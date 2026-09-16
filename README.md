@@ -29,6 +29,35 @@ npm link
 novon --help
 ```
 
+## 快速开始：init → dev → build
+
+下面的步骤在一个全新的目标目录中验证完整的本地闭环。文档仓库和要编写的站点目录可以分开：
+
+```bash
+# 在 novon 仓库根目录执行
+npm ci
+npm link
+
+mkdir ../my-novon-site
+cd ../my-novon-site
+novon init
+```
+
+`novon init` 会生成 `novon.config.json` 和 `content/index.mdx`。启动预览（该命令会持续运行）：
+
+```bash
+novon dev
+```
+
+在浏览器打开命令输出的地址（默认是 `http://127.0.0.1:3000`）。在另一个终端编辑并保存 `content/index.mdx`，刷新页面即可看到变更；最后生成静态产物：
+
+```bash
+cd ../my-novon-site
+novon build
+```
+
+构建完成后，`dist/index.html` 是可直接打开或交给任意静态文件托管服务的页面。使用 `Ctrl+C` 停止开发服务器。
+
 ## 初始化项目
 
 在准备好的空目录，或已有且不包含冲突目标文件的目录中运行：
@@ -105,6 +134,14 @@ novon dev --host 0.0.0.0 --port 4321
 
 当前预览是无运行时依赖的轻量 Markdown/MDX 阅读器，不会执行 MDX 中的 React/JSX 组件；复杂组件渲染属于后续 Astro 集成范围。
 
+## 常见失败处理
+
+- `novon` 找不到：确认已在仓库根目录执行 `npm link`；也可以直接使用 `node ./src/cli.js <command>`。
+- `init` 报文件冲突：命令不会覆盖已有的 `novon.config.json` 或 `content/index.mdx`。先备份、移走冲突文件，或在新的目标目录重试。
+- `dev` 找不到配置或内容目录：在目标项目目录执行 `novon init`，或检查 `novon.config.json` 中的 `contentDir`；配置和内容必须位于项目目录内。
+- `dev` 端口被占用：使用 `novon dev --port 4321` 选择其他端口；端口必须是 `0` 到 `65535` 的整数。
+- `build` 报配置、内容或页面解析错误：检查 JSON、front matter 和 Markdown/MDX 文件。失败构建返回非零状态，并保留上一次完整的 `dist` 产物。
+
 ## 静态构建
 
 当前 `build` 会在当前目录（或传入的项目目录）读取 `novon.config.json`，将 `contentDir` 中的 `.mdx` / `.md` 页面输出到 `outputDir`，默认值分别为 `content` 和 `dist`：
@@ -125,6 +162,12 @@ my-docs/
 
 构建会为每个页面生成完整的 `index.html` 或对应的 `.html` 文件，并以临时目录准备所有页面后一次性替换输出目录。因此配置、内容缺失或页面无法解析时会返回非零状态，不会用不完整产物覆盖上一次成功的构建。代码围栏、标题、段落、列表、链接、图片和常用行内格式均可在无运行时依赖的最小 Markdown/MDX 渲染器中使用。
 
+## 当前限制
+
+- 当前版本只覆盖单一本地站点的 `init`、`dev` 和 `build` 闭环；`studio` 与 `publish` 仍是公共命令占位，不会执行编辑或部署。
+- `dev` 和 `build` 使用无运行时依赖的最小 Markdown/MDX 渲染器，不执行 React/JSX 组件和任意 MDX JavaScript；复杂组件需要后续 Astro 集成。
+- 构建输出是静态 HTML，不包含文件监听或自动部署；修改内容后需刷新预览，并再次运行 `novon build` 更新产物。
+
 ## 工程结构
 
 ```text
@@ -139,7 +182,7 @@ src/build.js        静态构建、MDX 渲染和输出事务
 
 ## 质量检查
 
-- `npm test`：运行自动化测试。
+- `npm test`：运行自动化测试，其中 `test/e2e.test.js` 会在临时目录通过实际 CLI 进程验证 `init → dev → 修改内容 → build` 旅程。
 - `npm run lint`：执行 Node.js 语法检查。
 - `npm run check`：统一入口，依次执行语法检查和测试；提交前必须通过。
 

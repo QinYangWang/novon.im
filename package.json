@@ -1,0 +1,33 @@
+{
+  "name": "novon",
+  "version": "0.1.0",
+  "description": "A small CLI for building documentation sites with novon.",
+  "type": "commonjs",
+  "bin": {
+    "novon": "./src/cli.js"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "CONTRIBUTING.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "test": "node --test",
+    "lint": "node --check src/cli.js && node --check test/cli.test.js",
+    "check": "npm run lint && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QinYangWang/novon.im.git"
+  },
+  "bugs": {
+    "url": "https://github.com/QinYangWang/novon.im/issues"
+  },
+  "homepage": "https://github.com/QinYangWang/novon.im#readme",
+  "license": "Apache-2.0"
+}

@@ -3,6 +3,7 @@
 
 const packageInfo = require('../package.json');
 const { initializeProject } = require('./init');
+const { devHelpText, runDev } = require('./dev');
 
 const commands = Object.freeze([
   Object.freeze({
@@ -59,6 +60,10 @@ function helpText() {
 function commandHelp(command) {
   if (command.help) {
     return [`Usage: novon ${command.name}`, '', command.help].join('\n');
+  }
+
+  if (command.name === 'dev') {
+    return devHelpText();
   }
 
   return [
@@ -138,12 +143,34 @@ function main(args = process.argv.slice(2)) {
     }
   }
 
+  if (command.name === 'dev') {
+    try {
+      return runDev(rest);
+    } catch (error) {
+      console.error(`novon dev: ${error.message}`);
+      return 1;
+    }
+  }
+
   console.log(`novon ${command.name} is not implemented in this project skeleton yet.`);
   return 0;
 }
 
 if (require.main === module) {
-  process.exitCode = main();
+  const result = main();
+  if (result && typeof result.then === 'function') {
+    result.then(
+      (exitCode) => {
+        process.exitCode = exitCode;
+      },
+      (error) => {
+        console.error(`novon dev: ${error.message}`);
+        process.exitCode = 1;
+      },
+    );
+  } else {
+    process.exitCode = result;
+  }
 }
 
 module.exports = {

@@ -18,7 +18,7 @@
   "scripts": {
     "start": "node src/cli.js",
     "test": "node --test",
-    "lint": "node --check src/cli.js && node --check src/init.js && node --check src/project.js && node --check test/cli.test.js",
+    "lint": "node --check src/cli.js && node --check src/init.js && node --check src/project.js && node --check src/dev.js && node --check test/cli.test.js && node --check test/dev.test.js",
     "check": "npm run lint && npm test"
   },
   "repository": {

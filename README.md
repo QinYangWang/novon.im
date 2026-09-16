@@ -2,7 +2,7 @@
 
 novon 是一个面向文档与静态内容站点的 CLI 工具。它计划提供从本地内容初始化、预览到静态构建和发布的统一入口，并以 Astro 作为后续站点渲染能力的集成方向。
 
-当前版本只交付公共 CLI 契约和工程骨架。五个命令已经注册并可显示帮助，但尚未执行实际的初始化、服务启动、编辑、构建或发布操作。
+当前版本已交付公共 CLI 契约和最小的 `init` 初始化闭环。`dev`、`studio`、`build`、`publish` 已注册并可显示帮助，其他业务能力会在后续版本提供。
 
 ## 系统要求
 
@@ -29,6 +29,38 @@ npm link
 novon --help
 ```
 
+## 初始化项目
+
+在准备好的空目录，或已有且不包含冲突目标文件的目录中运行：
+
+```bash
+novon init
+```
+
+命令会创建以下最小项目结构：
+
+```text
+novon.config.json
+content/
+└── index.mdx
+```
+
+`novon.config.json` 是后续 `dev` 和 `build` 共用的项目配置，当前最小格式为：
+
+```json
+{
+  "contentDir": "content",
+  "outputDir": "dist"
+}
+```
+
+初始化示例页包含 `title` frontmatter 和可直接编辑的 Markdown 内容。命令只在当前工作目录操作，并且遵循以下安全策略：
+
+- 已有的无关文件会保留，不会被覆盖。
+- 如果 `novon.config.json` 或 `content/index.mdx` 已存在但内容不同，命令返回失败并拒绝覆盖。
+- 重复执行且两个生成文件仍是默认内容时返回成功，并明确提示没有修改文件。
+- 初始化失败时返回非零退出码，并说明冲突或文件系统错误。
+
 ## 命令契约
 
 ```text
@@ -39,7 +71,7 @@ novon build      构建静态站点文件
 novon publish    发布静态站点
 ```
 
-在当前骨架中，运行命令会明确提示功能尚未实现，不会修改文件、启动服务或发布内容。各命令的具体行为由后续 issue 实现，并必须继续支持 `novon <command> --help`。
+目前只有 `init` 会执行实际文件操作；`dev`、`studio`、`build` 和 `publish` 会明确提示功能尚未实现。每个命令都支持 `novon <command> --help`。
 
 ## 工程结构
 

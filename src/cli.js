@@ -2,11 +2,18 @@
 'use strict';
 
 const packageInfo = require('../package.json');
+const { initializeProject } = require('./init');
 
 const commands = Object.freeze([
   Object.freeze({
     name: 'init',
     description: 'initialize a novon documentation directory',
+    help: [
+      'Initialize a novon project in the current directory.',
+      '',
+      'Creates novon.config.json and content/index.mdx without overwriting',
+      'existing files.',
+    ].join('\n'),
   }),
   Object.freeze({
     name: 'dev',
@@ -50,6 +57,10 @@ function helpText() {
 }
 
 function commandHelp(command) {
+  if (command.help) {
+    return [`Usage: novon ${command.name}`, '', command.help].join('\n');
+  }
+
   return [
     `Usage: novon ${command.name}`,
     '',
@@ -102,6 +113,29 @@ function main(args = process.argv.slice(2)) {
   if (rest.includes('-h') || rest.includes('--help')) {
     console.log(commandHelp(command));
     return 0;
+  }
+
+  if (command.name === 'init') {
+    if (rest.length > 0) {
+      console.error('novon init: this command does not accept arguments.');
+      console.error('Run "novon init --help" for usage information.');
+      return 1;
+    }
+
+    try {
+      const result = initializeProject();
+
+      if (result.status === 'already-initialized') {
+        console.log('novon init: project is already initialized; no files were changed.');
+      } else {
+        console.log('novon init: initialized a project in the current directory.');
+        console.log(`Created: ${result.createdFiles.join(', ')}`);
+      }
+      return 0;
+    } catch (error) {
+      console.error(`novon init: ${error.message}`);
+      return 1;
+    }
   }
 
   console.log(`novon ${command.name} is not implemented in this project skeleton yet.`);

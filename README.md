@@ -2,7 +2,7 @@
 
 novon 是一个面向文档与静态内容站点的 CLI 工具。它计划提供从本地内容初始化、预览到静态构建和发布的统一入口，并以 Astro 作为后续站点渲染能力的集成方向。
 
-当前版本已交付公共 CLI 契约、最小的 `init` 初始化闭环和 `novon dev` 本地预览闭环：预览读取项目配置和 Markdown/MDX 内容，并在每次请求时重新读取文件，因此保存内容后刷新页面即可看到变化。`studio`、`build`、`publish` 的其他业务能力会在后续版本提供。
+当前版本已交付公共 CLI 契约、最小的 `init` 初始化闭环、`novon dev` 本地预览闭环和不依赖运行时框架的静态构建闭环：预览读取项目配置和 Markdown/MDX 内容，并在每次请求时重新读取文件；`build` 读取本地配置和页面并生成可直接打开或托管的 HTML。`studio`、`publish` 的其他业务能力会在后续版本提供。
 
 ## 系统要求
 
@@ -71,7 +71,7 @@ novon build      构建静态站点文件
 novon publish    发布静态站点
 ```
 
-`novon init` 会创建项目配置和示例内容，`novon dev` 会启动本地 HTTP 预览服务；`studio`、`build`、`publish` 的其他业务能力仍按后续 issue 逐步实现。所有命令都必须继续支持 `novon <command> --help`。
+`novon init` 会创建项目配置和示例内容，`novon dev` 会启动本地 HTTP 预览服务，`novon build` 会生成静态页面；`studio`、`publish` 的其他业务能力仍按后续 issue 逐步实现。所有命令都必须继续支持 `novon <command> --help`。
 
 ## 本地预览
 
@@ -105,11 +105,33 @@ novon dev --host 0.0.0.0 --port 4321
 
 当前预览是无运行时依赖的轻量 Markdown/MDX 阅读器，不会执行 MDX 中的 React/JSX 组件；复杂组件渲染属于后续 Astro 集成范围。
 
+## 静态构建
+
+当前 `build` 会在当前目录（或传入的项目目录）读取 `novon.config.json`，将 `contentDir` 中的 `.mdx` / `.md` 页面输出到 `outputDir`，默认值分别为 `content` 和 `dist`：
+
+```bash
+novon build
+# 或：novon build ./my-docs --output ./my-docs/site
+```
+
+最小项目格式如下：
+
+```text
+my-docs/
+├── novon.config.json
+└── content/
+    └── index.mdx
+```
+
+构建会为每个页面生成完整的 `index.html` 或对应的 `.html` 文件，并以临时目录准备所有页面后一次性替换输出目录。因此配置、内容缺失或页面无法解析时会返回非零状态，不会用不完整产物覆盖上一次成功的构建。代码围栏、标题、段落、列表、链接、图片和常用行内格式均可在无运行时依赖的最小 Markdown/MDX 渲染器中使用。
+
 ## 工程结构
 
 ```text
 src/cli.js          CLI 入口和公共命令注册
+src/build.js        静态构建、MDX 渲染和输出事务
  test/cli.test.js   CLI 契约测试
+ test/build.test.js 构建闭环和失败安全测试
 .github/workflows/  持续集成质量检查
 ```
 

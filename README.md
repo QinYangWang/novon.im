@@ -2,7 +2,7 @@
 
 novon 是一个面向文档与静态内容站点的 CLI 工具。它计划提供从本地内容初始化、预览到静态构建和发布的统一入口，并以 Astro 作为后续站点渲染能力的集成方向。
 
-当前版本已交付公共 CLI 契约和最小的 `init` 初始化闭环。`dev`、`studio`、`build`、`publish` 已注册并可显示帮助，其他业务能力会在后续版本提供。
+当前版本已交付公共 CLI 契约、最小的 `init` 初始化闭环和 `novon dev` 本地预览闭环：预览读取项目配置和 Markdown/MDX 内容，并在每次请求时重新读取文件，因此保存内容后刷新页面即可看到变化。`studio`、`build`、`publish` 的其他业务能力会在后续版本提供。
 
 ## 系统要求
 
@@ -71,7 +71,39 @@ novon build      构建静态站点文件
 novon publish    发布静态站点
 ```
 
-目前只有 `init` 会执行实际文件操作；`dev`、`studio`、`build` 和 `publish` 会明确提示功能尚未实现。每个命令都支持 `novon <command> --help`。
+`novon init` 会创建项目配置和示例内容，`novon dev` 会启动本地 HTTP 预览服务；`studio`、`build`、`publish` 的其他业务能力仍按后续 issue 逐步实现。所有命令都必须继续支持 `novon <command> --help`。
+
+## 本地预览
+
+在包含 `novon.config.json` 的项目目录中运行：
+
+```bash
+novon dev
+```
+
+配置文件使用 JSON，最小格式如下；`contentDir` 下的 `.mdx` 或 `.md` 文件会成为可访问页面，`content/index.mdx` 对应首页：
+
+```json
+{
+  "contentDir": "content",
+  "outputDir": "dist"
+}
+```
+
+启动成功后，终端会打印类似 `http://127.0.0.1:3000` 的访问地址。可使用以下选项覆盖默认监听设置：
+
+```bash
+novon dev --port 4321
+novon dev --host 0.0.0.0 --port 4321
+```
+
+预览不会缓存页面：保存 MDX 文件后刷新浏览器即可看到最新内容，无需重新初始化项目。常见启动错误及处理方式：
+
+- 找不到配置文件或 `contentDir` 时，在目标项目目录执行 `novon init`，或检查 `novon.config.json` 的路径。
+- 端口已被占用时，使用 `--port` 选择其他端口。
+- 端口必须是 `0` 到 `65535` 的整数；`0` 表示让操作系统分配空闲端口。
+
+当前预览是无运行时依赖的轻量 Markdown/MDX 阅读器，不会执行 MDX 中的 React/JSX 组件；复杂组件渲染属于后续 Astro 集成范围。
 
 ## 工程结构
 

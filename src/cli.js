@@ -4,6 +4,7 @@
 const packageInfo = require('../package.json');
 const { initializeProject } = require('./init');
 const { devHelpText, runDev } = require('./dev');
+const { buildHelpText, runBuild } = require('./build');
 
 const commands = Object.freeze([
   Object.freeze({
@@ -64,6 +65,10 @@ function commandHelp(command) {
 
   if (command.name === 'dev') {
     return devHelpText();
+  }
+
+  if (command.name === 'build') {
+    return buildHelpText();
   }
 
   return [
@@ -150,6 +155,10 @@ function main(args = process.argv.slice(2)) {
       console.error(`novon dev: ${error.message}`);
       return 1;
     }
+  }
+
+  if (command.name === 'build') {
+    return runBuild(rest);
   }
 
   console.log(`novon ${command.name} is not implemented in this project skeleton yet.`);

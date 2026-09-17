@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
 
+const { renderThemePage } = require('./theme');
+
 const CONFIG_FILENAMES = Object.freeze([
   'novon.config.json',
   '.novon.json',
@@ -400,6 +402,28 @@ function configuredTitle(config) {
   return title.trim();
 }
 
+function configuredDescription(config) {
+  const description = firstValue(configSections(config), ['description']);
+  if (description === undefined || description === null) {
+    return '';
+  }
+  if (typeof description !== 'string') {
+    throw new DevError('site description must be a string.');
+  }
+  return description.trim();
+}
+
+function configuredLanguage(config) {
+  const language = firstValue(configSections(config), ['lang', 'language']);
+  if (language === undefined || language === null || String(language).trim() === '') {
+    return 'en';
+  }
+  if (typeof language !== 'string' || !/^[A-Za-z0-9-]+$/.test(language.trim())) {
+    throw new DevError('site language must contain only letters, numbers, and hyphens.');
+  }
+  return language.trim();
+}
+
 function configuredServer(config) {
   const host = firstValue(configSections(config), ['host']);
   const port = firstValue(configSections(config), ['port']);
@@ -499,6 +523,8 @@ function loadProject(options = {}) {
     contentDirectory,
     entryPath,
     title: configuredTitle(config),
+    description: configuredDescription(config),
+    lang: configuredLanguage(config),
     host: server.host,
     port: server.port,
   };
@@ -701,6 +727,10 @@ function readProjectDocuments(project) {
     const titleValue = attributes.title;
     if (titleValue !== undefined && (typeof titleValue !== 'string' || titleValue.trim() === '')) {
       throw new DevError(`title in front matter for ${pathLabel(relativePath)} must be a non-empty string.`);
+    }
+    const descriptionValue = attributes.description;
+    if (descriptionValue !== undefined && typeof descriptionValue !== 'string') {
+      throw new DevError(`description in front matter for ${pathLabel(relativePath)} must be a string.`);
     }
     const title =
       typeof titleValue === 'string'
@@ -920,63 +950,32 @@ function findDocument(documents, requestPath) {
   return documents.find((document) => canonicalRoute(document.route) === normalizedPath) || null;
 }
 
-const PAGE_STYLE = `
-:root { color-scheme: light; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; color: #172033; background: #f7f8fb; }
-* { box-sizing: border-box; }
-body { margin: 0; }
-a { color: #315ecf; }
-header { border-bottom: 1px solid #e4e7ef; background: #fff; }
-.header-inner, .layout, footer { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; }
-.header-inner { padding: 1.25rem 0; }
-.brand { color: inherit; font-weight: 700; text-decoration: none; }
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 3rem; padding: 3rem 0; }
-article { min-width: 0; background: #fff; border: 1px solid #e4e7ef; border-radius: 0.75rem; padding: clamp(1.25rem, 4vw, 3rem); }
-article h1 { margin-top: 0; line-height: 1.2; }
-article img { max-width: 100%; }
-article pre { overflow-x: auto; padding: 1rem; border-radius: 0.5rem; background: #172033; color: #eef2ff; }
-article code { padding: 0.1rem 0.3rem; border-radius: 0.25rem; background: #eef1f8; }
-article pre code { padding: 0; background: transparent; }
-nav { position: sticky; top: 1rem; align-self: start; }
-nav h2 { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: #697386; }
-nav ul { margin: 0; padding: 0; list-style: none; }
-nav li { margin: 0.5rem 0; }
-footer { padding: 0 0 2rem; color: #697386; font-size: 0.9rem; }
-.error { color: #9f1239; }
-@media (max-width: 720px) { .layout { display: block; padding-top: 1.5rem; } nav { position: static; margin-bottom: 1.5rem; } }
-`;
-
 function renderPage(project, documents, document) {
-  const title = document ? `${document.title} · ${project.title}` : project.title;
-  const article = document
-    ? renderMarkdown(document.body).replace(/^(?![\s\S])/, '')
-    : '';
+  const title = document && document.title !== project.title
+    ? `${document.title} | ${project.title}`
+    : project.title;
+  const article = document ? renderMarkdown(document.body) : '';
   const articleBody = article.includes('<h1>')
     ? article
     : `<h1>${escapeHtml(document ? document.title : project.title)}</h1>${article}`;
-  const links = documents
-    .map(
-      (item) =>
-        `<li><a href="${escapeHtml(encodeRoute(item.route))}">${escapeHtml(item.title)}</a></li>`,
-    )
-    .join('');
+  const navigation = documents.map((item) => ({
+    current: document !== null && document !== undefined && item.filePath === document.filePath,
+    href: encodeRoute(item.route),
+    label: item.title,
+  }));
+  const description = document && document.attributes.description !== undefined
+    ? document.attributes.description.trim()
+    : project.description;
 
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(title)}</title>
-<style>${PAGE_STYLE}</style>
-</head>
-<body>
-<header><div class="header-inner"><a class="brand" href="/">${escapeHtml(project.title)}</a></div></header>
-<div class="layout">
-<main><article>${articleBody}</article></main>
-<nav aria-label="Pages"><h2>Pages</h2><ul>${links}</ul></nav>
-</div>
-<footer>novon · ฅ^•ﻌ^•ฅ</footer>
-</body>
-</html>`;
+  return renderThemePage({
+    body: articleBody,
+    description,
+    homeHref: '/',
+    lang: project.lang,
+    navigation,
+    pageTitle: title,
+    siteTitle: project.title,
+  });
 }
 
 function renderErrorPage(message) {

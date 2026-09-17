@@ -3,6 +3,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { renderThemePage } = require('./theme');
+
 const CONFIG_FILE_NAMES = Object.freeze(['novon.config.json', 'novon.json']);
 const CONTENT_EXTENSIONS = Object.freeze(new Set(['.md', '.mdx']));
 const IGNORED_DIRECTORY_NAMES = Object.freeze(new Set(['.git', 'node_modules']));
@@ -162,7 +164,7 @@ function resolveProject(rootDir, configData, outputOverride) {
     ['title', 'name'],
     configPath,
     'site title',
-  ) || path.basename(rootDir) || 'novon site';
+  ) || 'novon';
 
   const description = getConfiguredString(
     config,
@@ -650,7 +652,12 @@ function routeFromPage(relativePath, attributes) {
   return normalized;
 }
 
-function renderPage(source, filePath, project, relativePath, route) {
+function relativeRouteHref(fromRoute, targetRoute) {
+  const href = path.posix.relative(path.posix.dirname(fromRoute), targetRoute);
+  return href || path.posix.basename(targetRoute);
+}
+
+function renderPage(source, filePath, project, relativePath, route, pages = []) {
   const parsed = parseFrontMatter(source, filePath);
   const body = renderMarkdown(stripMdxStatements(parsed.body), filePath);
   const visibleBody = body.replace(/<!--[^]*?-->/g, '').trim();
@@ -669,40 +676,21 @@ function renderPage(source, filePath, project, relativePath, route) {
   }
 
   const titleText = title === project.title ? title : `${title} | ${project.title}`;
-  const indexHref = path.posix.relative(path.posix.dirname(route), 'index.html') || 'index.html';
-  const descriptionTag = description.trim()
-    ? `\n    <meta name="description" content="${escapeHtml(description.trim())}">`
-    : '';
+  const navigation = pages.map((page) => ({
+    current: page.route === route,
+    href: relativeRouteHref(route, page.route),
+    label: page.title,
+  }));
 
-  return `<!doctype html>
-<html lang="${escapeHtml(project.lang)}">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${escapeHtml(titleText)}</title>${descriptionTag}
-    <style>
-      :root { color-scheme: light dark; font-family: system-ui, sans-serif; line-height: 1.6; }
-      body { margin: 0; background: Canvas; color: CanvasText; }
-      .novon-page { box-sizing: border-box; max-width: 52rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
-      .novon-header { margin-bottom: 3rem; border-bottom: 1px solid color-mix(in srgb, CanvasText 20%, transparent); padding-bottom: 1rem; }
-      .novon-header a { color: inherit; font-weight: 700; text-decoration: none; }
-      article h1, article h2, article h3 { line-height: 1.25; }
-      article img { max-width: 100%; height: auto; }
-      pre { overflow-x: auto; padding: 1rem; border-radius: .5rem; background: color-mix(in srgb, CanvasText 10%, Canvas); }
-      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
-      :not(pre) > code { padding: .1rem .3rem; border-radius: .25rem; background: color-mix(in srgb, CanvasText 10%, Canvas); }
-      .novon-footer { margin-top: 3rem; opacity: .7; font-size: .875rem; }
-    </style>
-  </head>
-  <body>
-    <div class="novon-page">
-      <header class="novon-header"><a href="${escapeHtml(indexHref)}">${escapeHtml(project.title)}</a></header>
-      <main><article>${body}</article></main>
-      <footer class="novon-footer">novon ฅ^•ﻌ^•ฅ</footer>
-    </div>
-  </body>
-</html>
-`;
+  return renderThemePage({
+    body,
+    description: description.trim(),
+    homeHref: relativeRouteHref(route, 'index.html'),
+    lang: project.lang,
+    navigation,
+    pageTitle: titleText,
+    siteTitle: project.title,
+  });
 }
 
 function copyDirectoryContents(sourceDir, destinationDir) {
@@ -797,6 +785,7 @@ function buildProject(options = {}) {
     }
 
     const parsed = parseFrontMatter(source, file.absolutePath);
+    const title = pageTitle(parsed.attributes, project.title, file.relativePath);
     const route = routeFromPage(file.relativePath, parsed.attributes);
     if (routes.has(route)) {
       throw new BuildError(
@@ -804,7 +793,7 @@ function buildProject(options = {}) {
       );
     }
     routes.set(route, file.relativePath);
-    pages.push({ file, route, source });
+    pages.push({ file, route, source, title });
   }
 
   const outputParent = path.dirname(project.outputPath);
@@ -823,7 +812,14 @@ function buildProject(options = {}) {
     }
 
     for (const page of pages) {
-      const html = renderPage(page.source, page.file.absolutePath, project, page.file.relativePath, page.route);
+      const html = renderPage(
+        page.source,
+        page.file.absolutePath,
+        project,
+        page.file.relativePath,
+        page.route,
+        pages,
+      );
       writePage(stagingDir, page.route, html);
     }
 

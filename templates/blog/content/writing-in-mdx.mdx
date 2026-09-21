@@ -1,0 +1,46 @@
+---
+title: Writing in MDX
+description: Components, code and callouts in a blog post.
+date: 2026-01-08
+author: __TITLE__
+---
+
+A post is MDX, so anything that works in the docs also works here.
+
+## Code
+
+```ts title="posts.ts"
+export function latest(posts: Post[]): Post[] {
+  return posts
+    .filter((post) => post.date)
+    .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+}
+```
+
+<Tip>
+  Hover a code block for a copy button.
+</Tip>
+
+## Callouts
+
+<Note>Neutral information.</Note>
+
+<Warning>Something that will break.</Warning>
+
+## Tabs and steps
+
+<Tabs>
+  <Tab title="bun">`bun add -g novon`</Tab>
+  <Tab title="npm">`npm install -g novon`</Tab>
+</Tabs>
+
+<Steps>
+  <Step title="Write">Add a file to `content/`.</Step>
+  <Step title="Preview">Run `novon dev`.</Step>
+  <Step title="Publish">Run `novon build`.</Step>
+</Steps>
+
+## Anything else
+
+The full component list is in the documentation template — run
+`novon new my-docs` to scaffold one and read it there.

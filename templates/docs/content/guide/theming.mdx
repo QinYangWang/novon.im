@@ -1,7 +1,9 @@
 ---
 title: Theming and plugins
 description: Custom components, theme overrides, stylesheets and plugins.
-order: 4
+icon: Palette
+order: 5
+updated: 2026-01-14
 ---
 
 novon is built from three replaceable layers: **styles**, **components** and
@@ -18,8 +20,9 @@ theme: {
 }
 ```
 
-Everything else is a CSS custom property. Add a stylesheet and override the
-tokens directly, in `oklch()` or any other colour space:
+Each template ships its own default palette: the docs layout uses a soft grey
+shell with subtle cards, the blog layout is pure black on white. Both are CSS
+custom properties, so a stylesheet can override them directly:
 
 ```css title="styles/extra.css"
 :root {
@@ -39,7 +42,9 @@ theme: { css: ['./styles/extra.css'] }
 <Note>
   Token names follow shadcn/ui: `--background`, `--foreground`, `--card`,
   `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`,
-  `--destructive`, `--border`, `--input`, `--ring`.
+  `--destructive`, `--border`, `--input`, `--ring`. Layout widths are
+  `--novon-sidebar-width`, `--novon-toc-width`, `--novon-content-width` and
+  `--novon-blog-width`.
 </Note>
 
 ## Custom MDX components
@@ -84,27 +89,17 @@ export default function Banner() {
 Replace any built-in part with your own implementation. The module
 default-exports a component and receives the same props as the default:
 
-```tsx title="theme/Header.tsx"
-import { Brand, SearchTrigger, ThemeToggle } from 'novon'
-
-export default function Header() {
-  return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/85 px-4 backdrop-blur">
-      <Brand />
-      <div className="ml-auto flex items-center gap-2">
-        <SearchTrigger />
-        <ThemeToggle />
-      </div>
-    </header>
-  )
+```tsx title="theme/Footer.tsx"
+export default function Footer() {
+  return <footer className="px-4 py-8 text-sm">A custom footer.</footer>
 }
 ```
 
 ```ts
 theme: {
   override: {
-    Header: './theme/Header.tsx',
     Footer: './theme/Footer.tsx',
+    Sidebar: './theme/Sidebar.tsx',
   },
 }
 ```
@@ -113,11 +108,12 @@ Available overrides:
 
 | Name | Replaces |
 | --- | --- |
-| `Header` | Top bar with brand, nav, search and theme toggle. |
-| `Sidebar` | The documentation navigation tree. |
+| `Header` | Top bar: the docs mobile bar, or the blog's nav. |
+| `Sidebar` | The docs sidebar rail. |
 | `TableOfContents` | The "On this page" panel. |
 | `Footer` | Footer. |
 | `HomePage` | What the blog template renders at `/`. |
+| `PostListPage` | The generated `/blog` index. |
 | `NotFound` | The 404 page. |
 
 ## Plugins
@@ -125,11 +121,11 @@ Available overrides:
 A plugin is a plain object. It can add files after the build, rewrite each page's
 HTML, or prepare something before the build starts:
 
-```ts title="plugins/changelog.ts"
+```ts title="plugins/robots.ts"
 import { definePlugin } from 'novon/plugin'
 
 export default definePlugin({
-  name: 'changelog',
+  name: 'robots',
 
   setup({ config, root }) {
     // Runs once, before any build work.
@@ -149,9 +145,9 @@ export default definePlugin({
 ```
 
 ```ts
-import changelog from './plugins/changelog.ts'
+import robots from './plugins/robots.ts'
 
-plugins: ['search', 'sitemap', changelog]
+plugins: ['search', 'sitemap', robots]
 ```
 
 The build context gives a plugin what it needs:

@@ -169,11 +169,16 @@ export function ScrollArea({
 /* -------------------------------------------------------------------------- */
 
 export function Accordion({ className, ...props }: React.ComponentProps<typeof BaseAccordion.Root>) {
-  return <BaseAccordion.Root className={cn('divide-y divide-border', className)} {...props} />
+  return (
+    <BaseAccordion.Root
+      className={cn('my-6 divide-y divide-border overflow-hidden rounded-xl border border-border', className)}
+      {...props}
+    />
+  )
 }
 
 export function AccordionItem({ className, ...props }: React.ComponentProps<typeof BaseAccordion.Item>) {
-  return <BaseAccordion.Item className={cn('py-1', className)} {...props} />
+  return <BaseAccordion.Item className={cn('py-0', className)} {...props} />
 }
 
 export function AccordionTrigger({
@@ -185,19 +190,18 @@ export function AccordionTrigger({
     <BaseAccordion.Header className="flex">
       <BaseAccordion.Trigger
         className={cn(
-          'group flex flex-1 items-center justify-between gap-2 py-3 text-left text-sm font-medium transition-colors hover:text-primary',
+          'group flex w-full flex-1 items-center gap-2 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-accent/50',
           className,
         )}
         {...props}
       >
-        {children}
         <svg
           aria-hidden="true"
           viewBox="0 0 16 16"
-          className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[panel-open]:rotate-180"
+          className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[panel-open]:rotate-90"
         >
           <path
-            d="M4 6l4 4 4-4"
+            d="M6 4l4 4-4 4"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.75"
@@ -205,6 +209,7 @@ export function AccordionTrigger({
             strokeLinejoin="round"
           />
         </svg>
+        <span className="min-w-0 flex-1">{children}</span>
       </BaseAccordion.Trigger>
     </BaseAccordion.Header>
   )
@@ -223,7 +228,7 @@ export function AccordionPanel({ className, ...props }: React.ComponentProps<typ
 }
 
 export const AccordionGroup = ({ className, ...props }: React.ComponentProps<'div'>) => (
-  <div className={cn('my-6 rounded-xl border border-border bg-card px-4', className)} {...props} />
+  <div className={cn('my-6', className)} {...props} />
 )
 
 /* -------------------------------------------------------------------------- */
@@ -328,10 +333,20 @@ export const Popover = BasePopover.Root
 export const PopoverTrigger = BasePopover.Trigger
 export const PopoverClose = BasePopover.Close
 
-export function PopoverContent({ className, children, ...props }: React.ComponentProps<typeof BasePopover.Popup>) {
+export function PopoverContent({
+  className,
+  children,
+  align,
+  side,
+  sideOffset = 8,
+  ...props
+}: React.ComponentProps<typeof BasePopover.Popup> &
+  Pick<React.ComponentProps<typeof BasePopover.Positioner>, 'align' | 'side'> & {
+    sideOffset?: number
+  }) {
   return (
     <BasePopover.Portal>
-      <BasePopover.Positioner sideOffset={8}>
+      <BasePopover.Positioner sideOffset={sideOffset} align={align} side={side}>
         <BasePopover.Popup
           className={cn(
             'z-50 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg transition-all duration-150 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0',

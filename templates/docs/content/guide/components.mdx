@@ -1,12 +1,14 @@
 ---
 title: Components
 description: Every component available inside MDX, without an import.
-order: 2
+icon: Puzzle
+order: 3
+updated: 2026-01-16
 ---
 
 These components are injected into every `.mdx` file through `MDXProvider`, so
-they work without an import. To replace one, just import your own — an explicit
-import always wins.
+they work without an import. To replace one, import your own — an explicit import
+always wins.
 
 ## Layout
 
@@ -26,7 +28,7 @@ import always wins.
 
 ```mdx
 <CardGroup cols={2}>
-  <Card title="Getting started" icon="Rocket" href="/getting-started">
+  <Card title="Quick start" icon="Rocket" href="/getting-started">
     Install, preview, build.
   </Card>
   <Card title="Deploying" icon="Cloud" href="/guide/deploying" horizontal>
@@ -95,9 +97,6 @@ import always wins.
 </AccordionGroup>
 
 ### CodeGroup
-
-`CodeGroup` turns a set of code blocks into tabs, labelled with each block's
-`title`:
 
 <CodeGroup>
 ```bash title="bun"

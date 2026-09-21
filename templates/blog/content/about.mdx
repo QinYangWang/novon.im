@@ -6,7 +6,7 @@ sidebar: false
 ---
 
 A page does not have to be a post. `sidebar: false` keeps it out of the post list
-while still publishing it at its own URL.
+and the feed while still publishing it at its own URL.
 
 ## This site
 
@@ -16,8 +16,9 @@ It is a directory of MDX files and one config file:
 __NAME__/
 ├── novon.config.ts
 └── content/
-    ├── hello-world.mdx   # → /hello-world
-    └── about.mdx         # → /about   (sidebar: false)
+    ├── hello-world.mdx     # → /hello-world
+    ├── writing-in-mdx.mdx  # → /writing-in-mdx
+    └── about.mdx           # → /about   (sidebar: false)
 ```
 
 The header links to this page from `nav` in `novon.config.ts`.

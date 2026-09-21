@@ -1,7 +1,9 @@
 ---
 title: Deploying
 description: Vercel, Cloudflare Pages, GitHub Pages and any static host.
-order: 5
+icon: Cloud
+order: 6
+updated: 2026-01-12
 ---
 
 `novon build` produces a directory of static files. There is no server runtime,
@@ -12,12 +14,14 @@ dist/
 ├── index.html
 ├── getting-started/index.html
 ├── guide/writing/index.html
+├── guide/writing.md   # the Markdown source of that page
 ├── 404.html
 ├── .nojekyll
 ├── assets/            # hashed JS and CSS
 ├── sitemap.xml        # from the sitemap plugin
 ├── rss.xml            # from the rss plugin
-└── search-index.json  # from the search plugin
+├── search-index.json  # from the search plugin
+└── llms.txt           # from the llms plugin
 ```
 
 ## Build settings

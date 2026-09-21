@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { normalizeBase } from '../config.ts'
 import { renderDocument } from '../document.ts'
+import { markdownPath, outputPath } from '../paths.ts'
 import type { BuiltPage, BuildContext } from '../plugins/api.ts'
 import type { Route, TocEntry } from '../types.ts'
 import { runtimeConfig } from '../vite-config.ts'
@@ -38,7 +39,6 @@ function withBase(base: string, path: string): string {
   const prefix = base.endsWith('/') ? base.slice(0, -1) : base
   return `${prefix}${path.startsWith('/') ? path : `/${path}`}`
 }
-
 /** The script and stylesheets of the client entry, including shared chunks. */
 function collectAssets(manifest: Record<string, ManifestChunk>, base: string) {
   const entry = Object.values(manifest).find((chunk) => chunk.isEntry)
@@ -62,8 +62,7 @@ function collectAssets(manifest: Record<string, ManifestChunk>, base: string) {
 
 /** `/guide/setup` -> `guide/setup/index.html` */
 function outputFile(path: string): string {
-  if (path === '/') return 'index.html'
-  return `${path.replace(/^\//, '').replace(/\/$/, '')}/index.html`
+  return outputPath(path)
 }
 
 export async function build(site: Site, flags: BuildFlags): Promise<void> {
@@ -140,6 +139,8 @@ export async function build(site: Site, flags: BuildFlags): Promise<void> {
       body: result.html,
       styles,
       scripts,
+      ogType: result.frontmatter.date ? 'article' : 'website',
+      ogImage: typeof result.frontmatter.image === 'string' ? result.frontmatter.image : undefined,
     })
 
     const context = { root, config, outDir, base: config.base, packageRoot }
@@ -148,6 +149,16 @@ export async function build(site: Site, flags: BuildFlags): Promise<void> {
     }
 
     writeFileEnsured(page.outputPath, document)
+
+    // The Markdown source of every page, so "Copy Markdown" and LLM tooling can
+    // fetch the original file rather than a scraped rendering.
+    if (route.file) {
+      const source = join(root, route.file)
+      if (existsSync(source)) {
+        writeFileEnsured(join(outDir, markdownPath(route.path)), readFileSync(source, 'utf8'))
+      }
+    }
+
     pages.push(page)
   }
 

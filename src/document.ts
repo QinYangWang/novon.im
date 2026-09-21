@@ -16,6 +16,10 @@ export interface DocumentOptions {
   styles?: string
   /** Extra head markup contributed by plugins. */
   head?: string
+  /** Social preview image for this page. */
+  ogImage?: string
+  /** `article` for blog posts. */
+  ogType?: string
   /** Dev-only: the Vite client and react-refresh preamble. */
   devScripts?: string
 }
@@ -43,6 +47,7 @@ export function renderDocument(options: DocumentOptions): string {
   const base = config.base
   const fullTitle = title && title !== config.title ? `${title} · ${config.title}` : config.title
   const canonical = config.url ? joinUrl(config.url, joinUrl(base, '/')) : undefined
+  const ogImage = options.ogImage ?? config.theme.ogImage
 
   const head = [
     '<meta charset="utf-8" />',
@@ -53,10 +58,8 @@ export function renderDocument(options: DocumentOptions): string {
     canonical ? `<link rel="canonical" href="${escapeHtml(canonical)}" />` : '',
     `<meta property="og:title" content="${escapeHtml(fullTitle)}" />`,
     description ? `<meta property="og:description" content="${escapeHtml(description)}" />` : '',
-    '<meta property="og:type" content="website" />',
-    config.theme.ogImage
-      ? `<meta property="og:image" content="${escapeHtml(joinUrl(base, config.theme.ogImage))}" />`
-      : '',
+    `<meta property="og:type" content="${escapeHtml(options.ogType ?? 'website')}" />`,
+    ogImage ? `<meta property="og:image" content="${escapeHtml(joinUrl(base, ogImage))}" />` : '',
     `<meta name="generator" content="novon" />`,
     '<meta name="color-scheme" content="light dark" />',
     `<script>${THEME_INIT_SCRIPT}</script>`,
@@ -67,7 +70,7 @@ export function renderDocument(options: DocumentOptions): string {
     .join('\n    ')
 
   return `<!doctype html>
-<html lang="${escapeHtml(config.language)}" data-accent="${escapeHtml(config.theme.accent)}"${config.theme.darkMode ? '' : ' data-no-theme-toggle'} style="--radius: ${escapeHtml(config.theme.radius)}">
+<html lang="${escapeHtml(config.language)}" data-template="${escapeHtml(config.template)}" data-accent="${escapeHtml(config.theme.accent)}" style="--radius: ${escapeHtml(config.theme.radius)}">
   <head>
     ${head}
   </head>

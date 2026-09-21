@@ -1,7 +1,9 @@
 ---
-title: Guide
+title: Overview
 description: How to write, configure, theme and deploy a novon site.
+icon: Book
 order: 2
+updated: 2026-01-20
 ---
 
 This guide covers everything beyond the first page.
@@ -16,10 +18,37 @@ This guide covers everything beyond the first page.
   <Card title="Configuration" icon="Settings" href="/guide/configuration">
     Every option in novon.config.ts.
   </Card>
-  <Card title="Theming" icon="Palette" href="/guide/theming">
+  <Card title="Theming and plugins" icon="Palette" href="/guide/theming">
     Accent colours, custom components, theme overrides and plugins.
   </Card>
   <Card title="Deploying" icon="Cloud" href="/guide/deploying">
     Vercel, Cloudflare Pages and GitHub Pages.
   </Card>
 </CardGroup>
+
+## The sidebar comes from the file tree
+
+Each top-level directory becomes a labelled section; directories nested inside it
+become collapsible groups. The section name comes from the directory name and the
+`index.mdx` inside it is listed as an ordinary page, so the two never repeat the
+same label:
+
+```text
+content/guide/index.mdx      →  section "Guide", first item "Overview"
+content/guide/advanced/…     →  collapsible "Advanced" inside "Guide"
+```
+
+<AccordionGroup>
+  <Accordion title="How do I reorder pages?">
+    Set `order` in the frontmatter. Lower numbers come first, pages without an
+    `order` come last, and ties are sorted by label.
+  </Accordion>
+  <Accordion title="How do I add an icon to a sidebar entry?">
+    Set `icon` to any name from the curated icon set, for example
+    `icon: Rocket`.
+  </Accordion>
+  <Accordion title="How do I hide a page?">
+    `sidebar: false` keeps it out of the sidebar, the blog list and the feeds, but
+    the page is still published at its URL.
+  </Accordion>
+</AccordionGroup>

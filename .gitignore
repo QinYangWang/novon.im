@@ -10,7 +10,9 @@ dist/
 # Vite caches
 .vite/
 
-# Test directory
+# Test directories
+my-blog/
+my-docs/
 test/
 
 # Logs

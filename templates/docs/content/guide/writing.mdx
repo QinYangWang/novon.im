@@ -1,7 +1,9 @@
 ---
 title: Writing content
 description: Frontmatter, headings, code blocks, callouts, tabs and steps.
-order: 1
+icon: FileText
+order: 2
+updated: 2026-01-18
 ---
 
 Every page is an `.mdx` file in `content/`. The path of the file becomes the URL:
@@ -14,16 +16,19 @@ YAML frontmatter between `---` lines configures a page:
 ```yaml
 ---
 title: Writing content        # page heading, sidebar label, <title>
-description: How to write.    # sidebar subtitle, meta description, feeds
-order: 1                      # position inside its sidebar group
+description: How to write.    # subtitle, meta description, feeds
+icon: FileText                # sidebar icon
+order: 2                      # position inside its sidebar section
 label: Writing                # shorter sidebar label (optional)
 draft: false                  # true hides the page from a production build
 date: 2026-01-31              # blog lists, RSS and sitemap use this
+updated: 2026-01-18           # "Last updated on …" at the bottom of the page
 tags: [guide, mdx]
 author: Ada Lovelace
 toc: false                    # hide "On this page" for this page
-sidebar: false                # keep the page out of the sidebar
-slug: custom-url              # override the URL derived from the file name
+sidebar: false                # keep the page out of the sidebar and lists
+slug: custom-url              # override the URL (keeps the sidebar position)
+fullWidth: true               # render without the sidebar and TOC columns
 ---
 ```
 
@@ -37,7 +42,8 @@ The page heading comes from `title`, so start your body at `##`.
 
 ## Code blocks
 
-Fenced code blocks are highlighted with Shiki, in both light and dark themes:
+Fenced code blocks are highlighted with Shiki in both light and dark themes, and
+carry a copy button that appears on hover.
 
 ```ts title="src/greet.ts" showLineNumbers
 export function greet(name: string): string {
@@ -45,18 +51,14 @@ export function greet(name: string): string {
 }
 ```
 
-Add a `title` to get a filename header, and highlight specific lines:
+Add a `title` for a filename header, `showLineNumbers` for line numbers, and
+highlight individual lines with braces:
 
 ```js {2}
 const a = 1
 const highlighted = 2
 const c = 3
 ```
-
-<Note>
-  Use `title="path/to/file"` in the fence info string to show a filename above the
-  block.
-</Note>
 
 ## Callouts
 
@@ -76,8 +78,8 @@ const c = 3
   Callouts accept a `title` and an `icon`: `<Info icon="Zap">`.
 </Info>
 
-The same thing with an explicit type: `<Callout type="danger">` for destructive
-actions and `<Callout type="success">` for confirmations.
+Use `<Callout type="danger">` for destructive actions and
+`<Callout type="success">` for confirmations.
 
 ## Tabs
 
@@ -93,6 +95,19 @@ actions and `<Callout type="success">` for confirmations.
   </Tab>
 </Tabs>
 
+`CodeGroup` does the same for code blocks, taking each label from the block's
+`title`:
+
+<CodeGroup>
+```bash title="bun"
+bun add -g novon
+```
+
+```bash title="npm"
+npm install -g novon
+```
+</CodeGroup>
+
 ## Steps
 
 <Steps>
@@ -103,7 +118,7 @@ actions and `<Callout type="success">` for confirmations.
     `novon dev` reloads the browser as soon as you save.
   </Step>
   <Step title="Publish it">
-    `novon build` writes `dist/guide/new/index.html`.
+    `novon build` writes `dist/guide/new/index.html` and `dist/guide/new.md`.
   </Step>
 </Steps>
 
@@ -132,9 +147,15 @@ actions and `<Callout type="success">` for confirmations.
 - [ ] Nothing else, really
 
 Images are referenced from `public/`, so a file at `public/images/screenshot.png`
-is written as `/images/screenshot.png`. Wrap one in a frame to add a border and
-a caption:
+is written as `/images/screenshot.png`. Wrap one in a frame to add a border and a
+caption:
 
 <Frame caption="The novon dev server">
   <img src="/images/screenshot.png" alt="Screenshot of the dev server" />
 </Frame>
+
+## Markdown for other tools
+
+Every page is published twice: as HTML and as the original Markdown, at the same
+URL with `.md` appended. The **Copy Markdown** button in the page header uses it,
+and so can your editor or an LLM.

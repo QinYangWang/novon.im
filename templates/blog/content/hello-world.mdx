@@ -3,7 +3,6 @@ title: Hello, world
 description: The first post on a brand new novon blog.
 date: 2026-01-01
 author: __TITLE__
-tags: [meta, novon]
 ---
 
 This is a post. It is an `.mdx` file in `content/`, and its filename is its URL.
@@ -22,12 +21,11 @@ title: Hello, world
 description: Shown in the post list and in feeds.
 date: 2026-01-01
 author: Your Name
-tags: [meta, novon]
 ---
 ```
 
-Posts are sorted newest first on the home page. Pages without a `date` still
-appear, sorted after the dated ones.
+Posts are sorted newest first on the home page and on `/blog`. Pages without a
+`date` still appear, sorted after the dated ones.
 
 ## Adding a post
 
@@ -38,8 +36,7 @@ Create a new file, add frontmatter, save. That is the whole workflow:
     `content/my-new-post.mdx`
   </Step>
   <Step title="Add frontmatter">
-    At minimum a `title`. Add `date` and `tags` so the post sorts and groups
-    correctly.
+    At minimum a `title`. Add `date` so the post sorts correctly.
   </Step>
   <Step title="Write">
     Markdown, plus callouts, tabs, steps and cards without any imports.
@@ -48,7 +45,7 @@ Create a new file, add frontmatter, save. That is the whole workflow:
 
 <Note>
   `novon dev` reloads as soon as you save. `novon build` writes the static
-  version.
+  version, including `rss.xml` and `sitemap.xml`.
 </Note>
 
 ## What you get for free
@@ -57,14 +54,14 @@ Create a new file, add frontmatter, save. That is the whole workflow:
   <Card title="RSS feed" icon="Rss" href="/rss.xml">
     Generated from posts that have a `date`.
   </Card>
-  <Card title="Search" icon="Search">
-    Press `⌘K` anywhere on the site.
-  </Card>
   <Card title="Sitemap" icon="Globe" href="/sitemap.xml">
     Every published page, ready for crawlers.
   </Card>
-  <Card title="Tags" icon="Tag" href="/tags/meta">
-    Posts are grouped by their frontmatter tags.
+  <Card title="Markdown" icon="FileText" href="/hello-world.md">
+    Every post is also published as raw Markdown.
+  </Card>
+  <Card title="Dark mode" icon="Moon">
+    Follows the system, or the reader's choice.
   </Card>
 </CardGroup>
 

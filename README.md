@@ -33,6 +33,23 @@ my-docs/
 
 The file tree becomes the URL structure and the sidebar. Add a file, get a page.
 
+## Layouts
+
+`template` picks one of two shells, each with its own default palette.
+
+**`docs`** — a full-height sidebar rail (brand, search, grouped navigation with
+icons, and a system/light/dark switcher in its footer), a content header with
+**Copy Markdown** and **Open** actions, an "On this page" column, previous/next
+cards and a "last updated" line. Top-level directories render as labelled
+sections, deeper ones as collapsible groups.
+
+**`blog`** — a single narrow typographic column: lowercase nav, an intro
+paragraph, a date-and-title post list, and a footer of arrow links (rss, github,
+…). `/` and the generated `/blog` index both list posts newest first.
+
+Both palettes are CSS custom properties scoped to `data-template`, so a site can
+override any of them with a stylesheet (see [Theming](README.md#extending)).
+
 ## Commands
 
 | Command | Description |
@@ -54,16 +71,19 @@ Frontmatter drives everything:
 ```yaml
 ---
 title: Writing content        # page heading, sidebar label, <title>
-description: How to write.    # meta description, feeds, post list
-order: 1                      # position inside its sidebar group
+description: How to write.    # subtitle, meta description, feeds
+icon: FileText                # sidebar icon
+order: 1                      # position inside its sidebar section
 label: Writing                # shorter sidebar label
 draft: true                   # hidden from production builds
 date: 2026-01-31              # blog lists, RSS, sitemap
+updated: 2026-01-18           # "Last updated on …"
 tags: [guide, mdx]
 author: Ada Lovelace
 toc: false                    # hide "On this page" for this page
 sidebar: false                # not a page in the sidebar, not a post in lists
 slug: custom-url              # override the URL (keeps the sidebar position)
+fullWidth: true               # render without the sidebar and TOC columns
 ---
 ```
 
@@ -71,6 +91,10 @@ Directories and files starting with `_` are ignored (partials).
 
 Headings get stable anchor ids, and `h2`–`h4` are collected into the "On this
 page" panel from the same source on the server and in the browser.
+
+Every page is published twice: as HTML and as the original Markdown at the same
+URL with `.md` appended (`/guide/writing.md`). The **Copy Markdown** button reads
+it, and so can your editor or an LLM.
 
 ## Components
 
@@ -86,6 +110,10 @@ import always wins.
 | `Accordion`, `AccordionGroup` | Collapsible sections |
 | `Frame`, `Badge`, `Icon`, `Term`, `YouTube` | Media and inline bits |
 | `PostList`, `TagList` | Site data, no props needed |
+
+Code blocks are highlighted in both themes, show a filename from
+`title="path/to/file"`, take `showLineNumbers`, and have a copy button that
+appears on hover.
 
 ```mdx
 <CardGroup cols={2}>
@@ -152,7 +180,7 @@ components: { PricingTable: './components/PricingTable.tsx' }
 ```
 
 **Theme overrides** — replace any built-in part (`Header`, `Sidebar`,
-`TableOfContents`, `Footer`, `HomePage`, `NotFound`):
+`TableOfContents`, `Footer`, `HomePage`, `PostListPage`, `NotFound`):
 
 ```ts
 theme: { override: { Header: './theme/Header.tsx' } }
@@ -206,5 +234,11 @@ Requires Bun 1.1+.
 - Content lives in `content/` and is not configurable — that is what makes the
   dev server work with no generated entry files.
 - There is no client-side router: links are real page loads, so every route is a
-  static HTML file. Sidebar, search, tabs and theme switching still hydrate.
-- Sidebar nesting is derived from directories; there is no separate nav file.
+  static HTML file. Sidebar, search, tabs, code copying and theme switching still
+  hydrate.
+- Sidebar nesting is derived from directories; there is no separate nav file, and
+  there is no version or multi-product switcher.
+- Social preview images are static (`theme.ogImage` or per-page `image`); novon
+  does not render OG images at build time.
+- The search palette and tag pages are opt-in for the blog template: enable the
+  `search` plugin and add `tags` to posts.

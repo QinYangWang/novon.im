@@ -14,62 +14,14 @@ import * as React from 'react'
 import {
   AlertTriangle,
   ArrowRight,
-  Bell,
-  Book,
-  Bug,
-  Calendar,
   Check,
   CheckCircle2,
-  Clock,
-  Cloud,
-  Code,
-  Compass,
   Copy,
-  Cpu,
-  Database,
-  Download,
-  ExternalLink,
-  Eye,
-  FileText,
-  FlaskConical,
-  Folder,
-  GitBranch,
-  Globe,
-  GraduationCap,
-  Hash,
-  Heart,
   Info as InfoIcon,
-  Layers,
   Lightbulb,
-  Link as LinkIcon,
-  Lock,
-  Mail,
-  Map,
-  MessageSquare,
-  Package,
-  Palette,
-  Play,
-  Puzzle,
-  Rocket,
-  Rss,
-  Search,
-  Server,
-  Settings,
-  Shield,
-  Sparkles,
-  Star,
-  Tag,
-  Terminal,
-  Upload,
-  Users,
-  Wand2,
-  Wrench,
   XCircle,
-  Zap,
-  Command,
-  Monitor,
-  type LucideIcon,
 } from 'lucide-react'
+import { Icon, type IconProps } from './icons.tsx'
 import {
   Accordion as UIAccordion,
   AccordionItem,
@@ -84,93 +36,6 @@ import {
 import { cn, isExternal, withBase } from './lib.ts'
 import { useBase, useSite } from './site.tsx'
 import { PostList as UIPostList, TagList as UITagList } from './shell.tsx'
-
-/* -------------------------------------------------------------------------- */
-/* Icons                                                                      */
-/* -------------------------------------------------------------------------- */
-
-/** Curated so `icon="Rocket"` stays tree-shakeable. */
-export const icons: Record<string, LucideIcon> = {
-  ArrowRight,
-  Bell,
-  Book,
-  Bug,
-  Calendar,
-  Check,
-  CheckCircle: CheckCircle2,
-  Clock,
-  Cloud,
-  Code,
-  Compass,
-  Copy,
-  Cpu,
-  Database,
-  Download,
-  Eye,
-  FileText,
-  Flask: FlaskConical,
-  Folder,
-  GitBranch,
-  Globe,
-  GraduationCap,
-  Hash,
-  Heart,
-  Info: InfoIcon,
-  Layers,
-  Lightbulb,
-  Link: LinkIcon,
-  Lock,
-  Mail,
-  Map,
-  MessageSquare,
-  Package,
-  Palette,
-  Play,
-  Puzzle,
-  Rocket,
-  Rss,
-  Search,
-  Server,
-  Settings,
-  Shield,
-  Sparkles,
-  Star,
-  Tag,
-  Terminal,
-  Upload,
-  Users,
-  Wand: Wand2,
-  Wrench,
-  Zap,
-  Alert: AlertTriangle,
-  Command,
-  ExternalLink,
-  Monitor,
-  XCircle,
-}
-
-export interface IconProps extends React.ComponentProps<'span'> {
-  icon?: string | LucideIcon | React.ReactNode
-}
-
-/** Renders a lucide icon by name, or any custom component / element. */
-export function Icon({ icon, className, ...props }: IconProps) {
-  if (!icon) return null
-  if (typeof icon === 'string') {
-    const Component = icons[icon]
-    if (!Component) return null
-    return <Component aria-hidden="true" className={cn('size-4 shrink-0', className)} />
-  }
-  if (React.isValidElement(icon)) {
-    return (
-      <span className={cn('inline-flex [&_svg]:size-4', className)} {...props}>
-        {icon}
-      </span>
-    )
-  }
-  const Component = icon as LucideIcon
-  return <Component aria-hidden="true" className={cn('size-4 shrink-0', className)} />
-}
 
 /* -------------------------------------------------------------------------- */
 /* Callouts                                                                   */
@@ -240,18 +105,26 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
   return (
     <>
       {icon ? (
-        <span className={cn('text-primary', horizontal ? 'mt-0.5' : '')}>
-          <Icon icon={icon} className="size-5" />
+        <span
+          className={cn(
+            'flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-foreground',
+            horizontal ? 'mt-0.5' : '',
+          )}
+        >
+          <Icon icon={icon} className="size-4" />
         </span>
       ) : null}
-      <span className={cn('min-w-0 flex-1', horizontal ? '' : 'mt-3')}>
+      <span className={cn('min-w-0 flex-1', icon && !horizontal ? 'mt-3' : '')}>
         {title ? <span className="block font-medium text-foreground">{title}</span> : null}
         {children ? (
           <span className={cn('block text-sm text-muted-foreground', title ? 'mt-1' : '')}>{children}</span>
         ) : null}
       </span>
       {arrow ? (
-        <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        <ArrowRight
+          aria-hidden="true"
+          className="size-4 shrink-0 self-center text-muted-foreground transition-transform group-hover:translate-x-0.5"
+        />
       ) : null}
     </>
   )
@@ -260,9 +133,9 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
 export function MdxCard({ title, icon, href, horizontal, arrow = Boolean(href), className, children, ...props }: MdxCardProps) {
   const base = useBase()
   const classes = cn(
-    'group flex rounded-xl border border-border bg-card p-4 no-underline shadow-sm transition-colors',
+    'group flex rounded-xl border border-border bg-card p-4 no-underline transition-colors',
     horizontal ? 'flex-row items-start gap-3' : 'flex-col',
-    href && 'hover:border-primary/40 hover:bg-accent/40',
+    href && 'hover:bg-accent/40',
     className,
   )
   const inner = <MdxCardInner title={title} icon={icon} horizontal={horizontal} arrow={arrow}>{children}</MdxCardInner>
@@ -518,6 +391,46 @@ export function MdxTagList() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Code blocks                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Overrides `<pre>` inside MDX so every code block gets a copy button.
+ * The text is read from the DOM on click, so highlighted spans copy correctly.
+ */
+export function CodeBlock({ children, className, ...props }: React.ComponentProps<'pre'>) {
+  const ref = React.useRef<HTMLPreElement>(null)
+  const [copied, setCopied] = React.useState(false)
+
+  const copy = async () => {
+    const text = ref.current?.textContent ?? ''
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard access can be denied; leave the block alone.
+    }
+  }
+
+  return (
+    <div className="novon-code-wrap group/code relative">
+      <pre ref={ref} className={className} {...props}>
+        {children}
+      </pre>
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={copied ? 'Copied' : 'Copy code'}
+        className="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-md border border-border bg-background text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
+      >
+        {copied ? <Check aria-hidden="true" className="size-3.5" /> : <Copy aria-hidden="true" className="size-3.5" />}
+      </button>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /* Component map                                                              */
 /* -------------------------------------------------------------------------- */
 
@@ -547,6 +460,7 @@ export const mdxComponents = {
   YouTube,
   PostList: MdxPostList,
   TagList: MdxTagList,
+  pre: CodeBlock,
   a: ({ href = '', ...props }: React.ComponentProps<'a'>) => {
     const base = useBase()
     const external = isExternal(href) || href.startsWith('#')

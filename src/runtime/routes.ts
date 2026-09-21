@@ -27,6 +27,8 @@ export interface NavPage {
   path: string
   order: number
   meta: Frontmatter
+  /** From frontmatter, e.g. `icon: Rocket`. */
+  icon?: string
 }
 
 export interface NavGroup {
@@ -36,6 +38,8 @@ export interface NavGroup {
   path?: string
   order: number
   children: NavNode[]
+  /** From the group's index page frontmatter. */
+  icon?: string
 }
 
 export type NavNode = NavPage | NavGroup
@@ -136,6 +140,17 @@ interface DirNode {
   pages: Route[]
 }
 
+function pageNode(route: Route): NavPage {
+  return {
+    kind: 'page',
+    label: labelOf(route),
+    path: route.path,
+    order: routeSortValue(route),
+    meta: route.meta,
+    icon: typeof route.meta.icon === 'string' ? route.meta.icon : undefined,
+  }
+}
+
 function buildNavTree(routes: Route[]): NavNode[] {
   const root: DirNode = { name: '', dirs: new Map(), pages: [] }
 
@@ -160,20 +175,17 @@ function buildNavTree(routes: Route[]): NavNode[] {
     const pages: NavNode[] = node.pages
       .slice()
       .sort((a, b) => routeSortValue(a) - routeSortValue(b) || labelOf(a).localeCompare(labelOf(b)))
-      .map((route) => ({
-        kind: 'page' as const,
-        label: labelOf(route),
-        path: route.path,
-        order: routeSortValue(route),
-        meta: route.meta,
-      }))
+      .map(pageNode)
 
-    const groups: NavNode[] = [...node.dirs.values()].map((dir) => ({
+    const groups: NavGroup[] = [...node.dirs.values()].map((dir) => ({
       kind: 'group' as const,
-      label: dir.index ? labelOf(dir.index) : humanize(dir.name),
+      // The directory names the section; its `index.mdx` is listed as an item, so
+      // a folder and its overview page never show the same label twice.
+      label: humanize(dir.name),
       path: dir.index?.path,
       order: dir.index ? routeSortValue(dir.index) : 999,
-      children: toNodes(dir),
+      children: dir.index ? [pageNode(dir.index), ...toNodes(dir)] : toNodes(dir),
+      icon: dir.index && typeof dir.index.meta.icon === 'string' ? dir.index.meta.icon : undefined,
     }))
 
     return [...pages, ...groups].sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
@@ -184,13 +196,7 @@ function buildNavTree(routes: Route[]): NavNode[] {
   // The root `index.mdx` is a page, not a group label, so list it first.
   const home = root.index
   if (home && home.meta.sidebar !== false) {
-    nodes.unshift({
-      kind: 'page',
-      label: labelOf(home),
-      path: home.path,
-      order: typeof home.meta.order === 'number' ? home.meta.order : -1,
-      meta: home.meta,
-    })
+    nodes.unshift({ ...pageNode(home), order: typeof home.meta.order === 'number' ? home.meta.order : -1 })
   }
 
   return nodes
@@ -234,6 +240,20 @@ export function createSiteIndex(
 
   // Tag pages only make sense where a post list is the main navigation.
   if (config.template === 'blog') {
+    if (!byPath.has('/blog')) {
+      const route: Route = {
+        path: '/blog',
+        file: '',
+        meta: { title: 'Blog' },
+        segments: ['blog'],
+        isIndex: false,
+        synthetic: true,
+        postList: true,
+      }
+      routes.push(route)
+      byPath.set(route.path, route)
+    }
+
     for (const { tag } of tags) {
       const path = `/tags/${tagSlug(tag)}`
       if (byPath.has(path)) continue

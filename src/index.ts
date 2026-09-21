@@ -72,7 +72,6 @@ export {
   CardGroup,
   Danger,
   Frame,
-  Icon,
   Info,
   MdxCard,
   MdxPostList,
@@ -84,23 +83,33 @@ export {
   Tip,
   Warning,
   YouTube,
-  icons,
   mdxComponents,
 } from './runtime/mdx.tsx'
+
+/* Icons, shared by the theme and MDX components. */
+export { Icon, icons, type IconProps } from './runtime/icons.tsx'
 
 /* Theme internals, for people writing their own layout. */
 export {
   Brand,
+  DefaultDocsHeader,
   DefaultFooter,
   DefaultHeader,
   DefaultHomePage,
   DefaultNotFound,
   DefaultSidebar,
   DefaultTableOfContents,
+  PageActions,
+  PageHeading,
+  PageNav,
   PostCard,
   PostList,
+  PostListPage,
   Prose,
   TagList,
+  TagPage,
+  ThemeSwitcher,
+  ThemeToggle,
   useOverride,
   type LayoutProps,
 } from './runtime/shell.tsx'

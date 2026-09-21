@@ -13,8 +13,8 @@ export default defineConfig({
   ],
 
   theme: {
-    accent: 'zinc',
-    radius: '0.625rem',
+    accent: 'orange',
+    radius: '0.75rem',
     darkMode: true,
     toc: true,
 
@@ -28,18 +28,19 @@ export default defineConfig({
       // github: 'https://github.com/your-org/__NAME__',
     },
 
+    // Shows "Edit this page" at the bottom of every page.
+    // editLink: { base: 'https://github.com/your-org/__NAME__/edit/main/' },
+
     footer: {
       text: '© __TITLE__',
-      links: [
-        { label: 'GitHub', href: 'https://github.com' },
-      ],
+      links: [],
     },
 
     // Add your own stylesheets (relative to the site root):
     // css: ['./styles/extra.css'],
 
     // Replace built-in theme parts with your own components:
-    // override: { Header: './theme/Header.tsx' },
+    // override: { Header: './theme/Header.tsx', Sidebar: './theme/Sidebar.tsx' },
   },
 
   // Custom components available in every .mdx file without an import:

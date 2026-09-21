@@ -86,6 +86,8 @@ export interface Frontmatter {
   draft?: boolean
   /** ISO date, used by blog lists, RSS and sitemaps. */
   date?: string
+  /** ISO date of the last edit, shown at the bottom of the page. */
+  updated?: string
   author?: string | { name: string; avatar?: string; url?: string }
   tags?: string[]
   /** Social preview image. */
@@ -94,8 +96,12 @@ export interface Frontmatter {
   slug?: string
   /** Set to false to hide the "on this page" table of contents. */
   toc?: boolean
-  /** Set to false to keep the page out of the sidebar and blog list. */
+  /** Set to false to keep the page out of the sidebar, post lists and feeds. */
   sidebar?: boolean
+  /** Icon shown next to the sidebar entry, e.g. `Rocket`. */
+  icon?: string
+  /** Render the page without the sidebar and table of contents columns. */
+  fullWidth?: boolean
   [key: string]: unknown
 }
 
@@ -153,6 +159,8 @@ export interface Route {
   synthetic?: boolean
   /** Set on generated tag pages: the tag they list. */
   tag?: string
+  /** Set on the generated `/blog` index of the blog template. */
+  postList?: boolean
 }
 
 export interface TocEntry {
@@ -195,12 +203,16 @@ export interface RuntimeConfig {
 
 /** Built-in theme parts a site can replace with its own implementation. */
 export interface ThemeOverrides {
+  /** Top navigation: the docs mobile bar, or the blog's lowercase nav. */
   Header?: unknown
+  /** The docs sidebar rail. */
   Sidebar?: unknown
   Footer?: unknown
   TableOfContents?: unknown
-  PageLayout?: unknown
+  /** The blog home. */
   HomePage?: unknown
+  /** The generated `/blog` index. */
+  PostListPage?: unknown
   NotFound?: unknown
 }
 

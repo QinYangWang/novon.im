@@ -1,0 +1,71 @@
+---
+title: Hello, world
+description: The first post on a brand new novon blog.
+date: 2026-01-01
+author: __TITLE__
+tags: [meta, novon]
+---
+
+This is a post. It is an `.mdx` file in `content/`, and its filename is its URL.
+
+```text
+content/hello-world.mdx  →  /hello-world
+```
+
+## Writing
+
+Frontmatter at the top of the file drives everything:
+
+```yaml
+---
+title: Hello, world
+description: Shown in the post list and in feeds.
+date: 2026-01-01
+author: Your Name
+tags: [meta, novon]
+---
+```
+
+Posts are sorted newest first on the home page. Pages without a `date` still
+appear, sorted after the dated ones.
+
+## Adding a post
+
+Create a new file, add frontmatter, save. That is the whole workflow:
+
+<Steps>
+  <Step title="Create the file">
+    `content/my-new-post.mdx`
+  </Step>
+  <Step title="Add frontmatter">
+    At minimum a `title`. Add `date` and `tags` so the post sorts and groups
+    correctly.
+  </Step>
+  <Step title="Write">
+    Markdown, plus callouts, tabs, steps and cards without any imports.
+  </Step>
+</Steps>
+
+<Note>
+  `novon dev` reloads as soon as you save. `novon build` writes the static
+  version.
+</Note>
+
+## What you get for free
+
+<CardGroup cols={2}>
+  <Card title="RSS feed" icon="Rss" href="/rss.xml">
+    Generated from posts that have a `date`.
+  </Card>
+  <Card title="Search" icon="Search">
+    Press `⌘K` anywhere on the site.
+  </Card>
+  <Card title="Sitemap" icon="Globe" href="/sitemap.xml">
+    Every published page, ready for crawlers.
+  </Card>
+  <Card title="Tags" icon="Tag" href="/tags/meta">
+    Posts are grouped by their frontmatter tags.
+  </Card>
+</CardGroup>
+
+A closing paragraph, because every first post needs one.

@@ -1,0 +1,30 @@
+---
+title: About
+description: Who writes here.
+date: 2026-01-02
+sidebar: false
+---
+
+A page does not have to be a post. `sidebar: false` keeps it out of the post list
+while still publishing it at its own URL.
+
+## This site
+
+It is a directory of MDX files and one config file:
+
+```text title="project layout"
+__NAME__/
+├── novon.config.ts
+└── content/
+    ├── hello-world.mdx   # → /hello-world
+    └── about.mdx         # → /about   (sidebar: false)
+```
+
+The header links to this page from `nav` in `novon.config.ts`.
+
+## Editing
+
+```bash
+novon dev     # preview at http://localhost:4321
+novon build   # write the static site to dist/
+```

@@ -1,0 +1,58 @@
+---
+title: __TITLE__
+description: Documentation for __TITLE__.
+---
+
+Welcome to **__TITLE__**. This site is plain MDX plus one config file — no build
+scripts to maintain.
+
+<CardGroup cols={2}>
+  <Card title="Getting started" icon="Rocket" href="/getting-started">
+    Install novon, run the dev server, build the site.
+  </Card>
+  <Card title="Writing content" icon="FileText" href="/guide/writing">
+    Frontmatter, code blocks, tabs, callouts and more.
+  </Card>
+  <Card title="Components" icon="Puzzle" href="/guide/components">
+    Every component available inside MDX.
+  </Card>
+  <Card title="Configuration" icon="Settings" href="/guide/configuration">
+    Navigation, theme, plugins and deployment.
+  </Card>
+</CardGroup>
+
+## How a novon site is organised
+
+Everything you edit lives in two places:
+
+```text title="project layout"
+__NAME__/
+├── novon.config.ts      # title, theme, navigation, plugins
+└── content/             # your MDX pages
+    ├── index.mdx        #   → /
+    ├── getting-started.mdx  # → /getting-started
+    └── guide/
+        ├── index.mdx    #   → /guide
+        └── writing.mdx  #   → /guide/writing
+```
+
+The file tree becomes the URL structure and the sidebar. Add a file, get a page.
+
+<Steps>
+  <Step title="Edit a page">
+    Change this file, `content/index.mdx`, then save. The browser reloads
+    instantly.
+  </Step>
+  <Step title="Add a page">
+    Create `content/guide/new-page.mdx`, add a `title` in the frontmatter, and it
+    appears in the sidebar in the right place.
+  </Step>
+  <Step title="Build">
+    Run `novon build` to write a static site into `dist/`.
+  </Step>
+</Steps>
+
+<Note>
+  Frontmatter `title` is rendered as the page heading. Start your body content at
+  `##` so headings stay in order.
+</Note>

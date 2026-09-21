@@ -1,0 +1,140 @@
+---
+title: Writing content
+description: Frontmatter, headings, code blocks, callouts, tabs and steps.
+order: 1
+---
+
+Every page is an `.mdx` file in `content/`. The path of the file becomes the URL:
+`content/guide/writing.mdx` is served at `/guide/writing`.
+
+## Frontmatter
+
+YAML frontmatter between `---` lines configures a page:
+
+```yaml
+---
+title: Writing content        # page heading, sidebar label, <title>
+description: How to write.    # sidebar subtitle, meta description, feeds
+order: 1                      # position inside its sidebar group
+label: Writing                # shorter sidebar label (optional)
+draft: false                  # true hides the page from a production build
+date: 2026-01-31              # blog lists, RSS and sitemap use this
+tags: [guide, mdx]
+author: Ada Lovelace
+toc: false                    # hide "On this page" for this page
+sidebar: false                # keep the page out of the sidebar
+slug: custom-url              # override the URL derived from the file name
+---
+```
+
+The page heading comes from `title`, so start your body at `##`.
+
+## Headings and the table of contents
+
+`h2`, `h3` and `h4` headings are collected automatically and listed in the
+**On this page** panel on the right. Every heading gets a stable anchor link, so
+`/guide/writing#frontmatter` always works.
+
+## Code blocks
+
+Fenced code blocks are highlighted with Shiki, in both light and dark themes:
+
+```ts title="src/greet.ts" showLineNumbers
+export function greet(name: string): string {
+  return `Hello, ${name}!`
+}
+```
+
+Add a `title` to get a filename header, and highlight specific lines:
+
+```js {2}
+const a = 1
+const highlighted = 2
+const c = 3
+```
+
+<Note>
+  Use `title="path/to/file"` in the fence info string to show a filename above the
+  block.
+</Note>
+
+## Callouts
+
+<Note>
+  Neutral information that supports the surrounding text.
+</Note>
+
+<Tip>
+  A suggestion, shortcut or best practice.
+</Tip>
+
+<Warning>
+  Something that will break if ignored.
+</Warning>
+
+<Info title="Custom title">
+  Callouts accept a `title` and an `icon`: `<Info icon="Zap">`.
+</Info>
+
+The same thing with an explicit type: `<Callout type="danger">` for destructive
+actions and `<Callout type="success">` for confirmations.
+
+## Tabs
+
+<Tabs>
+  <Tab title="bun">
+    `bun add -g novon`
+  </Tab>
+  <Tab title="npm">
+    `npm install -g novon`
+  </Tab>
+  <Tab title="pnpm">
+    `pnpm add -g novon`
+  </Tab>
+</Tabs>
+
+## Steps
+
+<Steps>
+  <Step title="Write the page">
+    Create `content/guide/new.mdx` with a `title` in the frontmatter.
+  </Step>
+  <Step title="Preview it">
+    `novon dev` reloads the browser as soon as you save.
+  </Step>
+  <Step title="Publish it">
+    `novon build` writes `dist/guide/new/index.html`.
+  </Step>
+</Steps>
+
+## Accordions
+
+<AccordionGroup>
+  <Accordion title="Why MDX and not Markdown?">
+    MDX is Markdown plus JSX, so a page can use the same components as the rest
+    of the theme.
+  </Accordion>
+  <Accordion title="Can I use plain .md files?">
+    Yes. Both `.md` and `.mdx` files are picked up from `content/`.
+  </Accordion>
+</AccordionGroup>
+
+## Tables, lists and images
+
+| Feature | Supported |
+| --- | --- |
+| Tables | Yes, through GitHub-flavoured Markdown |
+| Task lists | Yes |
+| Footnotes | Yes |
+
+- [x] Tables
+- [x] Task lists
+- [ ] Nothing else, really
+
+Images are referenced from `public/`, so a file at `public/images/screenshot.png`
+is written as `/images/screenshot.png`. Wrap one in a frame to add a border and
+a caption:
+
+<Frame caption="The novon dev server">
+  <img src="/images/screenshot.png" alt="Screenshot of the dev server" />
+</Frame>

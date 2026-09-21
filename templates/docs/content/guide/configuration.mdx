@@ -1,0 +1,106 @@
+---
+title: Configuration
+description: Every option available in novon.config.ts.
+order: 3
+---
+
+`novon.config.ts` is the only configuration file. It exports a single object
+wrapped in `defineConfig` for editor support.
+
+```ts title="novon.config.ts"
+import { defineConfig } from 'novon/config'
+
+export default defineConfig({
+  title: 'My Docs',
+  description: 'Documentation for My Docs.',
+  url: 'https://docs.example.com',
+  base: '/',
+  template: 'docs',
+  nav: [{ label: 'Guide', href: '/guide' }],
+  theme: { accent: 'blue' },
+  plugins: ['search', 'sitemap', 'rss', 'llms'],
+})
+```
+
+## Site
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `title` | `string` | **Required.** Site name, used in the header and page titles. |
+| `description` | `string` | Default description, used for the home page and feeds. |
+| `url` | `string` | Canonical origin. Makes sitemap and RSS links absolute. |
+| `base` | `string` | Path the site is served from. Use `/repo/` on GitHub Pages. |
+| `template` | `docs` \| `blog` | Layout and default content structure. |
+| `language` | `string` | `lang` attribute and date formatting. Defaults to `en`. |
+| `author` | `string` | Default author for posts without one. |
+| `nav` | `NavItem[]` | Links in the header. |
+
+## Theme
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `accent` | `zinc` \| `slate` \| `blue` \| `indigo` \| `violet` \| `emerald` \| `teal` \| `orange` \| `rose` | Primary colour. |
+| `radius` | `string` | Corner radius, any CSS length. Defaults to `0.625rem`. |
+| `darkMode` | `boolean` | Show the light/dark toggle. Defaults to `true`. |
+| `toc` | `boolean` | Show the "On this page" panel. Defaults to `true`. |
+| `logo` | `string` | Logo path, e.g. `/logo.svg` for `public/logo.svg`. |
+| `logoDark` | `string` | Logo used in dark mode. |
+| `favicon` | `string` | Favicon path. |
+| `ogImage` | `string` | Social preview image. |
+| `editLink` | `{ base, label }` | "Edit this page" link, prefixed with `base`. |
+| `social` | `object` | `github`, `x`, `discord`, `npm`, `youtube`, `linkedin`. |
+| `footer` | `{ text, links }` | Footer text and links. |
+| `css` | `string[]` | Extra stylesheets, relative to the site root. |
+| `override` | `object` | Replace built-in theme parts (see [Theming](/guide/theming)). |
+
+## Static files
+
+Anything in `public/` is copied to the output root unchanged. A file at
+`public/logo.svg` is served at `/logo.svg` and referenced as `logo: '/logo.svg'`.
+
+Set `publicDir: false` to disable copying, or point `publicDir` at another
+directory.
+
+## Plugins
+
+Built-in plugins are enabled by name:
+
+```ts
+plugins: ['search', 'sitemap', 'rss', 'llms']
+```
+
+| Plugin | Output | Description |
+| --- | --- | --- |
+| `search` | `search-index.json` | Client-side search with `⌘K`. |
+| `sitemap` | `sitemap.xml` | One entry per published page. |
+| `rss` | `rss.xml` | Feed of pages with a `date`. |
+| `llms` | `llms.txt` | Page index for language models. |
+
+Custom plugins are objects created with `definePlugin` — see
+[Theming and plugins](/guide/theming).
+
+## Markdown
+
+```ts
+mdx: {
+  remarkPlugins: [myRemarkPlugin],
+  rehypePlugins: [[myRehypePlugin, { option: true }]],
+}
+```
+
+Your plugins run after the built-in ones (GitHub-flavoured Markdown, heading
+anchors, Shiki highlighting, frontmatter and `export const headings`).
+
+## Content
+
+Pages are `.md` or `.mdx` files inside `content/`. The directory name is fixed —
+it is what makes `novon dev` work without any generated entry files.
+
+Files or directories starting with `_` are ignored, which is handy for partials:
+
+```text
+content/
+├── _partials/          # ignored
+│   └── shared.mdx
+└── index.mdx           # → /
+```

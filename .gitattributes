@@ -1,0 +1,8 @@
+# Normalize to LF everywhere: bin/novon.js is executed through its shebang on
+# Linux and macOS, and CRLF would break it.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

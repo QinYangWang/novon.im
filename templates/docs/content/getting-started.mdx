@@ -1,0 +1,80 @@
+---
+title: Getting started
+description: Install novon, start the dev server and build a static site.
+order: 1
+---
+
+## Requirements
+
+novon runs on [Bun](https://bun.sh) 1.1 or newer.
+
+```bash
+bun --version
+```
+
+## Install
+
+```bash
+bun add -g novon
+```
+
+## Create a site
+
+```bash
+novon new my-docs                 # documentation template
+novon new my-blog --template blog # blog template
+```
+
+The generated directory contains only content and a config file:
+
+<CardGroup cols={2}>
+  <Card title="novon.config.ts" icon="Settings">
+    Title, navigation, theme, plugins.
+  </Card>
+  <Card title="content/" icon="Folder">
+    One `.mdx` file per page.
+  </Card>
+</CardGroup>
+
+## Preview locally
+
+```bash
+cd my-docs
+novon dev
+```
+
+The dev server starts on [http://localhost:4321](http://localhost:4321) and
+reloads on every content or config change.
+
+| Flag | Description |
+| --- | --- |
+| `--port 3000` | Use a different port |
+| `--host` | Expose the server on your network |
+
+## Build
+
+```bash
+novon build
+```
+
+This writes a fully static site to `dist/`: one HTML file per route, hashed
+assets, and any files your plugins emit (sitemap, RSS, search index).
+
+<Tabs>
+  <Tab title="Vercel">
+    Import the repository, set the build command to `novon build` and the output
+    directory to `dist`.
+  </Tab>
+  <Tab title="Cloudflare Pages">
+    Build command `novon build`, output directory `dist`. Nothing else is needed.
+  </Tab>
+  <Tab title="GitHub Pages">
+    Build with a base path (`novon build --base /my-repo/`), then publish the
+    `dist/` folder. novon writes a `.nojekyll` file so Pages serves it as-is.
+  </Tab>
+</Tabs>
+
+<Warning>
+  A site served from a subdirectory needs `base` (or `--base`). Without it,
+  links and assets resolve against the domain root.
+</Warning>

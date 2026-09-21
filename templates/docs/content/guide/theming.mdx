@@ -1,0 +1,167 @@
+---
+title: Theming and plugins
+description: Custom components, theme overrides, stylesheets and plugins.
+order: 4
+---
+
+novon is built from three replaceable layers: **styles**, **components** and
+**plugins**.
+
+## Colours
+
+`theme.accent` switches the primary palette, `theme.radius` the corner radius:
+
+```ts
+theme: {
+  accent: 'violet',
+  radius: '1rem',
+}
+```
+
+Everything else is a CSS custom property. Add a stylesheet and override the
+tokens directly, in `oklch()` or any other colour space:
+
+```css title="styles/extra.css"
+:root {
+  --primary: oklch(0.55 0.2 250);
+  --background: oklch(0.99 0.005 250);
+}
+
+[data-theme='dark'] {
+  --primary: oklch(0.75 0.15 250);
+}
+```
+
+```ts
+theme: { css: ['./styles/extra.css'] }
+```
+
+<Note>
+  Token names follow shadcn/ui: `--background`, `--foreground`, `--card`,
+  `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`,
+  `--destructive`, `--border`, `--input`, `--ring`.
+</Note>
+
+## Custom MDX components
+
+Point `components` at a file that default-exports a React component. It becomes
+available in every page without an import:
+
+```tsx title="components/PricingTable.tsx"
+export default function PricingTable({ plan }: { plan: string }) {
+  return <div className="rounded-xl border p-4">{plan}</div>
+}
+```
+
+```ts
+components: { PricingTable: './components/PricingTable.tsx' }
+```
+
+```mdx
+<PricingTable plan="Pro" />
+```
+
+Your component can import from `novon` to reuse the theme's primitives:
+
+```tsx
+import { Badge, Button, Card, CardContent, useConfig } from 'novon'
+
+export default function Banner() {
+  const config = useConfig()
+  return (
+    <Card>
+      <CardContent>
+        <Badge>{config.title}</Badge>
+        <Button size="sm">Get started</Button>
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+## Theme overrides
+
+Replace any built-in part with your own implementation. The module
+default-exports a component and receives the same props as the default:
+
+```tsx title="theme/Header.tsx"
+import { Brand, SearchTrigger, ThemeToggle } from 'novon'
+
+export default function Header() {
+  return (
+    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/85 px-4 backdrop-blur">
+      <Brand />
+      <div className="ml-auto flex items-center gap-2">
+        <SearchTrigger />
+        <ThemeToggle />
+      </div>
+    </header>
+  )
+}
+```
+
+```ts
+theme: {
+  override: {
+    Header: './theme/Header.tsx',
+    Footer: './theme/Footer.tsx',
+  },
+}
+```
+
+Available overrides:
+
+| Name | Replaces |
+| --- | --- |
+| `Header` | Top bar with brand, nav, search and theme toggle. |
+| `Sidebar` | The documentation navigation tree. |
+| `TableOfContents` | The "On this page" panel. |
+| `Footer` | Footer. |
+| `HomePage` | What the blog template renders at `/`. |
+| `NotFound` | The 404 page. |
+
+## Plugins
+
+A plugin is a plain object. It can add files after the build, rewrite each page's
+HTML, or prepare something before the build starts:
+
+```ts title="plugins/changelog.ts"
+import { definePlugin } from 'novon/plugin'
+
+export default definePlugin({
+  name: 'changelog',
+
+  setup({ config, root }) {
+    // Runs once, before any build work.
+  },
+
+  transformHtml(html, page) {
+    // Runs for every page, on the final document.
+    return html.replace('</body>', '<script src="/analytics.js"></script></body>')
+  },
+
+  postBuild(ctx) {
+    // Runs after all pages are written.
+    ctx.write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${ctx.config.url}/sitemap.xml\n`)
+    ctx.log(`wrote robots.txt for ${ctx.pages.length} pages`)
+  },
+})
+```
+
+```ts
+import changelog from './plugins/changelog.ts'
+
+plugins: ['search', 'sitemap', changelog]
+```
+
+The build context gives a plugin what it needs:
+
+| Field | Description |
+| --- | --- |
+| `ctx.pages` | Every rendered page: route, title, description, headings, excerpt, HTML and output path. |
+| `ctx.write(file, contents)` | Write a file relative to the output directory. |
+| `ctx.config` | The resolved configuration. |
+| `ctx.outDir`, `ctx.base`, `ctx.root` | Output directory, base path and site root. |
+| `ctx.log(message)` | Print a line in the build output. |
+
+A plugin object can also set `enforce: 'pre'` to run before the built-in ones.

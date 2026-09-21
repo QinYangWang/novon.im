@@ -1,0 +1,78 @@
+---
+title: Deploying
+description: Vercel, Cloudflare Pages, GitHub Pages and any static host.
+order: 5
+---
+
+`novon build` produces a directory of static files. There is no server runtime,
+no edge function and no framework-specific adapter.
+
+```text
+dist/
+├── index.html
+├── getting-started/index.html
+├── guide/writing/index.html
+├── 404.html
+├── .nojekyll
+├── assets/            # hashed JS and CSS
+├── sitemap.xml        # from the sitemap plugin
+├── rss.xml            # from the rss plugin
+└── search-index.json  # from the search plugin
+```
+
+## Build settings
+
+Every host needs the same two values:
+
+| Setting | Value |
+| --- | --- |
+| Build command | `novon build` |
+| Output directory | `dist` |
+
+Install Bun in the build environment, then install novon:
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+bun add -g novon
+```
+
+## Vercel
+
+Set the build command to `novon build` and the output directory to `dist`.
+`404.html` is picked up automatically for unmatched routes.
+
+## Cloudflare Pages
+
+Same settings. `404.html` is used for not-found responses.
+
+## GitHub Pages
+
+A project site is served from `https://<user>.github.io/<repo>/`, so it needs a
+base path:
+
+```bash
+novon build --base /<repo>/
+```
+
+Then publish the `dist/` directory. novon writes `.nojekyll` so that Pages serves
+the build output without running Jekyll.
+
+<Warning>
+  Forgetting `--base` on a project site is the most common deployment problem:
+  the HTML loads but every asset and link 404s.
+</Warning>
+
+## Anywhere else
+
+`dist/` is a static directory. Copy it to S3, put it behind nginx, or serve it
+from a container:
+
+```bash
+novon build
+python3 -m http.server --directory dist 8000
+```
+
+<Note>
+  Sub-pages are written as `<route>/index.html`, so every host resolves
+  `/guide/writing` without rewrite rules.
+</Note>

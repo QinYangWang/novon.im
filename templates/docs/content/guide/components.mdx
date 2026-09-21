@@ -1,0 +1,186 @@
+---
+title: Components
+description: Every component available inside MDX, without an import.
+order: 2
+---
+
+These components are injected into every `.mdx` file through `MDXProvider`, so
+they work without an import. To replace one, just import your own — an explicit
+import always wins.
+
+## Layout
+
+### Card and CardGroup
+
+<CardGroup cols={3}>
+  <Card title="Cards" icon="Layers">
+    Group related links and ideas.
+  </Card>
+  <Card title="With icons" icon="Sparkles">
+    Pass any name from the curated icon set.
+  </Card>
+  <Card title="And links" icon="ArrowRight" href="/guide/writing">
+    Cards with an `href` become links.
+  </Card>
+</CardGroup>
+
+```mdx
+<CardGroup cols={2}>
+  <Card title="Getting started" icon="Rocket" href="/getting-started">
+    Install, preview, build.
+  </Card>
+  <Card title="Deploying" icon="Cloud" href="/guide/deploying" horizontal>
+    Ship it anywhere that serves static files.
+  </Card>
+</CardGroup>
+```
+
+### Columns
+
+<Columns cols={2}>
+  <div>
+
+  **Left column.** Any Markdown works inside a column, including lists and code.
+
+  </div>
+  <div>
+
+  **Right column.** Use `cols={1|2|3}` to change the split.
+
+  </div>
+</Columns>
+
+### Steps
+
+<Steps>
+  <Step title="Install">`bun add -g novon`</Step>
+  <Step title="Create">`novon new my-docs`</Step>
+  <Step title="Build">`novon build`</Step>
+</Steps>
+
+### Frame
+
+<Frame caption="A bordered container for images, diagrams or embeds">
+  <div style={{ padding: '2rem', textAlign: 'center' }}>
+    Any content can be framed.
+  </div>
+</Frame>
+
+## Structure
+
+### Tabs
+
+<Tabs>
+  <Tab title="macOS" icon="Command">
+    `brew install oven-sh/bun/bun`
+  </Tab>
+  <Tab title="Linux" icon="Terminal">
+    `curl -fsSL https://bun.sh/install | bash`
+  </Tab>
+  <Tab title="Windows" icon="Monitor">
+    `powershell -c "irm bun.sh/install.ps1 | iex"`
+  </Tab>
+</Tabs>
+
+### Accordion and AccordionGroup
+
+<AccordionGroup>
+  <Accordion title="How is this different from a plain SSG?">
+    Page metadata, navigation and the sidebar are derived from the file tree, so
+    there is nothing to keep in sync.
+  </Accordion>
+  <Accordion title="Do I need a package.json?">
+    No. A novon site is only MDX and a config file.
+  </Accordion>
+</AccordionGroup>
+
+### CodeGroup
+
+`CodeGroup` turns a set of code blocks into tabs, labelled with each block's
+`title`:
+
+<CodeGroup>
+```bash title="bun"
+bun add -g novon
+```
+
+```bash title="npm"
+npm install -g novon
+```
+
+```bash title="pnpm"
+pnpm add -g novon
+```
+</CodeGroup>
+
+## Emphasis
+
+### Callouts
+
+<Note>Neutral information.</Note>
+
+<Info>Background context.</Info>
+
+<Tip>Something that makes life easier.</Tip>
+
+<Warning>Something that will break.</Warning>
+
+<Caution>Something to be careful about.</Caution>
+
+<Danger>Destructive or irreversible.</Danger>
+
+`Callout` also takes a `type` of `note`, `info`, `tip`, `success`, `warning`,
+`caution` or `danger`, plus an optional `title` and `icon`.
+
+### Badge
+
+Status badges: <Badge>New</Badge> <Badge variant="secondary">Beta</Badge>
+<Badge variant="outline">Draft</Badge> <Badge variant="success">Stable</Badge>
+<Badge variant="warning">Deprecated</Badge>
+
+### Term
+
+An inline definition: <Term tip="Content Delivery Network">CDN</Term> is a
+network of edge servers.
+
+### Icon
+
+Inline icons by name: <Icon icon="Rocket" /> <Icon icon="Shield" />
+<Icon icon="Database" /> <Icon icon="Zap" />
+
+The curated set covers the common cases. For anything else, pass a component:
+`<Icon icon={MyIcon} />`.
+
+## Site data
+
+### PostList and TagList
+
+Both read the site index from context, so they need no props. They are most
+useful in the blog template:
+
+```mdx
+<PostList limit={5} title="Latest posts" />
+
+<TagList />
+```
+
+## Using the shadcn/ui primitives
+
+The components novon itself is built from are exported too, for custom pages:
+
+```mdx
+import { Button, Card, CardContent, CardHeader, CardTitle, Tabs, TabsList,
+         TabsTrigger, TabsContent } from 'novon'
+
+<Button variant="outline" size="sm">Click me</Button>
+```
+
+Available primitives: `Button`, `Badge`, `Card` (with `CardHeader`,
+`CardTitle`, `CardDescription`, `CardContent`, `CardFooter`), `Input`, `Kbd`,
+`Separator`, `ScrollArea`, `Tabs`, `Accordion`, `Collapsible`, `Tooltip`,
+`Dialog` and `Popover` — all built on Base UI.
+
+<Note>
+  `Card` inside MDX is the content card from this page. The shadcn/ui container
+  is exported as `import { Card } from 'novon'`, which shadows the built-in.
+</Note>

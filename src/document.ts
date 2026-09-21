@@ -33,7 +33,7 @@ function escapeHtml(value: string): string {
 }
 
 /** Runs before first paint so the stored theme never flashes. */
-export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('novon-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){}})();`
+export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('novon-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}var r=document.documentElement;r.dataset.theme=t;r.dataset.js='true';}catch(e){}})();`
 
 function joinUrl(base: string, path: string): string {
   if (!path) return base

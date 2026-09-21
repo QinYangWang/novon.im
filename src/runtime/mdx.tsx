@@ -35,6 +35,7 @@ import {
 } from './ui.tsx'
 import { cn, isExternal, withBase } from './lib.ts'
 import { useBase, useSite } from './site.tsx'
+import { IconBadge } from './kit.tsx'
 import { PostList as UIPostList, TagList as UITagList } from './shell.tsx'
 
 /* -------------------------------------------------------------------------- */
@@ -67,10 +68,10 @@ export function Callout({ type = 'note', title, icon, className, children, ...pr
   const IconComponent = style.icon
   return (
     <div
-      className={cn('my-5 flex gap-3 rounded-lg border px-4 py-3 text-sm', style.tone, className)}
+      className={cn('my-5 flex gap-3 rounded-xl border border-border bg-card/40 px-4 py-3 text-sm', className)}
       {...props}
     >
-      <span className="mt-0.5 shrink-0">
+      <span className={cn('mt-0.5 shrink-0', style.tone)}>
         {icon ? <Icon icon={icon} /> : <IconComponent aria-hidden="true" className="size-4" />}
       </span>
       <div className="min-w-0 flex-1 text-foreground/90 [&>p:first-child]:mt-0 [&>p:last-child]:mb-0">
@@ -104,16 +105,7 @@ export interface MdxCardProps extends Omit<React.ComponentProps<'div'>, 'title'>
 function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps) {
   return (
     <>
-      {icon ? (
-        <span
-          className={cn(
-            'flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-foreground',
-            horizontal ? 'mt-0.5' : '',
-          )}
-        >
-          <Icon icon={icon} className="size-4" />
-        </span>
-      ) : null}
+      {icon ? <IconBadge icon={icon} className={horizontal ? 'mt-0.5' : ''} /> : null}
       <span className={cn('min-w-0 flex-1', icon && !horizontal ? 'mt-3' : '')}>
         {title ? <span className="block font-medium text-foreground">{title}</span> : null}
         {children ? (
@@ -133,7 +125,7 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
 export function MdxCard({ title, icon, href, horizontal, arrow = Boolean(href), className, children, ...props }: MdxCardProps) {
   const base = useBase()
   const classes = cn(
-    'group flex rounded-xl border border-border bg-card p-4 no-underline transition-colors',
+    'group flex rounded-xl border border-border bg-card/40 p-4 no-underline transition-colors',
     horizontal ? 'flex-row items-start gap-3' : 'flex-col',
     href && 'hover:bg-accent/40',
     className,
@@ -422,7 +414,7 @@ export function CodeBlock({ children, className, ...props }: React.ComponentProp
         type="button"
         onClick={copy}
         aria-label={copied ? 'Copied' : 'Copy code'}
-        className="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-md border border-border bg-background text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
+        className="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
       >
         {copied ? <Check aria-hidden="true" className="size-3.5" /> : <Copy aria-hidden="true" className="size-3.5" />}
       </button>

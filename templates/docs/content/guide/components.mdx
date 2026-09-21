@@ -163,6 +163,30 @@ useful in the blog template:
 <TagList />
 ```
 
+## The shared kit
+
+The blog and the docs are built from the same components, exported from `novon`,
+so a custom component or theme override can use them directly:
+
+| Component | Purpose |
+| --- | --- |
+| `PillNav` | Pill navigation with an indicator that slides between items. |
+| `IconBadge` | Rounded-square icon container used on cards and rows. |
+| `Section` | Titled block with the standard vertical rhythm. |
+| `Reveal` | Reveals its children on scroll. |
+| `ScrollProgress` | Reading progress bar pinned to the top. |
+| `ArrowPill`, `SocialPills` | Pill links, and a row built from `theme.social`. |
+| `CopyUrlButton` | Copies the current URL. |
+| `ThemeSwitch`, `ThemeToggle` | Three-way and single theme controls. |
+
+```tsx
+import { ArrowPill, IconBadge, PillNav, Reveal, Section } from 'novon'
+```
+
+`Reveal` only hides its content once JavaScript is running, and both it and the
+pill indicator are disabled under `prefers-reduced-motion`, so nothing is ever
+hidden from a reader without JS.
+
 ## Using the shadcn/ui primitives
 
 The components novon itself is built from are exported too, for custom pages:

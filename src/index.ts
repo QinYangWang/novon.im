@@ -103,17 +103,31 @@ export {
   PageHeading,
   PageNav,
   PostCard,
+  PostItem,
   PostList,
   PostListPage,
   Prose,
   TagList,
   TagPage,
-  ThemeSwitcher,
-  ThemeToggle,
   useOverride,
   type LayoutProps,
 } from './runtime/shell.tsx'
 export { SiteProvider, useBase, useConfig, useSite } from './runtime/site.tsx'
+
+/* The shared component kit: pill navigation, reveals, icon badges, theme controls. */
+export {
+  ArrowPill,
+  CopyUrlButton,
+  IconBadge,
+  PillNav,
+  Reveal,
+  ScrollProgress,
+  Section,
+  SocialPills,
+  ThemeSwitch,
+  ThemeToggle,
+  type PillNavItem,
+} from './runtime/kit.tsx'
 export { createSiteIndex, flattenNav, loadPage } from './runtime/content.ts'
 export type { NavGroup, NavNode, NavPage, PageModule, SiteIndex } from './runtime/content.ts'
 export { cn, formatDate, humanize, withBase } from './runtime/lib.ts'

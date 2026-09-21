@@ -1,13 +1,15 @@
 /**
  * Built-in theme.
  *
- * Two layouts, each modelled on a reference:
+ * Both templates are built from the same kit (`./kit.tsx`), so the blog and the
+ * docs share one visual language: pill controls, hairline borders, rounded
+ * surfaces and the orange brand accent.
  *
- * - `docs` — full-height sidebar rail with grouped, icon-bearing navigation and a
- *   three-way theme switcher, a content header with page actions, and a right-hand
- *   "on this page" column.
- * - `blog` — a single narrow typographic column with a lowercase nav, a
- *   date-and-title post list and an arrow-link footer.
+ * - `blog` — a narrow single column in the style of a personal site: name and
+ *   role, a section of posts written as title + description, and a "Connect"
+ *   block of arrow pills.
+ * - `docs` — a full-height sidebar rail, a content header with page actions, an
+ *   "On this page" column and previous/next cards.
  *
  * Every part goes through `useOverride()`, so a site can swap any of them from
  * `novon.config.ts`:
@@ -17,21 +19,7 @@
  * ```
  */
 import * as React from 'react'
-import {
-  ArrowUpRight,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  List as ListIcon,
-  Menu,
-  Monitor,
-  Moon,
-  PanelLeft,
-  Pencil,
-  Sun,
-  X,
-} from 'lucide-react'
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Copy, List as ListIcon, Menu, Pencil, PanelLeft, X } from 'lucide-react'
 import type { Frontmatter, Route, RuntimeConfig, ThemeOverrides, TocEntry } from '../types.ts'
 import { cn, formatDate, isExternal, tagSlug, withBase } from './lib.ts'
 import { markdownPath } from '../paths.ts'
@@ -39,7 +27,10 @@ import { useBase, useConfig } from './site.tsx'
 import { SearchTrigger } from './search.tsx'
 import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Popover, PopoverContent, PopoverTrigger, ScrollArea } from './ui.tsx'
 import { Icon } from './icons.tsx'
+import { CopyUrlButton, PillNav, Reveal, ScrollProgress, Section, SocialPills, ThemeSwitch, ThemeToggle } from './kit.tsx'
 import type { NavNode, PageLink, SiteIndex } from './content.ts'
+
+export { ThemeSwitch, ThemeToggle } from './kit.tsx'
 
 const OverrideContext = React.createContext<ThemeOverrides>({})
 
@@ -65,7 +56,7 @@ function GithubIcon({ className }: { className?: string }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Brand and theme controls                                                   */
+/* Brand                                                                      */
 /* -------------------------------------------------------------------------- */
 
 export function Brand({ className, showTitle = true }: { className?: string; showTitle?: boolean }) {
@@ -81,9 +72,7 @@ export function Brand({ className, showTitle = true }: { className?: string; sho
       {logo ? (
         <span className="flex size-6 shrink-0 items-center justify-center">
           <img src={withBase(base, logo)} alt="" className={cn('size-6', logoDark && 'dark:hidden')} />
-          {logoDark ? (
-            <img src={withBase(base, logoDark)} alt="" className="hidden size-6 dark:block" />
-          ) : null}
+          {logoDark ? <img src={withBase(base, logoDark)} alt="" className="hidden size-6 dark:block" /> : null}
         </span>
       ) : null}
       {showTitle ? <span className="truncate">{config.title}</span> : null}
@@ -91,149 +80,37 @@ export function Brand({ className, showTitle = true }: { className?: string; sho
   )
 }
 
-/** Single light/dark toggle, as used by the blog. */
-export function ThemeToggle({ className }: { className?: string }) {
-  const [ready, setReady] = React.useState(false)
-  React.useEffect(() => setReady(true), [])
-
-  const toggle = () => {
-    const root = document.documentElement
-    const next = root.dataset.theme === 'dark' ? 'light' : 'dark'
-    root.dataset.theme = next
-    try {
-      localStorage.setItem('novon-theme', next)
-    } catch {
-      // storage can be unavailable (private mode); the attribute still applies
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label="Toggle color theme"
-      className={cn(
-        'inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-        className,
-      )}
-      {...(ready ? {} : { tabIndex: -1, 'aria-hidden': true })}
-    >
-      <Moon aria-hidden="true" className="size-4 dark:hidden" />
-      <Sun aria-hidden="true" className="hidden size-4 dark:block" />
-    </button>
-  )
-}
-
-type ThemeChoice = 'system' | 'light' | 'dark'
-
-const THEME_CHOICES: { value: ThemeChoice; label: string; Icon: typeof Sun }[] = [
-  { value: 'system', label: 'System theme', Icon: Monitor },
-  { value: 'light', label: 'Light theme', Icon: Sun },
-  { value: 'dark', label: 'Dark theme', Icon: Moon },
-]
-
-/** Three-way system/light/dark control, as used in the docs sidebar. */
-export function ThemeSwitcher({ className }: { className?: string }) {
-  const [choice, setChoice] = React.useState<ThemeChoice>('system')
-  const [ready, setReady] = React.useState(false)
-
-  React.useEffect(() => {
-    setReady(true)
-    try {
-      const stored = localStorage.getItem('novon-theme')
-      setChoice(stored === 'light' || stored === 'dark' ? stored : 'system')
-    } catch {
-      // ignore
-    }
-  }, [])
-
-  const apply = (next: ThemeChoice) => {
-    setChoice(next)
-    const root = document.documentElement
-    try {
-      if (next === 'system') {
-        localStorage.removeItem('novon-theme')
-        root.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      } else {
-        localStorage.setItem('novon-theme', next)
-        root.dataset.theme = next
-      }
-    } catch {
-      root.dataset.theme = next === 'dark' ? 'dark' : 'light'
-    }
-  }
-
-  return (
-    <div
-      role="radiogroup"
-      aria-label="Color theme"
-      className={cn('flex items-center gap-0.5 rounded-md border border-border p-0.5', className)}
-      {...(ready ? {} : { 'aria-hidden': true })}
-    >
-      {THEME_CHOICES.map(({ value, label, Icon: ChoiceIcon }) => (
-        <button
-          key={value}
-          type="button"
-          role="radio"
-          aria-checked={choice === value}
-          aria-label={label}
-          title={label}
-          onClick={() => apply(value)}
-          className={cn(
-            'inline-flex size-6 items-center justify-center rounded transition-colors',
-            choice === value
-              ? 'bg-accent text-accent-foreground'
-              : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
-          <ChoiceIcon aria-hidden="true" className="size-3.5" />
-        </button>
-      ))}
-    </div>
-  )
-}
-
 /* -------------------------------------------------------------------------- */
 /* Blog header and footer                                                     */
 /* -------------------------------------------------------------------------- */
 
+/** Name, role, navigation pills and the reading controls. */
 export function DefaultHeader({ className }: { className?: string }) {
   const config = useConfig()
-  const base = useBase()
-  const items = config.nav.length > 0 ? config.nav : [{ label: 'blog', href: '/' }]
+  const items =
+    config.nav.length > 0
+      ? config.nav.map((item) => ({ label: item.label, href: item.href }))
+      : [{ label: 'home', href: '/' }]
 
   return (
-    <header className={cn('tracking-tight', className)}>
-      <nav className="flex flex-row items-center">
-        {items.map((item) => (
-          <a
-            key={item.href}
-            href={isExternal(item.href) ? item.href : withBase(base, item.href)}
-            {...(isExternal(item.href) ? { target: '_blank', rel: 'noreferrer' } : {})}
-            className="m-1 flex px-2 py-1 lowercase text-muted-foreground no-underline transition-colors hover:text-foreground"
-          >
-            {item.label}
-          </a>
-        ))}
-        {config.features.search ? <SearchTrigger className="-my-1 ml-auto w-32 sm:w-44" /> : null}
-        {config.theme.darkMode ? <ThemeToggle className="ml-1" /> : null}
-      </nav>
+    <header className={cn('flex flex-col gap-6', className)}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-base font-medium text-foreground">{config.title}</p>
+          {config.description ? (
+            <p className="text-muted-foreground">{config.description}</p>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-3">
+          <CopyUrlButton />
+          {config.theme.darkMode ? <ThemeToggle /> : null}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <PillNav items={items} />
+        {config.features.search ? <SearchTrigger className="ml-auto w-36" /> : null}
+      </div>
     </header>
-  )
-}
-
-function ArrowLink({ href, children, external = true }: { href: string; children: React.ReactNode; external?: boolean }) {
-  return (
-    <li>
-      <a
-        href={href}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        className="flex items-center text-muted-foreground no-underline transition-colors hover:text-foreground"
-      >
-        <ArrowUpRight aria-hidden="true" className="size-3 shrink-0" />
-        <span className="ml-2">{children}</span>
-      </a>
-    </li>
   )
 }
 
@@ -241,25 +118,48 @@ export function DefaultFooter({ className, variant = 'blog' }: { className?: str
   const config = useConfig()
   const base = useBase()
   const footer = config.theme.footer ?? {}
+  if (variant === 'docs') return null
 
-  if (variant === 'docs') {
-    return null
-  }
-
+  const email = config.theme.social?.email
   const links = footer.links ?? []
+  const pills: { label: string; href: string; external: boolean }[] = [
+    ...(config.features.rss ? [{ label: 'rss', href: withBase(base, '/rss.xml'), external: false }] : []),
+    ...links.map((link) => ({
+      label: link.label,
+      href: isExternal(link.href) ? link.href : withBase(base, link.href),
+      external: isExternal(link.href),
+    })),
+  ]
 
   return (
-    <footer className={cn('pb-16 text-sm', className)}>
-      <ul className="mt-8 flex flex-col space-y-2 text-muted-foreground md:flex-row md:space-x-4 md:space-y-0">
-        {config.features.rss ? <ArrowLink href={withBase(base, '/rss.xml')}>rss</ArrowLink> : null}
-        {config.theme.social?.github ? <ArrowLink href={config.theme.social.github}>github</ArrowLink> : null}
-        {links.map((link) => (
-          <ArrowLink key={link.href} href={isExternal(link.href) ? link.href : withBase(base, link.href)}>
-            {link.label}
-          </ArrowLink>
-        ))}
-      </ul>
-      <p className="mt-8 text-muted-foreground">
+    <footer className={cn('pt-6', className)}>
+      <Section title="Connect">
+        {email ? (
+          <p className="text-muted-foreground">
+            Feel free to contact me at{' '}
+            <a href={`mailto:${email}`} className="text-foreground underline underline-offset-4">
+              {email}
+            </a>
+          </p>
+        ) : null}
+        <SocialPills className={email ? 'mt-5' : ''} />
+        {pills.length > 0 ? (
+          <div className={cn('flex flex-wrap gap-2', email || pills.length > 0 ? 'mt-5' : '')}>
+            {pills.map((pill) => (
+              <a
+                key={pill.href}
+                href={pill.href}
+                {...(pill.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-sm text-foreground no-underline transition-colors hover:bg-accent"
+              >
+                {pill.label}
+                <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
+              </a>
+            ))}
+          </div>
+        ) : null}
+      </Section>
+      <p className="pt-2 text-sm text-muted-foreground">
         {footer.text ?? `© ${new Date().getFullYear()} ${config.title}`}
       </p>
     </footer>
@@ -293,10 +193,10 @@ function NavLink({
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex w-full items-center gap-2 rounded-lg py-1.5 pr-2 text-sm no-underline transition-colors',
+        'flex w-full items-center gap-2 rounded-full py-1.5 pr-3 text-sm no-underline transition-colors',
         indent ? 'pl-6' : 'pl-2.5',
         active
-          ? 'bg-primary/12 font-medium text-primary'
+          ? 'bg-accent font-medium text-foreground'
           : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
       )}
     >
@@ -333,7 +233,7 @@ function NavTree({
         }
 
         if (depth === 0) {
-          // Fumadocs-style section: a label, then its pages.
+          // A section: a label, then its pages.
           return (
             <li key={node.label} className="pt-4 first:pt-1">
               <p className="px-2.5 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
@@ -348,21 +248,13 @@ function NavTree({
           <li key={node.label}>
             <Accordion defaultValue={contains(node) ? ['group'] : []}>
               <AccordionItem value="group" className="border-0 py-0">
-                <AccordionTrigger className="gap-2 rounded-lg py-1.5 pl-2.5 pr-2 text-sm font-normal text-muted-foreground hover:bg-accent/60 hover:text-foreground">
+                <AccordionTrigger className="gap-2 rounded-full py-1.5 pl-2.5 pr-3 text-sm font-normal text-muted-foreground hover:bg-accent/60 hover:text-foreground">
                   <span className="flex min-w-0 items-center gap-2">
                     {node.icon ? <Icon icon={node.icon} className="size-4 shrink-0 opacity-80" /> : null}
                     <span className="truncate">{node.label}</span>
                   </span>
                 </AccordionTrigger>
                 <AccordionPanel className="pb-0">
-                  {node.path ? (
-                    <NavLink
-                      item={{ label: node.label, path: node.path }}
-                      current={current}
-                      onNavigate={onNavigate}
-                      indent
-                    />
-                  ) : null}
                   <div className="pl-1">
                     <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} />
                   </div>
@@ -402,9 +294,9 @@ export function DefaultSidebar({
             type="button"
             onClick={onCollapse}
             aria-label="Collapse sidebar"
-            className="ml-auto inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="ml-auto inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
           >
-            <PanelLeft aria-hidden="true" className="size-4" />
+            <PanelLeft aria-hidden="true" className="size-3.5" />
           </button>
         ) : null}
       </div>
@@ -426,14 +318,14 @@ export function DefaultSidebar({
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub"
-            className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
           >
-            <GithubIcon />
+            <GithubIcon className="size-3.5" />
           </a>
         ) : (
           <span />
         )}
-        {config.theme.darkMode ? <ThemeSwitcher /> : null}
+        {config.theme.darkMode ? <ThemeSwitch /> : null}
       </div>
     </div>
   )
@@ -450,19 +342,19 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
           type="button"
           onClick={onToggleNav}
           aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
-          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="inline-flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground"
         >
-          {navOpen ? <X aria-hidden="true" className="size-4" /> : <Menu aria-hidden="true" className="size-4" />}
+          {navOpen ? <X aria-hidden="true" className="size-3.5" /> : <Menu aria-hidden="true" className="size-3.5" />}
         </button>
       ) : null}
       <Brand />
-      <nav className="ml-2 hidden items-center gap-1 text-sm sm:flex">
+      <nav className="ml-2 hidden items-center gap-0.5 sm:flex">
         {config.nav.map((item) => (
           <a
             key={item.href}
             href={isExternal(item.href) ? item.href : withBase(base, item.href)}
             {...(isExternal(item.href) ? { target: '_blank', rel: 'noreferrer' } : {})}
-            className="rounded-md px-2 py-1.5 text-muted-foreground no-underline transition-colors hover:bg-accent hover:text-foreground"
+            className="rounded-full px-3 py-1.5 text-sm text-muted-foreground no-underline transition-colors hover:bg-accent hover:text-foreground"
           >
             {item.label}
           </a>
@@ -509,7 +401,7 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
         <ListIcon aria-hidden="true" className="size-4 text-muted-foreground" />
         On this page
       </p>
-      <ul className="mt-3 space-y-0.5 border-l border-border/70">
+      <ul className="mt-3 space-y-0.5 border-l border-border">
         {headings.map((heading) => {
           const active = activeId === heading.id
           return (
@@ -521,7 +413,7 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
                   '-ml-px block border-l-2 py-1 pr-2 no-underline transition-colors',
                   heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6' : 'pl-9',
                   active
-                    ? 'border-primary font-medium text-primary'
+                    ? 'border-primary font-medium text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -552,8 +444,7 @@ export function PageActions({ path }: { path: string }) {
   const copy = async () => {
     try {
       const response = await fetch(url)
-      const text = await response.text()
-      await navigator.clipboard.writeText(text)
+      await navigator.clipboard.writeText(await response.text())
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -571,18 +462,14 @@ export function PageActions({ path }: { path: string }) {
       <button
         type="button"
         onClick={copy}
-        className="inline-flex h-8 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-accent"
+        className="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent"
       >
-        {copied ? (
-          <Check aria-hidden="true" className="size-3.5" />
-        ) : (
-          <Copy aria-hidden="true" className="size-3.5" />
-        )}
+        {copied ? <Check aria-hidden="true" className="size-3.5" /> : <Copy aria-hidden="true" className="size-3.5" />}
         {copied ? 'Copied' : 'Copy Markdown'}
       </button>
 
       <Popover>
-        <PopoverTrigger className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-accent">
+        <PopoverTrigger className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent">
           Open
           <ChevronRight aria-hidden="true" className="size-3.5 rotate-90 opacity-60" />
         </PopoverTrigger>
@@ -591,7 +478,7 @@ export function PageActions({ path }: { path: string }) {
             href={url}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm no-underline transition-colors hover:bg-accent"
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm no-underline transition-colors hover:bg-accent"
           >
             <ArrowUpRight aria-hidden="true" className="size-3.5 opacity-70" />
             View as Markdown
@@ -599,7 +486,7 @@ export function PageActions({ path }: { path: string }) {
           <button
             type="button"
             onClick={() => ask('https://chatgpt.com/?q=', 'Read this documentation page and explain it:')}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
           >
             <ArrowUpRight aria-hidden="true" className="size-3.5 opacity-70" />
             Open in ChatGPT
@@ -607,7 +494,7 @@ export function PageActions({ path }: { path: string }) {
           <button
             type="button"
             onClick={() => ask('https://claude.ai/new?q=', 'Read this documentation page and explain it:')}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
+            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
           >
             <ArrowUpRight aria-hidden="true" className="size-3.5 opacity-70" />
             Open in Claude
@@ -749,35 +636,41 @@ function postLabel(route: Route): string {
   return route.meta.label ?? route.meta.title ?? route.segments[route.segments.length - 1] ?? ''
 }
 
-/** Date column + title, like the reference portfolio blog. */
+/** One row of the blog list: title, then description. */
+export function PostItem({ route, className }: { route: Route; className?: string }) {
+  const base = useBase()
+  return (
+    <a href={withBase(base, route.path)} className={cn('block py-3 no-underline', className)}>
+      <p className="font-medium text-foreground">{postLabel(route)}</p>
+      {route.meta.description ? (
+        <p className="mt-0.5 text-muted-foreground">{route.meta.description}</p>
+      ) : null}
+    </a>
+  )
+}
+
 export function PostList({
   posts,
   title,
   empty,
+  className,
 }: {
   posts: Route[]
   title?: string
   empty?: string
+  className?: string
 }) {
-  const config = useConfig()
-  const base = useBase()
-
   if (posts.length === 0) {
     return <p className="text-muted-foreground">{empty ?? 'No posts yet. Add an .mdx file to content/.'}</p>
   }
 
   return (
-    <div className="my-8">
-      {title ? <h2 className="mb-6 text-lg font-semibold tracking-tight">{title}</h2> : null}
-      {posts.map((post) => (
-        <a key={post.path} href={withBase(base, post.path)} className="mb-4 flex flex-col gap-1 no-underline">
-          <div className="flex w-full flex-col md:flex-row md:gap-2">
-            <p className="w-36 shrink-0 whitespace-nowrap tabular-nums text-muted-foreground">
-              {formatDate(post.meta.date, config.language)}
-            </p>
-            <p className="text-foreground">{postLabel(post)}</p>
-          </div>
-        </a>
+    <div className={cn('-my-3', className)}>
+      {title ? <h2 className="mb-3 text-lg font-medium tracking-tight">{title}</h2> : null}
+      {posts.map((post, index) => (
+        <Reveal key={post.path} delay={Math.min(index, 6) * 40}>
+          <PostItem route={post} />
+        </Reveal>
       ))}
     </div>
   )
@@ -785,16 +678,12 @@ export function PostList({
 
 /** Card presentation of a post, for custom themes and MDX. */
 export function PostCard({ route }: { route: Route }) {
-  const config = useConfig()
   const base = useBase()
   return (
     <a
       href={withBase(base, route.path)}
       className="flex flex-col gap-1 rounded-xl border border-border p-4 no-underline transition-colors hover:bg-accent/50"
     >
-      <span className="text-xs tabular-nums text-muted-foreground">
-        {formatDate(route.meta.date, config.language)}
-      </span>
       <span className="font-medium text-foreground">{postLabel(route)}</span>
       {route.meta.description ? (
         <span className="text-sm text-muted-foreground">{route.meta.description}</span>
@@ -825,13 +714,13 @@ export function TagPage({ site, tag }: { site: SiteIndex; tag: string }) {
   const posts = site.posts.filter((post) => (post.meta.tags ?? []).includes(tag))
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tighter">Posts tagged “{tag}”</h1>
-      <p className="mt-2 text-sm">
-        <a href={withBase(base, '/')} className="no-underline">
+      <p className="text-sm">
+        <a href={withBase(base, '/blog')} className="text-muted-foreground no-underline hover:text-foreground">
           ← All posts
         </a>
       </p>
-      <PostList posts={posts} empty={`No posts tagged “${tag}”.`} />
+      <h1 className="mt-4 text-2xl font-medium tracking-tight">Posts tagged “{tag}”</h1>
+      <PostList posts={posts} empty={`No posts tagged “${tag}”.`} className="mt-6" />
       <TagList tags={site.tags} active={tag} />
     </div>
   )
@@ -839,22 +728,18 @@ export function TagPage({ site, tag }: { site: SiteIndex; tag: string }) {
 
 export function DefaultHomePage({ site, config }: { site: SiteIndex; config: RuntimeConfig }) {
   return (
-    <section>
-      <h1 className="mb-8 text-2xl font-semibold tracking-tighter">{config.title}</h1>
-      {config.description ? <p className="mb-4">{config.description}</p> : null}
+    <Section title="Blog">
       <PostList posts={site.posts} />
-    </section>
+    </Section>
   )
 }
 
 /** The generated `/blog` index of the blog template. */
-export function PostListPage({ site, config }: { site: SiteIndex; config: RuntimeConfig }) {
+export function PostListPage({ site }: { site: SiteIndex }) {
   return (
-    <section>
-      <h1 className="mb-8 text-2xl font-semibold tracking-tighter">Blog</h1>
-      <p className="mb-4">{config.description}</p>
+    <Section title="Blog">
       <PostList posts={site.posts} />
-    </section>
+    </Section>
   )
 }
 
@@ -863,12 +748,15 @@ export function DefaultNotFound({ url }: { url: string }) {
   return (
     <div className="py-20 text-center">
       <p className="text-sm font-medium text-muted-foreground">404</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">Page not found</h1>
+      <h1 className="mt-2 text-2xl font-medium tracking-tight">Page not found</h1>
       <p className="mt-3 text-muted-foreground">
         Nothing is published at <code className="rounded bg-muted px-1.5 py-0.5 text-sm">{url}</code>.
       </p>
-      <a href={withBase(base, '/')} className="mt-6 inline-flex items-center gap-1 text-sm font-medium no-underline">
-        <ChevronLeft aria-hidden="true" className="size-4" /> Back to the start
+      <a
+        href={withBase(base, '/')}
+        className="mt-6 inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm no-underline transition-colors hover:bg-accent"
+      >
+        <ChevronLeft aria-hidden="true" className="size-3.5" /> Back to the start
       </a>
     </div>
   )
@@ -927,19 +815,16 @@ export function DocsLayout({ route, url, title, description, headings, children,
 
   return (
     <div className="min-h-screen">
+      <ScrollProgress />
       <Header onToggleNav={() => setNavOpen((value) => !value)} navOpen={navOpen} />
 
       <div className="flex">
         {!collapsed ? (
           <aside
-            className="sticky top-0 hidden h-screen shrink-0 border-r border-border bg-background lg:block"
+            className="sticky top-0 hidden h-screen shrink-0 border-r border-border lg:block"
             style={{ width: 'var(--novon-sidebar-width)' }}
           >
-            <Sidebar
-              nav={site.nav}
-              current={activePath}
-              onCollapse={toggleCollapsed}
-            />
+            <Sidebar nav={site.nav} current={activePath} onCollapse={toggleCollapsed} />
           </aside>
         ) : null}
 
@@ -958,15 +843,14 @@ export function DocsLayout({ route, url, title, description, headings, children,
               fullWidth ? 'max-w-[80rem]' : 'max-w-(--novon-content-width)',
             )}
           >
-            {/* Only needed once the rail is hidden. */}
             {collapsed ? (
               <button
                 type="button"
                 onClick={toggleCollapsed}
                 aria-label="Show sidebar"
-                className="mb-6 hidden size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:inline-flex"
+                className="mb-6 hidden size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
               >
-                <PanelLeft aria-hidden="true" className="size-4" />
+                <PanelLeft aria-hidden="true" className="size-3.5" />
               </button>
             ) : null}
 
@@ -1013,40 +897,58 @@ export function BlogLayout({ route, url, title, description, children, config, s
   const PostListOverride = useOverride('PostListPage', PostListPage)
   const isHome = url === '/'
   const isPost = Boolean(route && !route.isIndex && !route.synthetic && !route.postList && !route.tag)
+  const cover = typeof route?.meta.image === 'string' ? route.meta.image : undefined
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="mx-auto w-full max-w-(--novon-blog-width) flex-1 px-4 pb-8 md:px-0">
-        <div className="pt-8">
-          <Header />
-        </div>
+    <div className="min-h-screen">
+      <ScrollProgress />
+      <div className="mx-auto w-full max-w-(--novon-column-width) px-4 pt-14 pb-16 md:px-0">
+        <Header />
 
-        <main className="mt-6 min-w-0">
+        <main className="mt-12">
           {isHome && route?.synthetic ? (
             <HomePage site={site} config={config} />
           ) : route?.postList ? (
             <PostListOverride site={site} config={config} />
           ) : route?.tag ? (
             <TagPage site={site} tag={route.tag} />
-          ) : (
-            <section>
-              {route ? (
-                <PageHeading
-                  title={title}
-                  description={description}
-                  meta={route.meta}
-                  className="mb-8"
-                />
+          ) : isPost ? (
+            <article>
+              {cover ? (
+                <figure className="mb-8">
+                  <img src={withBase(config.base, cover)} alt="" className="w-full rounded-xl border border-border" />
+                  {typeof route?.meta.caption === 'string' ? (
+                    <figcaption className="mt-3 text-center text-sm text-muted-foreground">
+                      {route.meta.caption}
+                    </figcaption>
+                  ) : null}
+                </figure>
               ) : null}
+
+              <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
+              {description ? <p className="mt-4 text-lg text-muted-foreground">{description}</p> : null}
+
+              <div className="my-8 border-t border-border" />
+
               <Prose>{children}</Prose>
-              {isPost ? (
-                <p className="mt-12 text-sm">
-                  <a href={withBase(config.base, '/blog')} className="no-underline">
-                    ← All posts
-                  </a>
-                </p>
-              ) : null}
-            </section>
+
+              <p className="mt-12 text-sm">
+                <a
+                  href={withBase(config.base, '/blog')}
+                  className="inline-flex items-center gap-1.5 text-muted-foreground no-underline transition-colors hover:text-foreground"
+                >
+                  <ChevronLeft aria-hidden="true" className="size-3.5" />
+                  All posts
+                </a>
+              </p>
+            </article>
+          ) : (
+            <article>
+              <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
+              {description ? <p className="mt-4 text-lg text-muted-foreground">{description}</p> : null}
+              <div className="my-8 border-t border-border" />
+              <Prose>{children}</Prose>
+            </article>
           )}
         </main>
 

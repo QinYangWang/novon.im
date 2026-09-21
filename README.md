@@ -35,7 +35,9 @@ The file tree becomes the URL structure and the sidebar. Add a file, get a page.
 
 ## Layouts
 
-`template` picks one of two shells, each with its own default palette.
+`template` picks one of two shells. Both are built from the same component kit
+and the same palette, so a blog and a docs site from the same project look like
+one product.
 
 **`docs`** — a full-height sidebar rail (brand, search, grouped navigation with
 icons, and a system/light/dark switcher in its footer), a content header with
@@ -43,12 +45,41 @@ icons, and a system/light/dark switcher in its footer), a content header with
 cards and a "last updated" line. Top-level directories render as labelled
 sections, deeper ones as collapsible groups.
 
-**`blog`** — a single narrow typographic column: lowercase nav, an intro
-paragraph, a date-and-title post list, and a footer of arrow links (rss, github,
-…). `/` and the generated `/blog` index both list posts newest first.
+**`blog`** — a narrow single column in the style of a personal site: name and
+role, pill navigation, a **Copy URL** control, a section of posts written as
+title + description, and a "Connect" block of arrow pills (email, social, rss).
+`/` and the generated `/blog` index both list posts newest first, and a post page
+opens with its cover image and caption before the title.
 
-Both palettes are CSS custom properties scoped to `data-template`, so a site can
-override any of them with a stylesheet (see [Theming](README.md#extending)).
+## The component kit
+
+Both templates are assembled from one set of components, exported from `novon`
+so a custom component or theme override can use them:
+
+| Component | Purpose |
+| --- | --- |
+| `PillNav` | Pill navigation with an indicator that slides between items. |
+| `IconBadge` | Rounded-square icon container used on cards and rows. |
+| `Section` | Titled block with the standard vertical rhythm. |
+| `Reveal` | Reveals its children on scroll. |
+| `ScrollProgress` | Reading progress bar pinned to the top. |
+| `ArrowPill`, `SocialPills` | Pill links, and a row built from `theme.social`. |
+| `CopyUrlButton`, `PageActions` | Copy the current URL, or the page's Markdown. |
+| `ThemeSwitch`, `ThemeToggle` | Three-way and single theme controls. |
+
+```tsx
+import { ArrowPill, IconBadge, PillNav, Reveal, Section } from 'novon'
+```
+
+The style follows rare-ui: pill-shaped controls, hairline borders, rounded
+surfaces, an orange brand accent and dark-first colour. Everything is a CSS
+custom property, so a site can override any of it with a stylesheet (see
+[Extending](README.md#extending)).
+
+Motion is CSS transitions plus two small hooks — a `ResizeObserver` for the pill
+indicator and an `IntersectionObserver` for reveals. `Reveal` only hides its
+content once JavaScript is running, and both are disabled under
+`prefers-reduced-motion`, so nothing is ever hidden from a reader without JS.
 
 ## Commands
 
@@ -242,3 +273,7 @@ Requires Bun 1.1+.
   does not render OG images at build time.
 - The search palette and tag pages are opt-in for the blog template: enable the
   `search` plugin and add `tags` to posts.
+- The blog list shows titles and descriptions rather than dates, following the
+  layout it is modelled on. Dates still drive ordering, RSS and the sitemap.
+- Motion is CSS rather than a physics library. Springs would need `motion`, which
+  is not worth the bundle for a content site.

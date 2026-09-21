@@ -11,9 +11,11 @@ export default defineConfig({
   nav: [
     { label: 'home', href: '/' },
     { label: 'blog', href: '/blog' },
+    { label: 'about', href: '/about' },
   ],
 
   theme: {
+    accent: 'orange',
     darkMode: true,
 
     // Static files live in `public/` and are copied to the output root,
@@ -22,6 +24,8 @@ export default defineConfig({
     // favicon: '/favicon.svg',
 
     social: {
+      // `email` is rendered as a mailto link in the footer.
+      email: 'your@email.com',
       // github: 'https://github.com/your-org/__NAME__',
       // x: 'https://x.com/your-handle',
     },

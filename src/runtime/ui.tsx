@@ -24,20 +24,20 @@ import { cn } from './lib.ts'
 /* -------------------------------------------------------------------------- */
 
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        outline: 'border border-border bg-background hover:bg-accent hover:text-accent-foreground',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-accent',
+        outline: 'border border-border bg-card/60 hover:bg-accent',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+        link: 'text-foreground underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-6',
+        sm: 'h-8 rounded-full px-3 text-xs',
+        lg: 'h-10 rounded-full px-6',
         icon: 'size-9',
       },
     },
@@ -59,7 +59,7 @@ export function Button({
 /* -------------------------------------------------------------------------- */
 
 export const badgeVariants = cva(
-  'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors',
+  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors',
   {
     variants: {
       variant: {
@@ -90,7 +90,7 @@ export function Badge({
 export function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
-      className={cn('rounded-xl border border-border bg-card text-card-foreground shadow-sm', className)}
+      className={cn('rounded-xl border border-border bg-card text-card-foreground', className)}
       {...props}
     />
   )
@@ -128,7 +128,7 @@ export function Kbd({ className, ...props }: React.ComponentProps<'kbd'>) {
   return (
     <kbd
       className={cn(
-        'inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1.5 font-mono text-[11px] font-medium text-muted-foreground',
+        'inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-border bg-secondary px-1.5 font-mono text-[11px] font-medium text-muted-foreground',
         className,
       )}
       {...props}
@@ -140,7 +140,7 @@ export function Input({ className, ...props }: React.ComponentProps<'input'>) {
   return (
     <input
       className={cn(
-        'flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:opacity-50',
+        'flex h-9 w-full rounded-full border border-border bg-card/60 px-3.5 py-1 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 disabled:opacity-50',
         className,
       )}
       {...props}
@@ -171,7 +171,7 @@ export function ScrollArea({
 export function Accordion({ className, ...props }: React.ComponentProps<typeof BaseAccordion.Root>) {
   return (
     <BaseAccordion.Root
-      className={cn('my-6 divide-y divide-border overflow-hidden rounded-xl border border-border', className)}
+      className={cn('my-6 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/40', className)}
       {...props}
     />
   )
@@ -242,7 +242,10 @@ export function Tabs({ className, ...props }: React.ComponentProps<typeof BaseTa
 export function TabsList({ className, ...props }: React.ComponentProps<typeof BaseTabs.List>) {
   return (
     <BaseTabs.List
-      className={cn('flex items-center gap-1 overflow-x-auto border-b border-border pb-px', className)}
+      className={cn(
+        'inline-flex items-center gap-0.5 rounded-full border border-border bg-card/60 p-1',
+        className,
+      )}
       {...props}
     />
   )
@@ -252,7 +255,7 @@ export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof
   return (
     <BaseTabs.Tab
       className={cn(
-        'relative -mb-px shrink-0 rounded-t-md border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[active]:border-primary data-[active]:text-foreground',
+        'shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[active]:bg-accent data-[active]:text-foreground',
         className,
       )}
       {...props}
@@ -318,7 +321,7 @@ export function DialogContent({
       <BaseDialog.Backdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] transition-opacity duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
       <BaseDialog.Popup
         className={cn(
-          'fixed left-1/2 top-[12vh] z-50 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl transition-all duration-150 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0',
+          'fixed left-1/2 top-[12vh] z-50 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl transition-all duration-150 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0',
           className,
         )}
         {...props}
@@ -349,7 +352,7 @@ export function PopoverContent({
       <BasePopover.Positioner sideOffset={sideOffset} align={align} side={side}>
         <BasePopover.Popup
           className={cn(
-            'z-50 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg transition-all duration-150 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0',
+            'z-50 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-lg transition-all duration-150 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0',
             className,
           )}
           {...props}

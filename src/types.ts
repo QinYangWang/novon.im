@@ -92,6 +92,8 @@ export interface Frontmatter {
   tags?: string[]
   /** Social preview image. */
   image?: string
+  /** Caption shown under the cover image on a blog post. */
+  caption?: string
   /** Override the URL segment derived from the file path. */
   slug?: string
   /** Set to false to hide the "on this page" table of contents. */

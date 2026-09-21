@@ -133,7 +133,7 @@ export function SearchTrigger({ className }: { className?: string }) {
         onClick={() => setOpen(true)}
         aria-label="Search"
         className={cn(
-          'inline-flex h-8 items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:w-56',
+          'inline-flex h-8 items-center gap-2 rounded-full border border-border bg-card/60 px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:w-56',
           className,
         )}
       >

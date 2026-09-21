@@ -15,8 +15,6 @@ export type AccentColor =
   | 'orange'
   | 'rose'
 
-export type DeployTarget = 'static' | 'vercel' | 'cloudflare' | 'github-pages'
-
 /** A link in the top navigation bar or the footer. */
 export interface NavItem {
   label: string
@@ -58,7 +56,6 @@ export interface ThemeOptions {
   darkMode?: boolean
   /** Render the right-hand "on this page" table of contents. */
   toc?: boolean
-  layout?: 'sidebar' | 'topbar'
   /** Extra stylesheets, resolved relative to the site root or launched as URL. */
   css?: string[]
   editLink?: { base: string; label?: string }
@@ -140,7 +137,6 @@ export interface NovonConfig {
   mdx?: MdxOptions
   /** Built-in plugin names (`rss`, `sitemap`, `search`, `llms`) or plugin objects. */
   plugins?: unknown[]
-  deploy?: DeployTarget
   /** Default author applied to posts without one. */
   author?: string
   language?: string

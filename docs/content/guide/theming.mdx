@@ -1,0 +1,180 @@
+---
+title: Theming and plugins
+description: Colours, custom components, theme overrides and plugins.
+icon: Palette
+order: 6
+---
+
+novon is built from three replaceable layers: **styles**, **components** and
+**plugins**.
+
+## Colours
+
+`theme.accent` switches the primary palette, `theme.radius` the corner radius:
+
+```ts
+theme: {
+  accent: 'violet',
+  radius: '1rem',
+}
+```
+
+Everything else is a CSS custom property. Add a stylesheet and override the
+tokens directly, in `oklch()` or any other colour space:
+
+```css title="styles/extra.css"
+:root {
+  --primary: oklch(0.55 0.2 250);
+  --background: oklch(0.99 0.005 250);
+}
+
+[data-theme='dark'] {
+  --primary: oklch(0.75 0.15 250);
+}
+```
+
+```ts
+theme: { css: ['./styles/extra.css'] }
+```
+
+<Note>
+  Token names follow shadcn/ui: `--background`, `--foreground`, `--card`,
+  `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`,
+  `--destructive`, `--border`, `--input`, `--ring`. Layout widths are
+  `--novon-sidebar-width`, `--novon-toc-width`, `--novon-content-width` and
+  `--novon-column-width`. The typeface is `--font-sans`, which you can override
+  from your own stylesheet with `@theme { --font-sans: … }`.
+</Note>
+
+Your stylesheet is loaded after the theme's, so it wins on equal specificity.
+Dark mode is a `data-theme="dark"` attribute on `<html>`, set before first paint
+by an inline script so the stored preference never flashes.
+
+## Custom MDX components
+
+Point `components` at a file that default-exports a React component. It becomes
+available in every page without an import:
+
+```tsx title="components/PricingTable.tsx"
+import { Badge, Card, CardContent } from 'novon'
+
+export default function PricingTable({ plan, price }: { plan: string; price: number }) {
+  return (
+    <Card className="p-4">
+      <CardContent>
+        <Badge variant="success">{plan}</Badge>
+        <p className="text-sm text-muted-foreground">${price} / month</p>
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+```ts
+components: { PricingTable: './components/PricingTable.tsx' }
+```
+
+```mdx
+<PricingTable plan="Pro" price={20} />
+```
+
+Because the component imports from `novon`, it inherits the theme's tokens
+automatically — it looks right in both light and dark mode without extra work.
+
+## Theme overrides
+
+Replace any built-in part with your own implementation. The module
+default-exports a component and receives the same props as the default:
+
+```tsx title="theme/Header.tsx"
+import { Brand, SearchTrigger, ThemeSwitch } from 'novon'
+
+export default function Header() {
+  return (
+    <header className="flex h-14 items-center gap-4 border-b px-4">
+      <Brand />
+      <div className="ml-auto flex items-center gap-2">
+        <SearchTrigger />
+        <ThemeSwitch />
+      </div>
+    </header>
+  )
+}
+```
+
+```ts
+theme: {
+  override: {
+    Header: './theme/Header.tsx',
+    Footer: './theme/Footer.tsx',
+  },
+}
+```
+
+| Name | Replaces |
+| --- | --- |
+| `Header` | Top bar: the docs mobile bar, or the blog's nav. |
+| `Sidebar` | The docs sidebar rail. |
+| `TableOfContents` | The "On this page" panel. |
+| `Footer` | Footer. |
+| `HomePage` | What the blog template renders at `/`. |
+| `PostListPage` | The generated `/blog` index. |
+| `NotFound` | The 404 page. |
+
+## Plugins
+
+A plugin is a plain object. It can add files after the build, rewrite each page's
+HTML, or prepare something before the build starts:
+
+```ts title="plugins/robots.ts"
+import { definePlugin } from 'novon/plugin'
+
+export default definePlugin({
+  name: 'robots',
+
+  setup({ config, root }) {
+    // Runs once, before any build work.
+  },
+
+  transformHtml(html, page) {
+    // Runs for every page, on the final document.
+    return html.replace('</body>', '<script src="/analytics.js"></script></body>')
+  },
+
+  postBuild(ctx) {
+    // Runs after all pages are written.
+    ctx.write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${ctx.config.url}/sitemap.xml\n`)
+    ctx.log(`wrote robots.txt for ${ctx.pages.length} pages`)
+  },
+})
+```
+
+```ts
+import robots from './plugins/robots.ts'
+
+plugins: ['search', 'sitemap', robots]
+```
+
+| Hook | When | Receives |
+| --- | --- | --- |
+| `setup` | Once, before the build | `{ root, config, outDir, base, packageRoot }` |
+| `transformHtml` | Every page, on the final document | `(html, page, ctx)` |
+| `postBuild` | After all pages are written | `ctx` with `pages` and `write()` |
+
+The build context gives a plugin what it needs:
+
+| Field | Description |
+| --- | --- |
+| `ctx.pages` | Every rendered page: route, title, description, headings, excerpt, HTML and output path. |
+| `ctx.write(file, contents)` | Write a file relative to the output directory. |
+| `ctx.config` | The resolved configuration. |
+| `ctx.outDir`, `ctx.base`, `ctx.root` | Output directory, base path and site root. |
+| `ctx.log(message)` | Print a line in the build output. |
+
+Set `enforce: 'pre'` to run before the built-in plugins, or `'post'` to run after.
+
+<Note>
+  Plugin files imported from `novon.config.ts` are loaded the same way the config
+  is: their `novon/...` imports are resolved against the installed package, so a
+  plugin needs no `node_modules` of its own.
+</Note>

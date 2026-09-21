@@ -1,0 +1,90 @@
+---
+title: CLI
+description: Every novon command and flag.
+icon: Terminal
+order: 2
+---
+
+```text
+novon <command> [options]
+```
+
+| Command | Description |
+| --- | --- |
+| `novon new <dir>` | Scaffold a site. Aliases: `create`, `init`. |
+| `novon dev` | Start the dev server with live reload. Alias: `serve`. |
+| `novon build` | Build the static site into `dist/`. |
+| `novon help` | Print usage. |
+| `novon version` | Print the novon version. |
+
+Running `novon` with no command prints the help, as do `--help` and `-h`.
+`--version` and `-v` print the version.
+
+## new
+
+```bash
+novon new my-docs
+novon new my-blog --template blog
+novon new site --title "Acme Docs"
+```
+
+| Flag | Description |
+| --- | --- |
+| `-t, --template <docs\|blog>` | Site template. Defaults to `docs`. |
+| `--title <name>` | Site title. Defaults to the directory name, humanized. |
+| `-f, --force` | Scaffold into a non-empty directory. |
+
+<Warning>
+  Scaffolding into a directory that already contains files stops with an error
+  unless you pass `--force`. With `--force`, files whose names match the template
+  are replaced.
+</Warning>
+
+## dev
+
+```bash
+novon dev
+novon dev --port 3000
+novon dev --host
+```
+
+| Flag | Description |
+| --- | --- |
+| `-p, --port <number>` | Port. Defaults to `4321`. |
+| `--host [address]` | Expose the server on the network. |
+
+The dev server serves every route from one HTML shell and renders in the
+browser, so there is no prerender step and no 404s while you write. Content and
+config changes reload the page; adding or removing a file updates the sidebar
+and search without restarting.
+
+## build
+
+```bash
+novon build
+novon build --out-dir public
+novon build --base /my-repo/
+```
+
+| Flag | Description |
+| --- | --- |
+| `--out-dir <dir>` | Output directory. Defaults to `dist`. |
+| `--base <path>` | Base path, e.g. `--base /my-repo/` for a GitHub Pages project site. |
+
+`--base` rewrites asset URLs and in-content links together, so a site served
+from a subdirectory works without editing your content.
+
+<Note>
+  The build is quiet about things it cannot know. If you do not set `url` in the
+  config, it prints a reminder that sitemap and RSS links stay relative.
+</Note>
+
+## Exit codes
+
+`0` on success, `1` on failure. Errors are printed as a single line rather than a
+stack trace, so a failing CI step reads cleanly:
+
+```text
+  ✗ No novon.config.ts found in /work/docs.
+  Create one with `novon new <dir>` or add a config file to this directory.
+```

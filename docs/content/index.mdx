@@ -1,0 +1,94 @@
+---
+title: novon
+label: Home
+description: A static blog and documentation generator built on Bun, Vite, React and shadcn/ui.
+icon: Book
+---
+
+Write MDX. Configure one file. Get a fast static site for Vercel, Cloudflare
+Pages or GitHub Pages.
+
+```bash
+bun add -g novon
+
+novon new my-docs                 # documentation site
+novon new my-blog --template blog # blog
+
+cd my-docs
+novon dev                         # http://localhost:4321
+novon build                       # static output in dist/
+```
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="Rocket" href="/getting-started">
+    Install novon, scaffold a site, preview it and build it.
+  </Card>
+  <Card title="Content" icon="FileText" href="/guide/content">
+    The file tree becomes your routes, sidebar and feeds.
+  </Card>
+  <Card title="Components" icon="Puzzle" href="/guide/components">
+    Everything available inside MDX, without an import.
+  </Card>
+  <Card title="Configuration" icon="Settings" href="/guide/configuration">
+    Every option in `novon.config.ts`.
+  </Card>
+</CardGroup>
+
+## A site is only MDX and a config file
+
+There is no `package.json`, no build script and no theme source to maintain:
+
+```text title="project layout"
+my-docs/
+├── novon.config.ts        # title, navigation, theme, plugins
+└── content/
+    ├── index.mdx          #   → /
+    ├── getting-started.mdx#   → /getting-started
+    └── guide/
+        ├── index.mdx      #   → /guide          (labels the sidebar section)
+        └── writing.mdx    #   → /guide/writing
+```
+
+Add a file and you have a page: the path becomes the URL, the directory becomes
+the sidebar section, and the frontmatter drives the title, ordering, feeds and
+search.
+
+<Note>
+  This site is built with novon itself. Every page you are reading is an `.mdx`
+  file under `docs/content/` in the
+  [repository](https://github.com/QinYangWang/novon.im).
+</Note>
+
+## What you get
+
+<Columns cols={2}>
+  <div>
+
+  **Static by default.** `novon build` prerenders one HTML file per route, so
+  every page is real HTML with no server runtime — and the same bundle hydrates
+  for search, tabs, code copying and theme switching.
+
+  **Two templates.** `docs` gives you a sidebar rail, page actions and a table of
+  contents. `blog` gives you a narrow column with a post list and feeds.
+
+  </div>
+  <div>
+
+  **One component kit.** Both templates are assembled from the same components,
+  exported from `novon` so your own components and theme overrides can use them.
+
+  **Extensible.** Custom MDX components, theme overrides, stylesheets and a
+  three-hook plugin API, all declared in the config file.
+
+  </div>
+</Columns>
+
+## Requirements
+
+novon runs on [Bun](https://bun.sh) 1.1 or newer. It builds with Vite and renders
+with React 19; the output is plain HTML, CSS and JavaScript that any static host
+can serve.
+
+<Card title="How it works" icon="Layers" href="/guide/architecture" horizontal>
+  What `novon dev` and `novon build` actually do, step by step.
+</Card>

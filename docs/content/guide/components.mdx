@@ -1,0 +1,212 @@
+---
+title: Components
+description: MDX components, the shared kit and the shadcn/ui primitives.
+icon: Puzzle
+order: 4
+---
+
+## In MDX, without an import
+
+These are injected into every `.mdx` file through `MDXProvider`, so they work
+without an import. An explicit `import` in a page always wins over the default.
+
+| Component | Purpose |
+| --- | --- |
+| `Callout`, `Note`, `Info`, `Tip`, `Warning`, `Caution`, `Danger` | Callouts |
+| `Card`, `CardGroup`, `Columns` | Link grids and layouts |
+| `Steps`, `Step` | Numbered procedures |
+| `Tabs`, `Tab`, `CodeGroup` | Tabbed content and code |
+| `Accordion`, `AccordionGroup` | Collapsible sections |
+| `Frame`, `Badge`, `Icon`, `Term`, `YouTube` | Media and inline bits |
+| `PostList`, `TagList` | Site data, no props needed |
+
+### Callouts
+
+<Note>Neutral information that supports the surrounding text.</Note>
+
+<Info title="Custom title">Callouts accept a `title` and an `icon`.</Info>
+
+<Tip>A suggestion, shortcut or best practice.</Tip>
+
+<Warning>Something that will break if ignored.</Warning>
+
+<Danger>Destructive or irreversible.</Danger>
+
+`Callout` takes a `type` of `note`, `info`, `tip`, `success`, `warning`,
+`caution` or `danger`, plus an optional `title` and `icon`.
+
+### Cards
+
+<CardGroup cols={3}>
+  <Card title="Cards" icon="Layers">
+    Group related links and ideas.
+  </Card>
+  <Card title="With icons" icon="Sparkles">
+    Any name from the curated icon set.
+  </Card>
+  <Card title="And links" icon="ArrowRight" href="/guide/content">
+    Cards with an `href` become links.
+  </Card>
+</CardGroup>
+
+```mdx
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="Rocket" href="/getting-started">
+    Install, preview, build.
+  </Card>
+  <Card title="Deploying" icon="Cloud" href="/guide/deploying" horizontal>
+    Ship it anywhere that serves static files.
+  </Card>
+</CardGroup>
+```
+
+### Steps
+
+<Steps>
+  <Step title="Install">`bun add -g novon`</Step>
+  <Step title="Create">`novon new my-docs`</Step>
+  <Step title="Build">`novon build`</Step>
+</Steps>
+
+### Tabs and CodeGroup
+
+<Tabs>
+  <Tab title="bun" icon="Command">
+    `bun add -g novon`
+  </Tab>
+  <Tab title="npm" icon="Terminal">
+    `npm install -g novon`
+  </Tab>
+</Tabs>
+
+`CodeGroup` does the same for code blocks, taking each label from the block's
+`title`:
+
+<CodeGroup>
+```bash title="bun"
+bun add -g novon
+```
+
+```bash title="npm"
+npm install -g novon
+```
+</CodeGroup>
+
+### Accordions
+
+<AccordionGroup>
+  <Accordion title="How is this different from a plain SSG?">
+    Page metadata, navigation and the sidebar are derived from the file tree, so
+    there is nothing to keep in sync.
+  </Accordion>
+  <Accordion title="Do I need a package.json?">
+    No. A novon site is only MDX and a config file.
+  </Accordion>
+</AccordionGroup>
+
+### Inline bits
+
+Badges: <Badge>New</Badge> <Badge variant="secondary">Beta</Badge>
+<Badge variant="outline">Draft</Badge> <Badge variant="success">Stable</Badge>
+<Badge variant="warning">Deprecated</Badge>
+
+Icons: <Icon icon="Rocket" /> <Icon icon="Shield" /> <Icon icon="Database" />
+
+A defined term: <Term tip="Content Delivery Network">CDN</Term>.
+
+## The shared kit
+
+Both templates are assembled from these, and they are exported from `novon` so
+your own components and theme overrides can use them.
+
+| Component | Purpose |
+| --- | --- |
+| `PillNav` | Pill navigation with an indicator that slides between items. |
+| `IconBadge` | Rounded-square icon container used on cards and rows. |
+| `Section` | Titled block with the standard vertical rhythm. |
+| `Reveal` | Reveals its children on scroll. |
+| `ScrollProgress` | Reading progress bar pinned to the top. |
+| `ArrowPill`, `SocialPills` | Pill links, and a row built from `theme.social`. |
+| `CopyUrlButton`, `PageActions` | Copy the current URL, or the page's Markdown. |
+| `ThemeSwitch`, `ThemeToggle` | Three-way and single theme controls. |
+
+```tsx
+import { ArrowPill, IconBadge, PillNav, Reveal, Section } from 'novon'
+
+export default function Banner() {
+  return (
+    <Section title="Announcement">
+      <PillNav items={[{ label: 'home', href: '/' }, { label: 'docs', href: '/guide' }]} />
+      <ArrowPill href="https://example.com">Read more</ArrowPill>
+    </Section>
+  )
+}
+```
+
+<Note>
+  `Reveal` only hides its content once JavaScript is running, and both it and the
+  pill indicator are disabled under `prefers-reduced-motion`, so nothing is ever
+  hidden from a reader without JS.
+</Note>
+
+## shadcn/ui primitives
+
+The components novon itself is built from, all on
+[Base UI](https://base-ui.com): `Button`, `Badge`, `Card` (with `CardHeader`,
+`CardTitle`, `CardDescription`, `CardContent`, `CardFooter`), `Input`, `Kbd`,
+`Separator`, `ScrollArea`, `Tabs`, `Accordion`, `Collapsible`, `Tooltip`,
+`Dialog` and `Popover`. Variant helpers `buttonVariants` and `badgeVariants` are
+exported for building your own.
+
+```mdx
+import { Button, Card, CardContent } from 'novon'
+
+<Card>
+  <CardContent>
+    <Button variant="outline" size="sm">Click me</Button>
+  </CardContent>
+</Card>
+```
+
+<Warning>
+  `Card` inside MDX is the content card from this page. The shadcn/ui container
+  is also exported as `Card`, so importing it shadows the built-in.
+</Warning>
+
+## Hooks and helpers
+
+| Export | Purpose |
+| --- | --- |
+| `useConfig()` | The runtime configuration the theme was rendered with. |
+| `useSite()` | Config, base path, route table and the current URL. |
+| `useBase()` | The configured base path. |
+| `useOverride()` | Looks up a theme override by name. |
+| `cn()` | `clsx` + `tailwind-merge`. |
+| `withBase()` | Joins the base path with a site-relative path. |
+| `formatDate()` | Locale-aware dates for feeds and lists. |
+
+```tsx
+import { cn, useConfig, withBase } from 'novon'
+
+export default function Version() {
+  const config = useConfig()
+  return (
+    <a href={withBase(config.base, '/guide/cli')} className={cn('underline', 'text-sm')}>
+      {config.title}
+    </a>
+  )
+}
+```
+
+## Icons
+
+`icon` accepts a name from a curated set, a component, or an element. The set is
+deliberately small so it stays tree-shakeable: `Rocket`, `Book`, `FileText`,
+`Puzzle`, `Settings`, `Palette`, `Cloud`, `Terminal`, `Layers`, `Zap`, `Shield`,
+`Database`, `Globe`, `Tag`, `Search`, `Command`, `Monitor` and about forty more.
+`icons` is exported if you need to look one up.
+
+```mdx
+<Icon icon="Rocket" />
+<Icon icon={MyOwnIcon} />
+```

@@ -1,0 +1,154 @@
+---
+title: Configuration
+description: Every option in novon.config.ts.
+icon: Settings
+order: 5
+---
+
+`novon.config.ts` is the only configuration file. It exports a single object
+wrapped in `defineConfig` for editor support.
+
+```ts title="novon.config.ts"
+import { defineConfig } from 'novon/config'
+
+export default defineConfig({
+  title: 'My Docs',
+  description: 'Documentation for My Docs.',
+  url: 'https://docs.example.com',
+  base: '/',
+  template: 'docs',
+  nav: [{ label: 'Guide', href: '/guide' }],
+  theme: { accent: 'orange' },
+  plugins: ['search', 'sitemap', 'llms'],
+})
+```
+
+<Note>
+  Import from `novon/config` rather than `novon`. The config is loaded before
+  React is needed, and the narrower entry keeps that path light.
+</Note>
+
+## Site
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `title` | `string` | **Required.** Site name, used in the header and page titles. |
+| `description` | `string` | Default description for the home page and feeds. |
+| `url` | `string` | Canonical origin. Makes sitemap and RSS links absolute. |
+| `base` | `string` | Path the site is served from. Use `/repo/` on GitHub Pages. |
+| `template` | `docs` \| `blog` | Layout and default content structure. |
+| `language` | `string` | `lang` attribute and date formatting. Defaults to `en`. |
+| `author` | `string` | Default author for posts without one. |
+| `nav` | `NavItem[]` | Links in the top bar. |
+
+<Warning>
+  Set `url` for a deployed site. Without it, sitemap and RSS entries are written
+  as root-relative paths, which search engines do not accept as locations.
+</Warning>
+
+### nav
+
+```ts
+nav: [
+  { label: 'Guide', href: '/guide' },
+  { label: 'Components', href: '/guide/components' },
+  { label: 'GitHub', href: 'https://github.com/you/repo' },
+]
+```
+
+Links with an absolute URL open in a new tab. In the docs template `nav` is shown
+in the mobile top bar; in the blog template it is the pill navigation.
+
+## Output
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `outDir` | `string` | Output directory. Defaults to `dist`. |
+| `publicDir` | `string` \| `false` | Static files copied verbatim. Defaults to `public`. |
+
+Anything in `public/` is copied to the output root unchanged, so a file at
+`public/logo.svg` is served at `/logo.svg`. Set `publicDir: false` to disable
+copying, or point it at another directory.
+
+## Theme
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `accent` | `orange` \| `blue` \| `indigo` \| `violet` \| `emerald` \| `teal` \| `rose` \| `slate` \| `zinc` | Primary colour. |
+| `radius` | `string` | Corner radius, any CSS length. Defaults to `0.625rem`. |
+| `darkMode` | `boolean` | Show the light/dark controls. Defaults to `true`. |
+| `toc` | `boolean` | Show the "On this page" panel. Defaults to `true`. |
+| `logo` | `string` | Logo path, e.g. `/logo.svg`. |
+| `logoDark` | `string` | Logo used in dark mode. |
+| `favicon` | `string` | Favicon path. |
+| `ogImage` | `string` | Default social preview image. |
+| `editLink` | `{ base, label }` | "Edit this page" link, prefixed with `base`. |
+| `social` | `object` | `github`, `x`, `discord`, `npm`, `youtube`, `linkedin`, `email`. |
+| `footer` | `{ text, links }` | Footer text and links. |
+| `css` | `string[]` | Extra stylesheets, relative to the site root. |
+| `override` | `object` | Replace built-in theme parts. See [Theming](/guide/theming). |
+
+<Note>
+  `editLink.base` is a plain prefix. For a site that lives in a subdirectory of
+  its repository, include that segment — for example
+  `https://github.com/you/repo/edit/main/docs`, which resolves to
+  `…/edit/main/docs/content/guide/cli.mdx`.
+</Note>
+
+## Components
+
+Extra components available in every MDX file without an import. Paths resolve
+from the site root and must default-export a React component:
+
+```ts
+components: { PricingTable: './components/PricingTable.tsx' }
+```
+
+See [Theming and plugins](/guide/theming) for a full example.
+
+## Markdown
+
+```ts
+mdx: {
+  remarkPlugins: [myRemarkPlugin],
+  rehypePlugins: [[myRehypePlugin, { option: true }]],
+}
+```
+
+Your plugins run after the built-in ones, which are GitHub-flavoured Markdown,
+frontmatter, heading anchors, Shiki highlighting and the exported `headings`
+list. Both lists take
+[unified](https://github.com/unifiedjs/unified#plugin) plugins.
+
+## Plugins
+
+Built-in plugins are enabled by name:
+
+```ts
+plugins: ['search', 'sitemap', 'rss', 'llms']
+```
+
+| Plugin | Output | Description |
+| --- | --- | --- |
+| `search` | `search-index.json` | Search palette, opened with `⌘K`. |
+| `sitemap` | `sitemap.xml` | One entry per published page. |
+| `rss` | `rss.xml` | Feed of pages with a `date`. Skipped if there are none. |
+| `llms` | `llms.txt` | Page index for language models. |
+
+Custom plugins are objects created with `definePlugin` — see
+[Theming and plugins](/guide/theming).
+
+## Content
+
+Pages are read from `content/`, which is fixed. That is what lets `novon dev`
+work without generating any entry files — see
+[Architecture](/guide/architecture).
+
+Files and directories starting with `_` are ignored:
+
+```text
+content/
+├── _partials/          # ignored
+│   └── shared.mdx
+└── index.mdx           # → /
+```

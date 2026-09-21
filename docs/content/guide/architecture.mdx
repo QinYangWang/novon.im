@@ -1,0 +1,150 @@
+---
+title: Architecture
+description: What novon dev and novon build actually do.
+icon: Layers
+order: 7
+---
+
+novon is a Vite project with a content model on top. This page explains the
+machinery, which is worth knowing when you hit something the config cannot
+express.
+
+## The constraint everything follows from
+
+A novon site has no `package.json` and no `node_modules`. That is the whole point
+of the tool — you edit MDX, not a build setup — but it means every dependency has
+to be resolved from novon's own installation, and nothing can be generated into
+your site directory at authoring time.
+
+Two mechanisms make that work.
+
+### 1. Config specifiers are rewritten
+
+`novon.config.ts` says `import { defineConfig } from 'novon/config'`. Nothing in
+your site can resolve `novon`, so before the config is loaded, novon copies it
+into `<site>/.novon/` with every import specifier rewritten to an absolute
+`file://` URL.
+
+The rewrite is **transitive**: if your config imports `./plugins/robots.ts`, that
+file is rewritten too, or its own `novon/plugin` import would fail. Bare
+specifiers that only novon has (say `yaml`) resolve against novon's
+`node_modules` as a fallback. Relative imports, `import.meta.dirname` and
+`import.meta.url` keep pointing at the real files, so a config behaves exactly as
+written.
+
+`.novon/` contains a `.gitignore` with `*` in it, so the generated copies never
+end up in your repository. Deleting the directory is always safe.
+
+### 2. Content resolves through Vite aliases
+
+Pages under `content/` can `import { Card } from 'novon'` and use JSX. Vite
+aliases `novon`, `react`, `react-dom` and `@mdx-js/react` into the installed
+package, so a page gets the same React instance the theme does. Anything else
+falls back to a resolver that tries the site first, then novon.
+
+## The content index
+
+The route table cannot come from `import.meta.glob`. Globs resolve relative to
+the file that calls them, and the theme lives outside your site — often on
+another drive. So a Vite plugin (`novon:content`) scans `content/`, parses each
+file's frontmatter, and generates a virtual module:
+
+```js
+export const files = ['/content/index.mdx', '/content/guide/cli.mdx', …]
+export const meta = { '/content/index.mdx': { title: 'novon', … }, … }
+export const loaders = {
+  '/content/index.mdx': () => import('/content/index.mdx'),
+  …
+}
+```
+
+Frontmatter is parsed with the same YAML semantics as the MDX pipeline, so the
+navigation labels and the page's own `frontmatter` export always agree.
+
+`loaders` is what makes every page its own chunk. In `dev` the plugin watches
+`content/` and invalidates the module when files are added or removed, which is
+why a new page appears in the sidebar without a restart.
+
+## Build
+
+`novon build` runs four steps:
+
+1. **Client bundle** — React, the theme and the Tailwind stylesheet, with a
+   manifest so the prerenderer knows the hashed asset names.
+2. **Server bundle** — the same theme, built for Node. Everything is bundled
+   (`ssr.noExternal`), which keeps the prerender free of CJS/ESM interop issues.
+3. **Prerender** — the CLI imports the server bundle and asks it for the route
+   table, then for the HTML of each route. The theme only ever computes routes
+   once, so the sidebar cannot disagree with the output.
+4. **Plugins** — `sitemap`, `rss`, `search` and `llms` write their files, and
+   `.nojekyll` is written for GitHub Pages.
+
+Each route is written twice: as `<route>/index.html` and as `<route>.md`, the raw
+Markdown source. The `.md` file is what **Copy Markdown** fetches.
+
+Because the server bundle exports `getRoutes()` and `render(path)`, a plugin or a
+custom entry point can prerender the same routes without re-implementing the
+content model.
+
+## Markdown pipeline
+
+| Stage | Plugin |
+| --- | --- |
+| Frontmatter | `remark-frontmatter`, `remark-mdx-frontmatter` |
+| Markdown | `remark-gfm` |
+| Outline | `remarkNovonHeadings` — exports `headings` |
+| Anchors | `rehype-slug`, `rehype-autolink-headings` |
+| Highlighting | `rehype-pretty-code` (Shiki, light + dark) |
+
+`remarkNovonHeadings` runs at the remark stage on purpose: the table of contents
+is exported from the page module, which is the only way the server-rendered panel
+and the hydrated one can be guaranteed identical. `mdxjsEsm` nodes cannot be
+added at the rehype stage.
+
+MDX is compiled with `jsx: false`, emitting `_jsx()` calls rather than JSX
+syntax. Vite 8 transforms JSX in its native bundler, which does not run for a
+`.mdx` module id.
+
+## Hydration
+
+`novon build` renders real HTML, so the page is readable before any JavaScript
+arrives. The client entry then hydrates the same tree, which is what makes
+search, tabs, accordions, code copying, the sidebar collapse and theme switching
+work.
+
+Two details keep hydration honest:
+
+- The theme is applied by an inline script before first paint, on `<html>`, while
+  React renders into `#novon-root` — so there is no mismatch to suppress.
+- The scroll-reveal animation only hides content once JavaScript is running
+  (`data-js="true"`), and it is disabled under `prefers-reduced-motion`. Without
+  JS, nothing is hidden.
+
+## Where things live
+
+```text
+novon/
+├── bin/novon.js            # CLI entry
+└── src/
+    ├── cli.ts              # argument parsing and dispatch
+    ├── commands/           # new, dev, build, and the Vite plumbing
+    ├── load.ts             # config/plugin specifier rewriting
+    ├── content-plugin.ts   # the content index
+    ├── vite-config.ts      # the Vite config, virtual modules, resolution
+    ├── mdx.ts              # the Markdown pipeline
+    ├── document.ts         # the HTML shell
+    ├── paths.ts            # route → file mapping
+    ├── plugins/            # builtin plugins and the plugin API
+    └── runtime/            # the theme: layouts, kit, MDX components, CSS
+```
+
+## Tests
+
+```bash
+bun test
+```
+
+The suite covers the parts that are easy to get subtly wrong: specifier
+rewriting, route and sidebar derivation, tag pages, the document shell, XML
+escaping in the feeds, and the route-to-file mapping that the build and the
+theme must agree on.

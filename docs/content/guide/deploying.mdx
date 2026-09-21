@@ -1,0 +1,147 @@
+---
+title: Deploying
+description: Vercel, Cloudflare Pages, GitHub Pages and any static host.
+icon: Cloud
+order: 8
+---
+
+`novon build` produces a directory of static files. There is no server runtime,
+no edge function and no framework-specific adapter.
+
+```text
+dist/
+├── index.html
+├── getting-started/index.html
+├── getting-started.md      # the Markdown source of that page
+├── 404.html
+├── .nojekyll
+├── assets/                 # hashed JS and CSS
+├── sitemap.xml
+├── rss.xml
+├── search-index.json
+└── llms.txt
+```
+
+## Build settings
+
+Every host needs the same two values:
+
+| Setting | Value |
+| --- | --- |
+| Build command | `novon build` |
+| Output directory | `dist` |
+
+Install Bun in the build environment, then install novon:
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+bun add -g novon
+```
+
+## Vercel
+
+Set the build command to `novon build` and the output directory to `dist`.
+`404.html` is picked up automatically for unmatched routes.
+
+## Cloudflare Pages
+
+Same settings. `404.html` is used for not-found responses.
+
+## GitHub Pages
+
+A project site is served from `https://<user>.github.io/<repo>/`, so it needs a
+base path:
+
+```bash
+novon build --base /<repo>/
+```
+
+Then publish the `dist/` directory. novon writes `.nojekyll` so Pages serves the
+build output without running Jekyll.
+
+<Warning>
+  Forgetting `--base` on a project site is the most common deployment problem:
+  the HTML loads but every asset and link 404s.
+</Warning>
+
+### Deploying with GitHub Actions
+
+[This repository's own documentation](https://github.com/QinYangWang/novon.im)
+is deployed this way. The workflow builds the site in `docs/` and publishes it
+with the official Pages actions:
+
+```yaml title=".github/workflows/docs.yml"
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'src/**', 'bin/**', 'package.json', 'bun.lock', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Compute the base path
+        id: base
+        run: |
+          if [[ "${{ github.event.repository.name }}" == *.github.io ]]; then
+            echo "value=/" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=/${{ github.event.repository.name }}/" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build the docs
+        working-directory: docs
+        run: bun ../bin/novon.js build --base "${{ steps.base.outputs.value }}"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+The base path is derived from the repository name, so a fork works without
+editing the workflow, and a `<user>.github.io` repository correctly gets `/`.
+
+<Note>
+  Two prerequisites in the repository settings: **Pages → Build and deployment →
+  Source** must be set to **GitHub Actions**, and the workflow needs the
+  `pages: write` and `id-token: write` permissions shown above.
+</Note>
+
+## Anywhere else
+
+`dist/` is a static directory. Copy it to S3, put it behind nginx, or serve it
+from a container:
+
+```bash
+novon build
+python3 -m http.server --directory dist 8000
+```
+
+<Note>
+  Sub-pages are written as `<route>/index.html`, so every host resolves
+  `/guide/cli` without rewrite rules.
+</Note>

@@ -154,7 +154,7 @@ function fallbackResolve(packageRoot: string, siteRoot: string): Plugin {
 }
 
 /** Serve the HTML shell for every route and restart when the config changes. */
-function devServer({ config, siteRoot, packageRoot, configFile }: CreateViteConfigOptions): Plugin {
+function devServer({ config, packageRoot, configFile }: CreateViteConfigOptions): Plugin {
   const runtime = runtimeConfig(config)
   const entry = `/@fs/${toPosix(join(packageRoot, 'src', 'runtime', 'entry-client.tsx'))}`
 

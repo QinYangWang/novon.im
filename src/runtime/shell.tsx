@@ -726,7 +726,7 @@ export function TagPage({ site, tag }: { site: SiteIndex; tag: string }) {
   )
 }
 
-export function DefaultHomePage({ site, config }: { site: SiteIndex; config: RuntimeConfig }) {
+export function DefaultHomePage({ site }: { site: SiteIndex; config: RuntimeConfig }) {
   return (
     <Section title="Blog">
       <PostList posts={site.posts} />

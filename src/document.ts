@@ -3,6 +3,7 @@
  * the same document.
  */
 import type { RuntimeConfig } from './types.ts'
+import { absoluteUrl } from './url.ts'
 
 export interface DocumentOptions {
   config: RuntimeConfig
@@ -46,7 +47,7 @@ export function renderDocument(options: DocumentOptions): string {
   const { config, title, description, body } = options
   const base = config.base
   const fullTitle = title && title !== config.title ? `${title} · ${config.title}` : config.title
-  const canonical = config.url ? joinUrl(config.url, joinUrl(base, '/')) : undefined
+  const canonical = config.url ? absoluteUrl(config, '/') : undefined
   const ogImage = options.ogImage ?? config.theme.ogImage
 
   const head = [

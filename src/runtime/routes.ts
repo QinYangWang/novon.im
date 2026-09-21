@@ -92,6 +92,18 @@ export function labelOf(route: Route): string {
   return last ? humanize(last) : 'Home'
 }
 
+/**
+ * Heading for a page. `label` is only a sidebar shortening, so it never wins
+ * here — otherwise setting `label: Home` would retitle the page.
+ */
+export function titleOf(route: Route): string {
+  const { meta } = route
+  if (typeof meta.title === 'string' && meta.title) return meta.title
+  if (typeof meta.label === 'string' && meta.label) return meta.label
+  const last = route.segments[route.segments.length - 1]
+  return last ? humanize(last) : 'Home'
+}
+
 /** Build the route table from the content index. */
 export function buildRoutes(
   template: 'docs' | 'blog' = 'docs',

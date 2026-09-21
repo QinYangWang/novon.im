@@ -6,7 +6,7 @@
  */
 import { renderToString } from 'react-dom/server'
 import { App } from './app.tsx'
-import { createSiteIndex, loadPage, type PageModule, type SiteIndex } from './content.ts'
+import { createSiteIndex, loadPage, titleOf, type PageModule, type SiteIndex } from './content.ts'
 import type { Route } from '../types.ts'
 import config from 'virtual:novon/config'
 
@@ -30,21 +30,16 @@ export async function render(url: string): Promise<RenderResult> {
   const page: PageModule | undefined = route?.file ? await loadPage(route.file) : undefined
 
   const html = renderToString(<App config={config} url={url} site={site} page={page} />)
-  const title = route ? route.meta.label || route.meta.title || lastSegment(route.path) : 'Not found'
+  const title = route ? titleOf(route) : 'Not found'
 
   return {
     html,
     title,
     description: typeof route?.meta.description === 'string' ? route.meta.description : undefined,
     headings: page?.headings ?? [],
-    frontmatter: { ...(route?.meta ?? {}) },
+    frontmatter: { ...route?.meta },
     excerpt: toText(html).slice(0, 240),
   }
-}
-
-function lastSegment(path: string): string {
-  const parts = path.split('/').filter(Boolean)
-  return parts[parts.length - 1] ?? 'Home'
 }
 
 function toText(html: string): string {

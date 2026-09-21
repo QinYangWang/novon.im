@@ -6,12 +6,11 @@
  * ```
  */
 import type { BuiltPage, BuildContext, NovonPlugin } from './api.ts'
+import { absoluteUrl } from '../url.ts'
 
 /** Absolute URL for a route, or a root-relative one when `url` is not configured. */
 function absolute(ctx: BuildContext, path: string): string {
-  const base = ctx.base === '/' ? '' : ctx.base.replace(/\/$/, '')
-  const clean = path === '/' ? '/' : path
-  return ctx.config.url ? `${ctx.config.url.replace(/\/$/, '')}${base}${clean}` : `${base}${clean}` || '/'
+  return absoluteUrl(ctx.config, path)
 }
 
 function escapeXml(value: unknown): string {

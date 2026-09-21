@@ -1,0 +1,149 @@
+---
+title: Content
+description: Frontmatter, routing, the sidebar and the generated feeds.
+icon: FileText
+order: 3
+---
+
+Every page is a `.md` or `.mdx` file under `content/`. The path of the file
+becomes the URL: `content/guide/cli.mdx` is served at `/guide/cli`.
+
+## Frontmatter
+
+```yaml
+---
+title: Content               # page heading, sidebar label, <title>
+description: Frontmatter.     # subtitle, meta description, feeds, search
+icon: FileText                # sidebar icon
+order: 3                      # position inside its sidebar section
+label: Content                # shorter sidebar label (optional)
+draft: false                  # true hides the page from a production build
+date: 2026-01-31              # blog lists, RSS and sitemap use this
+updated: 2026-01-18           # "Last updated on …" at the bottom of the page
+tags: [guide, mdx]
+author: Ada Lovelace
+image: /cover.svg             # social preview, and the cover on a blog post
+caption: Shown under the cover image on a blog post
+toc: false                    # hide "On this page" for this page
+sidebar: false                # not a page in the sidebar, not a post in lists
+slug: custom-url              # override the URL (keeps the sidebar position)
+fullWidth: true               # render without the sidebar and TOC columns
+---
+```
+
+The page heading comes from `title`, so start your body at `##`.
+
+| Field | Effect |
+| --- | --- |
+| `title` | Heading, sidebar label, `<title>`, feeds. |
+| `description` | Subtitle, meta description, post list, search index. |
+| `icon` | Icon next to the sidebar entry, from the curated set. |
+| `order` | Sort key inside the section. Lower first; unset last. |
+| `label` | Sidebar text, when `title` is too long. |
+| `draft` | `true` excludes the page from a production build. Visible in `dev`. |
+| `date` | Drives post ordering, RSS and sitemap `lastmod`. |
+| `updated` | Shown as "Last updated on …". |
+| `tags` | Badges on a post, and tag pages in the blog template. |
+| `author` | Name or `{ name, avatar, url }`. |
+| `image` | Social preview; also the cover image on a blog post. |
+| `caption` | Caption under the cover image. |
+| `toc` | `false` hides the table of contents for this page. |
+| `sidebar` | `false` keeps it out of the sidebar, lists and feeds. |
+| `slug` | Overrides the URL without moving the page in the sidebar. |
+| `fullWidth` | Renders without the sidebar and TOC columns. |
+
+## Routing
+
+| File | URL |
+| --- | --- |
+| `content/index.mdx` | `/` |
+| `content/getting-started.mdx` | `/getting-started` |
+| `content/guide/index.mdx` | `/guide` |
+| `content/guide/cli.mdx` | `/guide/cli` |
+
+<AccordionGroup>
+  <Accordion title="What if there is no content/index.mdx?">
+    The docs template points `/` at the first page it finds, the way mkdocs
+    copies `index.md`. The blog template renders the post list at `/` instead,
+    because a blog home is a list rather than a page.
+  </Accordion>
+  <Accordion title="How do I keep a page out of the navigation?">
+    Set `sidebar: false`. The page is still published at its URL and still
+    appears in the sitemap — it is only removed from the sidebar, the post list
+    and the feeds.
+  </Accordion>
+  <Accordion title="Are duplicate routes allowed?">
+    No. If two files resolve to the same URL, the build keeps the first and warns
+    with both paths.
+  </Accordion>
+</AccordionGroup>
+
+## Sidebar sections
+
+Top-level directories become labelled sections; nested directories become
+collapsible groups. The section label comes from the directory name, and the
+directory's `index.mdx` is listed as an ordinary page:
+
+```text
+content/guide/index.mdx      →  section "Guide", first item "Overview"
+content/guide/advanced/…     →  collapsible "Advanced" inside "Guide"
+```
+
+## Headings and the table of contents
+
+`h2`, `h3` and `h4` are collected automatically into the **On this page** panel.
+Every heading gets a stable anchor, so `/guide/content#frontmatter` always works.
+The outline is computed at compile time and exported from the page module, which
+is why the server-rendered panel and the hydrated one are identical.
+
+## Code blocks
+
+Fenced blocks are highlighted with Shiki in both light and dark themes, and carry
+a copy button that appears on hover.
+
+```ts title="src/greet.ts" showLineNumbers
+export function greet(name: string): string {
+  return `Hello, ${name}!`
+}
+```
+
+Add `title="path/to/file"` for a filename header, `showLineNumbers` for line
+numbers, and braces to highlight lines:
+
+```js {2}
+const a = 1
+const highlighted = 2
+const c = 3
+```
+
+## Markdown for other tools
+
+Every page is published twice: as HTML, and as the original Markdown at the same
+URL with `.md` appended. The **Copy Markdown** button in the docs header reads
+it, and the **Open** menu offers it to ChatGPT or Claude. The `llms` plugin
+publishes `llms.txt` listing every page, which is a compact way to hand a whole
+documentation set to a model.
+
+<Note>
+  The `.md` file is the raw source, frontmatter included, so it round-trips: you
+  can paste it back into `content/` unchanged.
+</Note>
+
+## Images
+
+Files in `public/` are copied to the output root, so `public/images/diagram.png`
+is written as `/images/diagram.png`:
+
+```mdx
+![A diagram](/images/diagram.png)
+
+<Frame caption="The dev server">
+  <img src="/screenshot.svg" alt="The novon dev server" />
+</Frame>
+```
+
+## Blog posts
+
+In the `blog` template every non-index page is a post. Posts sort newest first by
+`date`, and `/blog` lists them all. A page with `sidebar: false` is a normal page
+rather than a post — useful for an About page.

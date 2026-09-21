@@ -1,0 +1,97 @@
+---
+title: Quick start
+description: Install novon, scaffold a site, preview it and build it.
+icon: Rocket
+order: 1
+---
+
+## Requirements
+
+novon runs on [Bun](https://bun.sh) 1.1 or newer.
+
+```bash
+bun --version
+```
+
+## Install
+
+```bash
+bun add -g novon
+```
+
+## Create a site
+
+```bash
+novon new my-docs                 # documentation template
+novon new my-blog --template blog # blog template
+```
+
+<CardGroup cols={2}>
+  <Card title="novon.config.ts" icon="Settings">
+    Title, navigation, theme, plugins.
+  </Card>
+  <Card title="content/" icon="Folder">
+    One `.mdx` file per page.
+  </Card>
+</CardGroup>
+
+The generated directory contains nothing else. Everything that renders it lives
+in the installed package, so upgrading novon upgrades your site's theme without
+touching your content.
+
+## Preview locally
+
+```bash
+cd my-docs
+novon dev
+```
+
+The dev server starts on [http://localhost:4321](http://localhost:4321) and
+reloads on every content or config change. Adding a file is enough — the sidebar
+and search index pick it up without a restart.
+
+| Flag | Description |
+| --- | --- |
+| `--port 3000` | Use a different port |
+| `--host` | Expose the server on your network |
+
+## Build
+
+```bash
+novon build
+```
+
+This writes a fully static site to `dist/`:
+
+```text
+dist/
+├── index.html
+├── getting-started/index.html
+├── getting-started.md      # the Markdown source of that page
+├── 404.html
+├── .nojekyll
+├── assets/                 # hashed JS and CSS
+├── sitemap.xml             # from the sitemap plugin
+├── search-index.json       # from the search plugin
+└── llms.txt                # from the llms plugin
+```
+
+Every route is written as `<route>/index.html`, so any host resolves
+`/getting-started` without rewrite rules.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="CLI reference" icon="Terminal" href="/guide/cli">
+    Every command and flag.
+  </Card>
+  <Card title="Writing content" icon="FileText" href="/guide/content">
+    Frontmatter, routing and the sidebar.
+  </Card>
+  <Card title="Configuration" icon="Settings" href="/guide/configuration">
+    Navigation, theme and plugins.
+  </Card>
+  <Card title="Deploying" icon="Cloud" href="/guide/deploying">
+    Vercel, Cloudflare Pages and GitHub Pages.
+  </Card>
+</CardGroup>

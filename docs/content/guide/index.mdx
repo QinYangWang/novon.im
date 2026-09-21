@@ -1,0 +1,65 @@
+---
+title: Overview
+description: How to write, configure, theme and deploy a novon site.
+icon: Book
+order: 2
+---
+
+This guide covers everything beyond the first page.
+
+<CardGroup cols={2}>
+  <Card title="CLI" icon="Terminal" href="/guide/cli">
+    Every command and flag.
+  </Card>
+  <Card title="Content" icon="FileText" href="/guide/content">
+    Frontmatter, routing and the sidebar.
+  </Card>
+  <Card title="Components" icon="Puzzle" href="/guide/components">
+    MDX components and the shared kit.
+  </Card>
+  <Card title="Configuration" icon="Settings" href="/guide/configuration">
+    Every option in novon.config.ts.
+  </Card>
+  <Card title="Theming and plugins" icon="Palette" href="/guide/theming">
+    Colours, overrides, custom components and plugins.
+  </Card>
+  <Card title="Architecture" icon="Layers" href="/guide/architecture">
+    What dev and build actually do.
+  </Card>
+  <Card title="Deploying" icon="Cloud" href="/guide/deploying">
+    Vercel, Cloudflare Pages and GitHub Pages.
+  </Card>
+</CardGroup>
+
+## The two templates
+
+`template` in the config picks the shell. Both share one component kit and one
+palette, so a blog and a docs site from the same project look like one product.
+
+**`docs`** — a full-height sidebar rail (brand, search, grouped navigation with
+icons, and a theme switcher in its footer), a content header with **Copy
+Markdown** and **Open** actions, an "On this page" column, previous/next cards
+and a "last updated" line.
+
+**`blog`** — a narrow single column: name and role, pill navigation, a **Copy
+URL** control, a section of posts written as title + description, and a
+"Connect" block of arrow pills.
+
+<AccordionGroup>
+  <Accordion title="How is the sidebar ordered?">
+    Top-level directories become labelled sections and nested ones become
+    collapsible groups. Within a section, pages sort by frontmatter `order`, then
+    by label; pages without an `order` come last. The directory names the
+    section, and its `index.mdx` is listed as an ordinary page, so the two never
+    show the same label twice.
+  </Accordion>
+  <Accordion title="Can I use plain Markdown?">
+    Yes. Both `.md` and `.mdx` files are read from `content/`. Files and
+    directories starting with `_` are ignored, which is handy for partials.
+  </Accordion>
+  <Accordion title="Do I need a package.json in my site?">
+    No. A novon site is only MDX and a config file — the CLI resolves everything
+    else from its own installation. See
+    [Architecture](/guide/architecture) for how.
+  </Accordion>
+</AccordionGroup>

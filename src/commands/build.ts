@@ -135,6 +135,7 @@ export async function build(site: Site, flags: BuildFlags): Promise<void> {
     let document = renderDocument({
       config: runtime,
       title: result.title,
+      path: route.path,
       description: result.description,
       body: result.html,
       styles,

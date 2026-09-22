@@ -1,6 +1,6 @@
 ---
 title: Components
-description: MDX components, the shared kit and the shadcn/ui primitives.
+description: Writing components and the small set of primitives behind the theme.
 icon: Puzzle
 order: 4
 ---
@@ -182,24 +182,20 @@ export default function Banner() {
   hidden from a reader without JS.
 </Note>
 
-## shadcn/ui primitives
+## Theme primitives
 
-The components novon itself is built from, all on
-[Base UI](https://base-ui.com). Every one has a live preview and an MDX snippet
-in the [component reference](/components):
+The [component reference](/components) is organized around writing, not building
+an application. Prefer the MDX components above for articles.
 
-- **Surfaces** `Card`, `Badge`, `Avatar`, `Blobatar`, `Table`, `Separator`, `AspectRatio`,
-  `ScrollArea`
-- **Forms** `Input`, `Textarea`, `Label`, `Field`, `Select`, `Checkbox`,
-  `RadioGroup`, `Switch`, `Slider`
-- **Feedback** `Alert`, `Toast`, `Progress`, `Skeleton`, `Spinner`
-- **Navigation** `Tabs`, `Accordion`, `Collapsible`, `Breadcrumb`, `Pagination`,
-  `Toggle`, `ToggleGroup`
-- **Overlays** `Dialog`, `AlertDialog`, `Sheet`, `Popover`, `Tooltip`,
-  `HoverCard`, `DropdownMenu`, `ContextMenu`
+For custom themes, novon exports `Button`, `Card`, `Badge`, `Avatar`, `Blobatar`,
+`Table`, `ScrollArea`, `Kbd`, `Tabs`, `Accordion`, `Dialog` and `DropdownMenu`, plus
+their retained compound parts. Composite interactions use [Base UI](https://base-ui.com).
+The variant helpers are `buttonVariants` and `badgeVariants`.
 
-Variant helpers `buttonVariants`, `badgeVariants`, `toggleVariants` and
-`alertVariants` are exported for building your own.
+Unused forms, toasts, loading widgets and extra overlay/navigation families have
+been removed from the public exports. See the [migration list](/components#what-was-removed)
+if an existing page or theme imports them. Add a page-specific React component
+when a real interactive example needs more than the writing toolkit.
 
 ```mdx
 import { Button, Card, CardContent } from 'novon'

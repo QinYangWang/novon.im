@@ -34,6 +34,7 @@
     "dev": "bun run src/cli.ts",
     "lint": "oxlint",
     "test": "bun test",
+    "test:browser": "node tests/navigation.browser.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -70,6 +71,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "oxlint": "^1.85.0",
+    "playwright-core": "^1.63.0",
     "typescript": "^5.9.0"
   },
   "engines": {

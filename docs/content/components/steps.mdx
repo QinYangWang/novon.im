@@ -1,0 +1,25 @@
+---
+title: Steps
+description: Turn a procedure into a short, ordered path.
+icon: List
+order: 3
+---
+
+<Preview title="Publish a site">
+<Steps>
+  <Step title="Write">Add Markdown or MDX files to `content/`.</Step>
+  <Step title="Build">Run `novon build` and check the output.</Step>
+  <Step title="Publish">Upload the generated directory to your static host.</Step>
+</Steps>
+
+```mdx
+<Steps>
+  <Step title="Write">Add files to `content/`.</Step>
+  <Step title="Build">Run `novon build`.</Step>
+  <Step title="Publish">Upload the output to your static host.</Step>
+</Steps>
+```
+</Preview>
+
+Use a Markdown numbered list for a simple checklist. Use `Steps` when each action
+needs its own explanation or code sample. Neither component requires an import.

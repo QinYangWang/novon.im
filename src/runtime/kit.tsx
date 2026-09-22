@@ -13,7 +13,7 @@ import * as React from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { cn, isExternal, withBase } from './lib.ts'
 import { copyText } from './actions.ts'
-import { useBase, useConfig } from './site.tsx'
+import { useBase, useConfig, useSite } from './site.tsx'
 import { Icon, type IconProps } from './icons.tsx'
 
 /* -------------------------------------------------------------------------- */
@@ -150,11 +150,8 @@ export function PillNav({ items, className }: { items: PillNavItem[]; className?
   const config = useConfig()
   const listRef = React.useRef<HTMLDivElement>(null)
   const [indicator, setIndicator] = React.useState<{ left: number; width: number } | null>(null)
-  const [pathname, setPathname] = React.useState('')
-
-  React.useEffect(() => {
-    setPathname(normalizeHref(window.location.pathname))
-  }, [])
+  const { url } = useSite()
+  const pathname = withBase(base, url)
 
   const activeIndex = React.useMemo(
     () => (pathname ? activePillIndex(items, pathname, config.base) : -1),

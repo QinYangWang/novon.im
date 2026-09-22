@@ -1,9 +1,8 @@
 /**
- * Disclosure: accordion, tabs and collapsible.
+ * Disclosure for reading: accordions and tabs.
  */
 import * as React from 'react'
 import { Accordion as BaseAccordion } from '@base-ui-components/react/accordion'
-import { Collapsible as BaseCollapsible } from '@base-ui-components/react/collapsible'
 import { Tabs as BaseTabs } from '@base-ui-components/react/tabs'
 import { cn } from '../lib.ts'
 import type { BaseProps } from './props.ts'
@@ -87,7 +86,7 @@ export function TabsList({ className, ...props }: BaseProps<typeof BaseTabs.List
   return (
     <BaseTabs.List
       className={cn(
-        'inline-flex items-center gap-0.5 rounded-lg border border-border bg-card/60 p-1',
+        'inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-border bg-card/60 p-1',
         className,
       )}
       {...props}
@@ -110,11 +109,3 @@ export function TabsTrigger({ className, ...props }: BaseProps<typeof BaseTabs.T
 export function TabsContent({ className, ...props }: BaseProps<typeof BaseTabs.Panel>) {
   return <BaseTabs.Panel className={cn('pt-4 outline-none', className)} {...props} />
 }
-
-/* -------------------------------------------------------------------------- */
-/* Collapsible                                                                */
-/* -------------------------------------------------------------------------- */
-
-export const Collapsible = BaseCollapsible.Root
-export const CollapsibleTrigger = BaseCollapsible.Trigger
-export const CollapsiblePanel = BaseCollapsible.Panel

@@ -1,0 +1,26 @@
+---
+title: Callouts
+description: Highlight a note, recommendation or risk without leaving the article.
+icon: Info
+order: 1
+---
+
+<Preview title="A useful warning">
+<Warning title="Set the deployment base">
+  When hosting in a subdirectory, set `base` before building so asset URLs work.
+</Warning>
+
+```mdx
+<Warning title="Set the deployment base">
+  When hosting in a subdirectory, set `base` before building.
+</Warning>
+```
+</Preview>
+
+Use `Note` or `Info` for context, `Tip` for a recommendation, `Warning` or `Caution`
+for a pitfall, and `Danger` for a risk of data loss. The icon and text convey the
+meaning as well as the color. Avoid stacking callouts when ordinary prose works.
+
+`Callout` accepts `type`, `title` and an optional Lucide `icon`. The named variants
+accept the same props except `type`. These are reading content, not interrupting
+screen-reader alerts.

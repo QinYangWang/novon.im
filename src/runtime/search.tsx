@@ -8,6 +8,7 @@ import { cn, withBase } from './lib.ts'
 import { useBase, useConfig } from './site.tsx'
 import { Dialog, DialogContent, Kbd } from './ui.tsx'
 import { pageFrontmatter, routePathOf } from './content.ts'
+import { navigate } from './navigation.ts'
 
 interface SearchEntry {
   title: string
@@ -46,10 +47,17 @@ export function SearchTrigger({ className }: { className?: string }) {
   const [query, setQuery] = React.useState('')
   const [active, setActive] = React.useState(0)
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
+
+  React.useEffect(() => {
+    const close = () => setOpen(false)
+    window.addEventListener('novon:navigated', close)
+    return () => window.removeEventListener('novon:navigated', close)
+  }, [])
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      if (!event.defaultPrevented && triggerRef.current?.checkVisibility() && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setOpen((value) => !value)
       }
@@ -108,7 +116,8 @@ export function SearchTrigger({ className }: { className?: string }) {
 
   const go = React.useCallback(
     (path: string) => {
-      window.location.href = withBase(base, path)
+      setOpen(false)
+      navigate(withBase(base, path))
     },
     [base],
   )
@@ -129,6 +138,7 @@ export function SearchTrigger({ className }: { className?: string }) {
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search"
@@ -143,7 +153,7 @@ export function SearchTrigger({ className }: { className?: string }) {
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="p-0">
+        <DialogContent aria-label="Search" className="p-0">
           <div className="flex items-center gap-2 border-b border-border px-4">
             <SearchIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
             <input
@@ -174,6 +184,7 @@ export function SearchTrigger({ className }: { className?: string }) {
                     <a
                       href={withBase(base, entry.path)}
                       onMouseEnter={() => setActive(index)}
+                      onClick={() => setOpen(false)}
                       className={cn(
                         'block rounded-md px-3 py-2 text-sm no-underline',
                         index === active ? 'bg-accent text-accent-foreground' : 'text-foreground',

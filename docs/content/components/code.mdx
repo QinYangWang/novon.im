@@ -1,0 +1,57 @@
+---
+title: Code blocks
+description: Readable examples with syntax highlighting, filenames and copy actions.
+icon: Code
+order: 4
+---
+
+Fenced code blocks get syntax highlighting and a copy button automatically.
+Add a language for highlighting, `title` for a filename and `showLineNumbers`
+when readers need to refer to individual lines.
+
+```ts title="novon.config.ts" showLineNumbers
+export default {
+  title: 'My notes',
+  template: 'blog',
+}
+```
+
+The opening fence for this example is:
+
+````md
+```ts title="novon.config.ts" showLineNumbers
+````
+
+## Code groups
+
+Use `CodeGroup` for equivalent commands or implementations. Tab labels come
+from the `title` on each fenced block.
+
+<CodeGroup>
+
+```sh title="bun"
+bun add novon
+```
+
+```sh title="npm"
+npm install novon
+```
+
+</CodeGroup>
+
+````mdx
+<CodeGroup>
+
+```sh title="bun"
+bun add novon
+```
+
+```sh title="npm"
+npm install novon
+```
+
+</CodeGroup>
+````
+
+Copy reads the rendered code text, not the highlighting markup. The copy button
+is also available on keyboard focus and touch devices.

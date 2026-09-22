@@ -1,109 +1,59 @@
 ---
 title: Components
 label: Overview
-description: The primitives every novon site is built from.
+description: Building blocks for documentation and personal writing.
 icon: Puzzle
 order: 10
-wide: true
 ---
 
-import { Input, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from 'novon'
+Start with Markdown: headings, paragraphs, links, lists, quotes, tables and fenced
+code. Add a component only when it makes an explanation easier to follow.
 
-Every component below is a [`shadcn/ui`](https://ui.shadcn.com) style primitive built on
-[Base UI](https://base-ui.com). They ship inside `novon`, so a site can use them in
-MDX, in a custom page or in a theme override without installing anything.
+## Explain and guide
 
-<Preview title="A composed example" description="Primitives drop into any MDX page.">
+<CardGroup>
+  <Card title="Callouts" icon="Info" href="/components/callouts">Notes, tips and warnings beside the relevant instructions.</Card>
+  <Card title="Steps" icon="List" href="/components/steps">Installation, setup and other ordered procedures.</Card>
+  <Card title="Code blocks" icon="Code" href="/components/code">Highlighted examples, filenames, copy buttons and language variants.</Card>
+  <Card title="Tabs" icon="Folder" href="/components/tabs">Alternatives such as package managers and operating systems.</Card>
+  <Card title="Accordions" icon="List" href="/components/accordion">FAQs and optional technical detail.</Card>
+  <Card title="Tables" icon="List" href="/components/table">Configuration options and API references.</Card>
+</CardGroup>
 
-<Card className="w-full max-w-sm">
-  <CardHeader>
-    <CardTitle>Weekly digest</CardTitle>
-    <CardDescription>One email, every Friday.</CardDescription>
-  </CardHeader>
-  <CardContent className="flex flex-col gap-3">
-    <Input placeholder="you@example.com" type="email" />
-    <Button className="w-full">Subscribe</Button>
-  </CardContent>
-</Card>
+## Organize and illustrate
 
-```mdx
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from 'novon'
+- [Cards](/components/card): related articles and guide entry points.
+- [Media](/components/media): screenshots, captions and video embeds.
+- [Badge](/components/badge): versions and publishing status.
+- [Avatar](/components/avatar) and [Blobatar](/components/blobatar): author identities.
+- [Blog lists](/components/blog): recent posts and topic links.
 
-<Card>
-  <CardHeader>
-    <CardTitle>Weekly digest</CardTitle>
-    <CardDescription>One email, every Friday.</CardDescription>
-  </CardHeader>
-  <CardContent className="flex flex-col gap-3">
-    <Input placeholder="you@example.com" type="email" />
-    <Button className="w-full">Subscribe</Button>
-  </CardContent>
-</Card>
-```
+These authoring components are available in MDX without imports. Explicit imports
+are only needed for lower-level theme primitives such as [Button](/components/button)
+and the compound `Table` and `Avatar` components.
 
-</Preview>
+## What belongs in the theme?
 
-## Design conventions
+Search, mobile navigation, theme switching, copy actions, the table of contents
+and previous/next links are provided by the layout. You do not need to compose
+them inside every article. `Dialog` and `DropdownMenu` remain available for theme
+overrides because the built-in layout uses them.
 
-The set follows a small number of rules so unrelated components still read as one
-system. They are the same rules the rest of the theme is built on.
+## What was removed?
 
-- **One radius scale.** Controls use `rounded-md`, surfaces `rounded-lg` or
-  `rounded-xl`, and circles are reserved for avatars, radios and sliders. A
-  component never invents its own corner.
-- **Hairline borders and flat surfaces.** Boundaries are drawn with `border-border`,
-  not shadows. Elevation is reserved for overlays that genuinely float.
-- **Monochrome by default.** Light is black on white, dark is white on black.
-  Color marks state, action and data, so status tones stay meaningful. Hover and
-  selection use the neutral `accent` token.
-- **Geist typography.** Headings and prose use Geist, code and identifiers Geist
-  Mono. The scale is a few sizes used consistently rather than many one-offs.
-- **Sentence case.** Labels, titles and buttons are written the way a person
-  speaks, not Title Cased.
-- **Keyboard first.** Native elements, visible focus rings, `aria-*` on the
-  custom controls and hit areas that meet the 24 by 24 minimum.
+The application-widget catalog is no longer part of novon: forms (`Input`,
+`Textarea`, `Label`, `Field`, `Select`, `Checkbox`, `RadioGroup`, `Switch`, `Slider`),
+`Toggle`, `ToggleGroup`, `Alert`, toast notifications, loading widgets (`Progress`,
+`Skeleton`, `Spinner`), `Collapsible`, `Breadcrumb`, `Pagination`, `Separator`,
+`AspectRatio`, `AlertDialog`, `Sheet`, `Popover`, `Tooltip`, `HoverCard` and
+`ContextMenu`. Their unused implementations and exports were removed too.
 
-<Note>
-  The authoring components that only make sense inside documentation — callouts,
-  steps, tabs with a `title` — live on
-  [Components in MDX](/guide/components) instead.
-</Note>
+Use callouts instead of alerts, accordions instead of a second disclosure API,
+Markdown rules instead of separators, and the built-in page navigation instead of
+pagination widgets. A static site does not supply a subscription, account or
+settings backend; examples should not imply that it does.
 
-## Form controls
-
-- [Input](/components/input), [Textarea](/components/input), [Label](/components/input)
-- [Field](/components/field) for labels, descriptions and errors
-- [Select](/components/select)
-- [Checkbox](/components/checkbox)
-- [Radio Group](/components/radio-group)
-- [Switch](/components/switch)
-- [Slider](/components/slider)
-- [Toggle](/components/toggle)
-
-## Surfaces and data
-
-- [Card](/components/card)
-- [Badge](/components/badge)
-- [Avatar](/components/avatar) and [Blobatar](/components/blobatar)
-- [Table](/components/table)
-- [Separator](/components/separator), [Aspect Ratio](/components/separator), [Scroll Area](/components/separator)
-
-## Feedback
-
-- [Alert](/components/alert)
-- [Toast](/components/toast)
-- [Progress](/components/progress) with [Skeleton](/components/progress) and [Spinner](/components/progress)
-
-## Navigation and disclosure
-
-- [Tabs](/components/tabs)
-- [Accordion](/components/accordion)
-- [Collapsible](/components/collapsible)
-- [Breadcrumb](/components/breadcrumb) and [Pagination](/components/breadcrumb)
-
-## Overlays
-
-- [Dialog](/components/dialog), [Alert Dialog](/components/dialog) and [Sheet](/components/dialog)
-- [Popover](/components/popover), [Tooltip](/components/popover) and [Hover Card](/components/popover)
-- [Dropdown Menu](/components/dropdown-menu)
-- [Context Menu](/components/context-menu)
+If an article genuinely needs an interactive calculator, form or demo, import a
+purpose-built React component in that page or register it through
+[`components` in the configuration](/guide/configuration). Existing custom themes
+that imported removed exports must supply their own replacements.

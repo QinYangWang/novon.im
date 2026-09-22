@@ -202,17 +202,14 @@ Available primitives, all built on Base UI:
 
 - **Surfaces** `Card` (with `CardHeader`, `CardTitle`, `CardDescription`,
   `CardContent`, `CardFooter`, `CardAction`), `Badge`, `Avatar`, `Blobatar`, `Table`,
-  `Separator`, `AspectRatio`, `ScrollArea`, `Kbd`
-- **Forms** `Input`, `Textarea`, `Label`, `Field`, `Select`, `Checkbox`,
-  `RadioGroup`, `Switch`, `Slider`
-- **Feedback** `Alert`, `Toast`, `Progress`, `Skeleton`, `Spinner`
-- **Navigation** `Tabs`, `Accordion`, `Collapsible`, `Breadcrumb`, `Pagination`,
-  `Toggle`, `ToggleGroup`
-- **Overlays** `Dialog`, `AlertDialog`, `Sheet`, `Popover`, `Tooltip`,
-  `HoverCard`, `DropdownMenu`, `ContextMenu`
+  `ScrollArea`, `Kbd`
+- **Disclosure** `Tabs`, `Accordion`
+- **Theme overlays** `Dialog`, `DropdownMenu`
 
-Variant helpers `buttonVariants`, `badgeVariants`, `toggleVariants` and
-`alertVariants` are exported for building your own.
+Variant helpers `buttonVariants` and `badgeVariants` are exported for custom themes.
+Application forms, toast notifications and unrelated widgets are intentionally
+not included. Use the MDX writing components for articles and add a page-specific
+React component when an interactive example genuinely needs one.
 
 <Note>
   `Card` inside MDX is the content card from this page. The shadcn/ui container

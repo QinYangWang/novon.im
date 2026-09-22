@@ -120,6 +120,27 @@ Two details keep hydration honest:
   (`data-js="true"`), and it is disabled under `prefers-reduced-motion`. Without
   JS, nothing is hidden.
 
+## Navigation without a document reload
+
+The first visit hydrates the generated HTML. After that, ordinary internal links
+load the destination's MDX module on demand and update the existing React tree.
+The sidebar and header stay mounted; the article, active navigation, outline and
+page metadata update. Page-local tabs and copy state reset for each article.
+
+Hovering or focusing an internal link preloads its module. Back and forward
+restore the saved scroll position; a new page starts at its heading or URL
+fragment. Search uses the same route loader. Loading failures fall back to a
+normal document navigation.
+
+External links, downloads, modified clicks and links outside the configured
+`base` keep their browser behavior. Add `data-no-router` to a link (or its
+container) to opt out, for example when a plugin requires a full document load.
+Plugin-injected head markup is not rerun by client navigation.
+
+This is progressive client navigation, not incremental static regeneration.
+Every route still works as a direct static URL and without JavaScript. Content
+changes are published by rebuilding and deploying the site.
+
 ## Where things live
 
 ```text

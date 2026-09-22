@@ -2,7 +2,7 @@
 title: Button
 description: Triggers an action or event.
 icon: Box
-order: 1
+order: 90
 wide: true
 ---
 
@@ -85,7 +85,12 @@ important the action is, and a size that matches the density of the surface.
 | `variant` | `default` `secondary` `outline` `ghost` `destructive` `link` | `default` |
 | `size` | `sm` `default` `lg` `icon` `icon-sm` | `default` |
 | `disabled` | `boolean` | `false` |
+| `static` | `boolean` — disable press scaling | `false` |
 | `className` | `string` | — |
+
+Buttons use a 150 ms color/press transition with a restrained `0.96` scale.
+Reduced-motion preferences disable scaling; disclosure and tab controls keep
+text stationary. Disabled controls do not animate. The default `type` is `button`.
 
 Every native button attribute is forwarded. `buttonVariants` is exported so a
 link or another element can wear the same styles.

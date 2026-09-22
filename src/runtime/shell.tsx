@@ -247,27 +247,40 @@ function NavTree({
           )
         }
 
-        return (
-          <li key={node.label}>
-            <Accordion defaultValue={contains(node) ? ['group'] : []}>
-              <AccordionItem value="group" className="border-0 py-0">
-                <AccordionTrigger className="gap-2 rounded-md py-1.5 pl-2.5 pr-3 text-sm font-normal text-muted-foreground hover:bg-accent/60 hover:text-foreground">
-                  <span className="flex min-w-0 items-center gap-2">
-                    {node.icon ? <Icon icon={node.icon} className="size-4 shrink-0 opacity-80" /> : null}
-                    <span className="truncate">{node.label}</span>
-                  </span>
-                </AccordionTrigger>
-                <AccordionPanel className="pb-0">
-                  <div className="pl-1">
-                    <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} />
-                  </div>
-                </AccordionPanel>
-              </AccordionItem>
-            </Accordion>
-          </li>
-        )
+        return <NestedNavGroup key={node.label} node={node} active={contains(node)} current={current} onNavigate={onNavigate} depth={depth} />
       })}
     </ul>
+  )
+}
+
+/** Preserve disclosures, but reveal a new destination reached from search/history. */
+function NestedNavGroup({ node, active, current, onNavigate, depth }: {
+  node: Extract<NavNode, { kind: 'group' }>
+  active: boolean
+  current: string
+  onNavigate?: () => void
+  depth: number
+}) {
+  const [open, setOpen] = React.useState<string[]>(active ? ['group'] : [])
+  React.useEffect(() => { if (active) setOpen(['group']) }, [active, current])
+  return (
+    <li>
+      <Accordion value={open} onValueChange={setOpen}>
+        <AccordionItem value="group" className="border-0 py-0">
+          <AccordionTrigger className="gap-2 rounded-md py-1.5 pl-2.5 pr-3 text-sm font-normal text-muted-foreground hover:bg-accent/60 hover:text-foreground">
+            <span className="flex min-w-0 items-center gap-2">
+              {node.icon ? <Icon icon={node.icon} className="size-4 shrink-0 opacity-80" /> : null}
+              <span className="truncate">{node.label}</span>
+            </span>
+          </AccordionTrigger>
+          <AccordionPanel className="pb-0">
+            <div className="pl-1">
+              <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} />
+            </div>
+          </AccordionPanel>
+        </AccordionItem>
+      </Accordion>
+    </li>
   )
 }
 
@@ -297,7 +310,10 @@ export function DefaultSidebar({
             type="button"
             onClick={onCollapse}
             aria-label="Collapse sidebar"
-            className="ml-auto inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-expanded="true"
+            aria-controls="novon-sidebar"
+            title="Collapse sidebar"
+            className="ml-auto inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <PanelLeft aria-hidden="true" className="size-3.5" />
           </button>
@@ -345,6 +361,8 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
           type="button"
           onClick={onToggleNav}
           aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+          aria-expanded={navOpen}
+          aria-controls="novon-mobile-sidebar"
           className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           {navOpen ? <X aria-hidden="true" className="size-3.5" /> : <Menu aria-hidden="true" className="size-3.5" />}
@@ -364,7 +382,7 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
         ))}
       </nav>
       <div className="ml-auto flex items-center gap-1">
-        {config.features.search ? <SearchTrigger className="w-32 sm:w-44" /> : null}
+        {config.features.search ? <SearchTrigger className="size-8 justify-center p-0 sm:w-44 sm:justify-start sm:px-3" /> : null}
         {config.theme.darkMode ? <ThemeToggle /> : null}
       </div>
     </header>
@@ -393,11 +411,8 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
     }
 
     offsetsRef.current = measure()
-    setActiveId((previous) =>
-      offsetsRef.current.some((offset) => offset.id === previous)
-        ? previous
-        : initialActiveHeading(offsetsRef.current, window.location.hash),
-    )
+    pendingRef.current = null
+    setActiveId(initialActiveHeading(offsetsRef.current, window.location.hash))
     const hashId = hashToId(window.location.hash)
     if (hashId) pendingRef.current = { id: hashId, until: performance.now() + 1500 }
 
@@ -586,8 +601,12 @@ export function PageActions({ path }: { path: string }) {
     setAbsolute(new URL(url, window.location.href).href)
   }, [url])
 
-  // Abort in-flight work and drop timers when the route changes or we unmount.
+  // Abort in-flight work and drop page-local state when the URL changes.
   React.useEffect(() => {
+    textRef.current = null
+    setState('idle')
+    setError('')
+    setSource('')
     return () => {
       requestRef.current += 1
       controllerRef.current?.abort()
@@ -757,7 +776,7 @@ export function PageHeading({
           ))}
         </div>
       ) : null}
-      {actions && path ? <PageActions path={path} /> : null}
+      {actions && path ? <PageActions key={path} path={path} /> : null}
       {meta?.draft === true ? <Badge variant="warning">Draft</Badge> : null}
     </header>
   )
@@ -1008,6 +1027,9 @@ export function DocsLayout({ route, url, title, description, headings, children,
   const Footer = useOverride('Footer', DefaultFooter)
   const [navOpen, setNavOpen] = React.useState(false)
   const [collapsed, setCollapsed] = React.useState(false)
+  const sidebarRef = React.useRef<HTMLElement>(null)
+
+  React.useEffect(() => { setNavOpen(false) }, [url])
 
   // Remember what opened the mobile nav so focus can return to it, but only
   // while it is still visible (the trigger is hidden at the desktop breakpoint).
@@ -1102,6 +1124,9 @@ export function DocsLayout({ route, url, title, description, headings, children,
   }, [])
 
   const toggleCollapsed = () => {
+    window.requestAnimationFrame(() => {
+      sidebarRef.current?.querySelector<HTMLButtonElement>(collapsed ? '[aria-label="Collapse sidebar"]' : '[aria-label="Show sidebar"]')?.focus()
+    })
     setCollapsed((value) => {
       try {
         localStorage.setItem('novon-sidebar', value ? 'expanded' : 'collapsed')
@@ -1133,19 +1158,41 @@ export function DocsLayout({ route, url, title, description, headings, children,
       <Header onToggleNav={toggleNav} navOpen={navOpen} />
 
       <div className="flex">
-        {!collapsed ? (
-          <aside
-            className="sticky top-0 hidden h-screen shrink-0 border-r border-border lg:block"
-            style={{ width: 'var(--novon-sidebar-width)' }}
-          >
+        <aside
+          ref={sidebarRef}
+          aria-label="Sidebar"
+          className="sticky top-0 hidden h-dvh shrink-0 border-r border-border lg:block"
+          style={{ width: collapsed ? '3.5rem' : 'var(--novon-sidebar-width)' }}
+        >
+          <div id="novon-sidebar" hidden={collapsed} className="h-full">
             <Sidebar nav={site.nav} current={activePath} onCollapse={toggleCollapsed} />
-          </aside>
-        ) : null}
+          </div>
+          {collapsed ? (
+            <div className="flex h-full flex-col items-center bg-card/40">
+              <div className="flex h-14 items-center">
+                <button
+                  type="button"
+                  onClick={toggleCollapsed}
+                  aria-label="Show sidebar"
+                  aria-expanded="false"
+                  aria-controls="novon-sidebar"
+                  title="Show sidebar"
+                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <PanelLeft aria-hidden="true" className="size-4" />
+                </button>
+              </div>
+              {config.features.search ? <SearchTrigger className="size-8 justify-center p-0 [&>span]:hidden [&>kbd]:hidden" /> : null}
+              {config.theme.darkMode ? <div className="mt-auto flex h-12 items-center"><ThemeToggle /></div> : null}
+            </div>
+          ) : null}
+        </aside>
 
         <Dialog open={navOpen} onOpenChange={setNavOpen}>
           <DialogContent
             showClose={false}
             finalFocus={finalFocus}
+            id="novon-mobile-sidebar"
             aria-label="Documentation navigation"
             className="fixed inset-x-0 top-14 bottom-0 h-auto max-w-none rounded-none border-0 bg-background p-0 shadow-none lg:hidden"
           >
@@ -1161,24 +1208,13 @@ export function DocsLayout({ route, url, title, description, headings, children,
           </DialogContent>
         </Dialog>
 
-        <main id="novon-content" className="min-w-0 flex-1">
+        <main id="novon-content" tabIndex={-1} className="min-w-0 flex-1">
           <div
             className={cn(
               'mx-auto w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10',
               fullWidth ? 'max-w-[80rem]' : wide ? 'max-w-[64rem]' : 'max-w-(--novon-content-width)',
             )}
           >
-            {collapsed ? (
-              <button
-                type="button"
-                onClick={toggleCollapsed}
-                aria-label="Show sidebar"
-                className="mb-6 hidden size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:inline-flex"
-              >
-                <PanelLeft aria-hidden="true" className="size-3.5" />
-              </button>
-            ) : null}
-
             {route ? (
               <PageHeading
                 title={title}
@@ -1202,7 +1238,7 @@ export function DocsLayout({ route, url, title, description, headings, children,
           </div>
         </main>
 
-        {showToc && !collapsed ? (
+        {showToc ? (
           <aside
             className="novon-scroll sticky top-0 hidden h-screen shrink-0 overflow-y-auto px-4 py-10 xl:block"
             style={{ width: 'var(--novon-toc-width)' }}
@@ -1239,7 +1275,7 @@ export function BlogLayout({ route, url, title, description, children, config, s
       <div className="mx-auto w-full max-w-(--novon-column-width) px-4 pt-14 pb-16 md:px-0">
         <Header />
 
-        <main id="novon-content" className="mt-12">
+        <main id="novon-content" tabIndex={-1} className="mt-12">
           {isHome && route?.synthetic ? (
             <HomePage site={site} config={config} />
           ) : route?.postList ? (

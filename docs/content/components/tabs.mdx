@@ -1,76 +1,30 @@
 ---
 title: Tabs
-description: Switch between related panels in place.
-icon: Layers
-order: 20
-wide: true
+description: Let readers choose the example that matches their environment.
+icon: Folder
+order: 5
 ---
 
-import { Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from 'novon'
+Tabs work well for equivalent alternatives. Do not hide required sequential
+instructions behind separate tabs; use [steps](/components/steps) instead.
 
-Use tabs when the panels are peers and switching is cheap. If the reader needs
-several panels at once, or the content is long, use sections instead.
-
-## Usage
-
-<Preview title="Basic" description="One panel is visible at a time.">
-
-<Tabs defaultValue="account" className="w-full max-w-md">
-  <TabsList>
-    <TabsTrigger value="account">Account</TabsTrigger>
-    <TabsTrigger value="password">Password</TabsTrigger>
-    <TabsTrigger value="billing">Billing</TabsTrigger>
-  </TabsList>
-  <TabsContent value="account">
-    <Card>
-      <CardContent className="pt-5 text-sm text-muted-foreground">
-        Change the name and email on your account.
-      </CardContent>
-    </Card>
-  </TabsContent>
-  <TabsContent value="password">
-    <Card>
-      <CardContent className="pt-5 text-sm text-muted-foreground">
-        Update the password you use to sign in.
-      </CardContent>
-    </Card>
-  </TabsContent>
-  <TabsContent value="billing">
-    <Card>
-      <CardContent className="pt-5 text-sm text-muted-foreground">
-        Manage the card on file and the billing address.
-      </CardContent>
-    </Card>
-  </TabsContent>
+<Preview title="Package managers">
+<Tabs>
+  <Tab title="bun">Run `bun add novon`.</Tab>
+  <Tab title="npm">Run `npm install novon`.</Tab>
 </Tabs>
 
 ```mdx
-<Tabs defaultValue="account">
-  <TabsList>
-    <TabsTrigger value="account">Account</TabsTrigger>
-    <TabsTrigger value="password">Password</TabsTrigger>
-  </TabsList>
-  <TabsContent value="account">…</TabsContent>
-  <TabsContent value="password">…</TabsContent>
+<Tabs>
+  <Tab title="bun">Run `bun add novon`.</Tab>
+  <Tab title="npm">Run `npm install novon`.</Tab>
 </Tabs>
 ```
-
 </Preview>
 
-## API
+`Tab` accepts a `title` and optional `icon`. Arrow keys move between tabs; focus
+and the active background identify the selected tab. For fenced code blocks,
+use [CodeGroup](/components/code) to derive labels from filenames.
 
-| Component | Element | Notes |
-| --- | --- | --- |
-| `Tabs` | `div` | Root. Takes `defaultValue` or `value`. |
-| `TabsList` | `div` | `role="tablist"`. |
-| `TabsTrigger` | `button` | `role="tab"`, matched to a panel by `value`. |
-| `TabsContent` | `div` | `role="tabpanel"`. |
-
-Arrow keys move between triggers and activation follows focus, so a tab set is a
-single stop in the tab order.
-
-<Note>
-  Inside MDX the un-imported `Tabs` is the authoring component that reads
-  `<Tab title="…">` children. Import this one to get the primitive. The
-  authoring pair is documented on [Components in MDX](/guide/components).
-</Note>
+The MDX API needs no import. Custom React themes can import `Tabs`, `TabsList`,
+`TabsTrigger` and `TabsContent` from `novon` for explicit `value` control.

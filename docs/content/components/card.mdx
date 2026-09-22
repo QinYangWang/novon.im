@@ -1,106 +1,36 @@
 ---
-title: Card
-description: A bordered surface that groups related content.
+title: Cards
+description: Link to related guides and articles with useful context.
 icon: Layers
-order: 4
-wide: true
+order: 2
 ---
 
-import { Badge, Button, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from 'novon'
+Use a card for a destination that benefits from a description. Use an ordinary
+Markdown link for references within a sentence. MDX cards need no import.
 
-A card is the default container for a self-contained unit: a setting, a summary,
-a form. Compose it from `CardHeader`, `CardTitle`, `CardDescription`,
-`CardContent`, `CardFooter` and `CardAction`.
-
-## Usage
-
-<Preview title="Basic" description="A header, a body and a footer action.">
-
-<Card className="w-full max-w-sm">
-  <CardHeader>
-    <CardTitle>Deployments</CardTitle>
-    <CardDescription>Every push to main ships automatically.</CardDescription>
-  </CardHeader>
-  <CardContent className="text-sm text-muted-foreground">
-    The last deploy finished in 42 seconds.
-  </CardContent>
-  <CardFooter>
-    <Button size="sm">View logs</Button>
-  </CardFooter>
-</Card>
+<Preview title="Related guides">
+<CardGroup>
+  <Card title="Write content" icon="FileText" href="/guide/content">Frontmatter, Markdown and MDX.</Card>
+  <Card title="Deploy a site" icon="Globe" href="/guide/deploying">Publish the generated static files.</Card>
+</CardGroup>
 
 ```mdx
-<Card>
-  <CardHeader>
-    <CardTitle>Deployments</CardTitle>
-    <CardDescription>Every push to main ships automatically.</CardDescription>
-  </CardHeader>
-  <CardContent>
-    The last deploy finished in 42 seconds.
-  </CardContent>
-  <CardFooter>
-    <Button size="sm">View logs</Button>
-  </CardFooter>
-</Card>
+<CardGroup cols={2}>
+  <Card title="Write content" icon="FileText" href="/guide/content">
+    Frontmatter, Markdown and MDX.
+  </Card>
+  <Card title="Deploy a site" icon="Globe" href="/guide/deploying">
+    Publish the generated static files.
+  </Card>
+</CardGroup>
 ```
-
 </Preview>
 
-<Preview title="With an action" description="`CardAction` aligns a control with the title.">
+`Card` accepts `title`, `icon`, `href`, `horizontal` and `arrow`.
+`CardGroup` accepts `cols={1}`, `cols={2}` or `cols={3}` and stacks on narrow screens.
+Omit `href` for a non-interactive summary; do not nest links inside a linked card.
 
-<Card className="w-full max-w-sm">
-  <CardHeader>
-    <CardTitle>Production</CardTitle>
-    <CardDescription>Connected to main</CardDescription>
-    <CardAction><Badge variant="success">Live</Badge></CardAction>
-  </CardHeader>
-  <CardContent>
-    <div className="flex flex-col gap-2">
-      <Label htmlFor="domain">Domain</Label>
-      <Input id="domain" defaultValue="acme.com" />
-    </div>
-  </CardContent>
-  <CardFooter className="justify-end">
-    <Button variant="ghost" size="sm">Cancel</Button>
-    <Button size="sm">Save</Button>
-  </CardFooter>
-</Card>
-
-```mdx
-<Card>
-  <CardHeader>
-    <CardTitle>Production</CardTitle>
-    <CardDescription>Connected to main</CardDescription>
-    <CardAction><Badge variant="success">Live</Badge></CardAction>
-  </CardHeader>
-  <CardContent>
-    <div className="flex flex-col gap-2">
-      <Label htmlFor="domain">Domain</Label>
-      <Input id="domain" defaultValue="acme.com" />
-    </div>
-  </CardContent>
-  <CardFooter className="justify-end">
-    <Button variant="ghost" size="sm">Cancel</Button>
-    <Button size="sm">Save</Button>
-  </CardFooter>
-</Card>
-```
-
-</Preview>
-
-## API
-
-| Component | Element | Notes |
-| --- | --- | --- |
-| `Card` | `div` | The rounded, bordered surface. |
-| `CardHeader` | `div` | Title block with an optional action. |
-| `CardTitle` | `h3` | The card's heading. |
-| `CardDescription` | `p` | Muted supporting line. |
-| `CardContent` | `div` | The body. |
-| `CardFooter` | `div` | Actions row. |
-| `CardAction` | `div` | Pushes to the top right of the header. |
-
-<Warning>
-  Inside MDX, an un-imported `Card` is the documentation content card. Import
-  this one explicitly to get the surface: `import { Card } from 'novon'`.
-</Warning>
+<Note>
+  The package export `Card` is a lower-level surface for custom themes. Importing
+  it shadows the MDX card. Use `MdxCard` when you need the authoring card in React.
+</Note>

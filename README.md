@@ -159,19 +159,17 @@ appears on hover.
 </Tabs>
 ```
 
-The shadcn/ui primitives novon itself is built from are exported too, all on
-[Base UI](https://base-ui.com). Every one has a live preview and a copyable MDX
-snippet in the [component reference](https://qinyangwang.github.io/novon.im/components):
+The [component reference](https://qinyangwang.github.io/novon.im/components)
+focuses on writing: callouts, cards, steps, code groups, tabs, accordions, tables,
+media, badges, author avatars and blog lists. Theme primitives (`Button`, `Card`,
+`Badge`, `Avatar`, `Table`, `ScrollArea`, `Kbd`, `Tabs`, `Accordion`, `Dialog` and
+`DropdownMenu`) remain exported, with [Base UI](https://base-ui.com) handling
+composite interactions.
 
-- **Surfaces** `Card`, `Badge`, `Avatar`, `Blobatar`, `Table`, `Separator`, `AspectRatio`,
-  `ScrollArea`, `Kbd`
-- **Forms** `Input`, `Textarea`, `Label`, `Field`, `Select`, `Checkbox`,
-  `RadioGroup`, `Switch`, `Slider`
-- **Feedback** `Alert`, `Toast`, `Progress`, `Skeleton`, `Spinner`
-- **Navigation** `Tabs`, `Accordion`, `Collapsible`, `Breadcrumb`, `Pagination`,
-  `Toggle`, `ToggleGroup`
-- **Overlays** `Dialog`, `AlertDialog`, `Sheet`, `Popover`, `Tooltip`,
-  `HoverCard`, `DropdownMenu`, `ContextMenu`
+Unused application widgets (forms, toggles, toasts, loading indicators and the
+extra overlay/navigation families) have been removed, including their exports.
+Existing pages importing these must use their own components. See the component
+reference for the removal list and authoring alternatives.
 
 ## Configuration
 
@@ -270,13 +268,25 @@ bun run src/cli.ts --help
 
 Requires Bun 1.1+.
 
+For the production navigation smoke test (docs and blog, including subdirectory
+hosting, history, fragments, mobile and reduced motion):
+
+```bash
+(cd docs && bun ../bin/novon.js build)
+bunx playwright-core install chromium
+bun run test:browser
+```
+
 ## Deliberate limits
 
 - Content lives in `content/` and is not configurable — that is what makes the
   dev server work with no generated entry files.
-- There is no client-side router: links are real page loads, so every route is a
-  static HTML file. Sidebar, search, tabs, code copying and theme switching still
-  hydrate.
+- Every route is still a static HTML file. After hydration, internal navigation
+  loads the destination's MDX chunk on demand and updates content without
+  reloading the document. The shell stays mounted; history, fragments and
+  search use the same navigation path. External links and downloads stay native.
+  Add `data-no-router` to a link to force a document navigation. Publishing
+  changed content still requires a build; this is not server-side regeneration.
 - Sidebar nesting is derived from directories; there is no separate nav file, and
   there is no version or multi-product switcher.
 - Social preview images are static (`theme.ogImage` or per-page `image`); novon

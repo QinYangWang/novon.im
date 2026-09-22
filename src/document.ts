@@ -8,6 +8,8 @@ import { absoluteUrl } from './url.ts'
 export interface DocumentOptions {
   config: RuntimeConfig
   title: string
+  /** Canonical route path, without the deployment base. */
+  path?: string
   description?: string
   /** Server-rendered markup for the app root. */
   body: string
@@ -47,7 +49,7 @@ export function renderDocument(options: DocumentOptions): string {
   const { config, title, description, body } = options
   const base = config.base
   const fullTitle = title && title !== config.title ? `${title} · ${config.title}` : config.title
-  const canonical = config.url ? absoluteUrl(config, '/') : undefined
+  const canonical = config.url ? absoluteUrl(config, options.path ?? '/') : undefined
   const ogImage = options.ogImage ?? config.theme.ogImage
 
   const head = [

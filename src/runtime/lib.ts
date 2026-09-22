@@ -19,6 +19,7 @@ export function withBase(base: string, path: string): string {
 /** `/guide/setup/` -> `/guide/setup`. Keeps `/`. */
 export function normalizePathname(pathname: string, base: string): string {
   let path = pathname || '/'
+  try { path = decodeURI(path) } catch { /* Leave malformed URLs to the 404 page. */ }
   const prefix = base.endsWith('/') ? base.slice(0, -1) : base
   if (prefix && prefix !== '/' && path.startsWith(prefix)) path = path.slice(prefix.length)
   path = path.replace(/index\.html$/, '').replace(/\/+$/, '')

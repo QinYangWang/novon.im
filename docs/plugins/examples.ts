@@ -10,7 +10,7 @@
  * with no second copy to keep in sync, and they need no extra server or port.
  *
  * Generated files live under `public/examples/` (git-ignored) and are rebuilt
- * only when a template or this file changes.
+ * when a template, the generator or this file changes.
  */
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -113,7 +113,7 @@ export default definePlugin({
       const output = join(publicRoot, `${name}-template`)
       const base = `/examples/${name}-template/`
       const stampFile = join(stampRoot, name)
-      const stamp = `${newestMtime(template)}:${newestMtime(import.meta.filename)}`
+      const stamp = `${newestMtime(template)}:${statSync(import.meta.filename).mtimeMs}:${newestMtime(join(ctx.packageRoot, 'src'))}`
       if (existsSync(join(output, 'index.html')) && existsSync(stampFile) && readFileSync(stampFile, 'utf8') === stamp) {
         built.push(base)
         continue

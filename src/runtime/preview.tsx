@@ -171,7 +171,7 @@ function CodeFallback({ code }: { code?: string }) {
           type="button"
           onClick={copy}
           aria-label={copied ? 'Copied' : 'Copy code'}
-          className="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
+          className="novon-code-copy absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
         >
           {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
         </button>

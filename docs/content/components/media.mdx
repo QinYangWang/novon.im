@@ -1,0 +1,36 @@
+---
+title: Media
+description: Screenshots, illustrations and videos with context.
+icon: Play
+order: 8
+---
+
+Use Markdown images for most articles. Describe meaningful images with alt text
+and place files in `public/`.
+
+```md
+![The documentation sidebar with the guide section expanded](/screenshot.svg)
+```
+
+## Frames and captions
+
+`Frame` adds a border and optional caption to screenshots or diagrams.
+
+```mdx
+<Frame caption="The guide navigation on desktop.">
+  <img src="/screenshot.svg" alt="Guide links in the left sidebar" />
+</Frame>
+```
+
+A caption adds context; it does not replace alt text. For deployments under a
+subdirectory, use `withBase(useBase(), '/screenshot.svg')` in a custom component
+for raw image URLs.
+
+## Video
+
+```mdx
+<YouTube id="VIDEO_ID" title="A walkthrough of the deployment process" />
+```
+
+Give every video a specific title, and provide a transcript or written alternative
+for instructions. Videos do not autoplay. The embed contacts YouTube when loaded.

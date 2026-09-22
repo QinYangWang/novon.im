@@ -143,6 +143,20 @@
     outline-offset: 2px;
   }
 
+  /* Disclosure rows opt out of scale so their text stays anchored. */
+  :where(button, .novon-press):active:not(:disabled):not([aria-disabled='true']) {
+    filter: brightness(0.94);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :where(button, .novon-press):active:not(:disabled):not([aria-disabled='true']):not([data-static]):not([aria-controls]):not([role='tab']) {
+      scale: 0.96;
+    }
+  }
+
+  [data-navigating='true'] { cursor: progress; }
+  [data-navigating='true'] .novon-progress { opacity: 0.5; }
+
   .novon-scroll {
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -200,7 +214,24 @@
   }
 }
 
+/* Keep press scaling interruptible even on controls with transition-colors. */
+:where(button, .novon-press) {
+  transition-property: color, background-color, border-color, opacity, scale;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (hover: none) {
+  .novon-code-copy { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+  }
+
   .novon-reveal,
   [data-js='true'] .novon-reveal {
     opacity: 1 !important;

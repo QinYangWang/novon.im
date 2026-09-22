@@ -10,7 +10,6 @@ import { mdxComponents } from './mdx.tsx'
 import { SiteProvider } from './site.tsx'
 import { BlogLayout, DefaultHomePage, DefaultNotFound, DocsLayout, OverrideProvider, useOverride } from './shell.tsx'
 import { flattenNav, titleOf } from './content.ts'
-import { Toaster } from './ui/toast.tsx'
 import { customComponents } from 'virtual:novon/components'
 import { themeOverrides } from 'virtual:novon/theme'
 
@@ -44,7 +43,7 @@ function AppBody({ config, url, site, page }: AppProps) {
   }
 
   const content = page?.default ? (
-    <MDXProvider components={components}>
+    <MDXProvider key={url} components={components}>
       <page.default />
     </MDXProvider>
   ) : config.template === 'blog' ? (
@@ -73,7 +72,7 @@ export function App(props: AppProps) {
     <OverrideProvider value={{ ...themeOverrides, ...props.overrides }}>
       <SiteProvider value={{ config, base: config.base, site, url }}>
         <AppBody {...props} />
-        <Toaster />
+        <span className="sr-only" role="status" aria-live="polite">{site.byPath.has(url) ? titleOf(site.byPath.get(url)!) : 'Page not found'}</span>
       </SiteProvider>
     </OverrideProvider>
   )

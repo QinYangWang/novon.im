@@ -298,7 +298,9 @@ export function flattenNav(nav: NavNode[]): PageLink[] {
     for (const node of nodes) {
       if (node.kind === 'page') out.push({ label: node.label, path: node.path })
       else {
-        if (node.path) out.push({ label: node.label, path: node.path })
+        if (node.path && !node.children.some((child) => child.kind === 'page' && child.path === node.path)) {
+          out.push({ label: node.label, path: node.path })
+        }
         walk(node.children)
       }
     }

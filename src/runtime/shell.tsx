@@ -951,7 +951,7 @@ export function TagPage({ site, tag }: { site: SiteIndex; tag: string }) {
 
 export function DefaultHomePage({ site }: { site: SiteIndex; config: RuntimeConfig }) {
   return (
-    <Section title="Blog">
+    <Section title="Blog" headingLevel={1}>
       <PostList posts={site.posts} />
     </Section>
   )
@@ -960,7 +960,7 @@ export function DefaultHomePage({ site }: { site: SiteIndex; config: RuntimeConf
 /** The generated `/blog` index of the blog template. */
 export function PostListPage({ site }: { site: SiteIndex }) {
   return (
-    <Section title="Blog">
+    <Section title="Blog" headingLevel={1}>
       <PostList posts={site.posts} />
     </Section>
   )

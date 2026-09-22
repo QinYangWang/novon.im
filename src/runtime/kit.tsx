@@ -239,18 +239,26 @@ export function Section({
   className,
   id,
   action,
+  headingLevel = 2,
 }: {
   title?: React.ReactNode
   children: React.ReactNode
   className?: string
   id?: string
   action?: React.ReactNode
+  /**
+   * Heading element for `title`. Use `1` when the section heading is the page's
+   * main heading, as on the blog home and post list, which have no page title
+   * of their own. The visual treatment stays the same either way.
+   */
+  headingLevel?: 1 | 2 | 3
 }) {
+  const Heading = `h${headingLevel}` as 'h1' | 'h2' | 'h3'
   return (
     <section id={id} className={cn('py-10 first:pt-0', className)}>
       {title ? (
         <div className="mb-3 flex items-baseline justify-between gap-4">
-          <h2 className="text-lg font-medium tracking-tight text-foreground">{title}</h2>
+          <Heading className="text-lg font-medium tracking-tight text-foreground">{title}</Heading>
           {action}
         </div>
       ) : null}

@@ -39,7 +39,7 @@
   /* Layout */
   --novon-sidebar-width: 16.75rem;
   --novon-toc-width: 14.5rem;
-  --novon-content-width: 45rem;
+  --novon-content-width: 56rem;
   --novon-column-width: 38rem;
   --novon-header-height: 3.5rem;
 }
@@ -209,6 +209,10 @@
   }
 
   .novon-pill-indicator {
+    transition: none !important;
+  }
+
+  .novon-progress {
     transition: none !important;
   }
 

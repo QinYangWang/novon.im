@@ -22,6 +22,7 @@
 import * as React from 'react'
 import { Check, Copy } from 'lucide-react'
 import { cn } from './lib.ts'
+import { copyText } from './actions.ts'
 
 export interface PreviewProps {
   /** Short name for the example. */
@@ -156,13 +157,9 @@ function CodeFallback({ code }: { code?: string }) {
   const [copied, setCopied] = React.useState(false)
   const copy = async () => {
     if (!code) return
-    try {
-      await navigator.clipboard.writeText(code)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard access can be denied; leave the block alone.
-    }
+    if (!(await copyText(code))) return
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 2000)
   }
   return (
     <div className="group/code relative bg-card/40">

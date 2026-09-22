@@ -19,14 +19,17 @@
  * ```
  */
 import * as React from 'react'
-import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Copy, List as ListIcon, Menu, Pencil, PanelLeft, X } from 'lucide-react'
+import { ArrowUpRight, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, List as ListIcon, Loader2, Menu, Pencil, PanelLeft, X } from 'lucide-react'
 import type { Frontmatter, Route, RuntimeConfig, ThemeOverrides, TocEntry } from '../types.ts'
 import { cn, formatDate, isExternal, tagSlug, withBase } from './lib.ts'
 import { markdownPath } from '../paths.ts'
 import { useBase, useConfig } from './site.tsx'
 import { SearchTrigger } from './search.tsx'
-import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Dialog, DialogClose, DialogContent, Popover, PopoverContent, PopoverTrigger, ScrollArea } from './ui.tsx'
+import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Dialog, DialogClose, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, ScrollArea } from './ui.tsx'
 import { Icon } from './icons.tsx'
+import { SvglIcon } from './svgl.tsx'
+import { copyText, isMarkdownDocument } from './actions.ts'
+import { TOC_READING_OFFSET, hashToId, initialActiveHeading, resolveActiveHeading, type HeadingOffset } from './toc.ts'
 import { CopyUrlButton, PillNav, Reveal, ScrollProgress, Section, SocialPills, ThemeSwitch, ThemeToggle } from './kit.tsx'
 import type { NavNode, PageLink, SiteIndex } from './content.ts'
 
@@ -95,13 +98,13 @@ export function DefaultHeader({ className }: { className?: string }) {
   return (
     <header className={cn('flex flex-col gap-6', className)}>
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-base font-medium text-foreground">{config.title}</p>
           {config.description ? (
             <p className="text-muted-foreground">{config.description}</p>
           ) : null}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <CopyUrlButton />
           {config.theme.darkMode ? <ThemeToggle /> : null}
         </div>
@@ -374,26 +377,132 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
 
 export function DefaultTableOfContents({ headings, className }: { headings: TocEntry[]; className?: string }) {
   const [activeId, setActiveId] = React.useState('')
+  const listRef = React.useRef<HTMLUListElement>(null)
+  const offsetsRef = React.useRef<HeadingOffset[]>([])
+  const frameRef = React.useRef<number | null>(null)
+  const pendingRef = React.useRef<{ id: string; until: number } | null>(null)
 
   React.useEffect(() => {
-    const elements = headings
-      .map((heading) => document.getElementById(heading.id))
-      .filter((element): element is HTMLElement => Boolean(element))
-    if (elements.length === 0) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-        if (visible[0]?.target.id) setActiveId(visible[0].target.id)
-      },
-      { rootMargin: '-80px 0px -70% 0px', threshold: [0, 1] },
+    const measure = (): HeadingOffset[] => {
+      const result: HeadingOffset[] = []
+      for (const heading of headings) {
+        const element = document.getElementById(heading.id)
+        if (element) result.push({ id: heading.id, top: element.getBoundingClientRect().top + window.scrollY })
+      }
+      return result
+    }
+
+    offsetsRef.current = measure()
+    setActiveId((previous) =>
+      offsetsRef.current.some((offset) => offset.id === previous)
+        ? previous
+        : initialActiveHeading(offsetsRef.current, window.location.hash),
     )
-    elements.forEach((element) => observer.observe(element))
-    return () => observer.disconnect()
+    const hashId = hashToId(window.location.hash)
+    if (hashId) pendingRef.current = { id: hashId, until: performance.now() + 1500 }
+
+    const update = () => {
+      frameRef.current = null
+      const offsets = offsetsRef.current
+      if (offsets.length === 0) return
+      const pending = pendingRef.current
+      if (pending) {
+        if (performance.now() >= pending.until) {
+          pendingRef.current = null
+        } else {
+          // A click or hash jump owns the active state until the destination is
+          // reached, so a long smooth scroll cannot flicker through sections.
+          const target = offsets.find((offset) => offset.id === pending.id)
+          const readingLine = window.scrollY + TOC_READING_OFFSET
+          if (!target || Math.abs(target.top - readingLine) <= 2) pendingRef.current = null
+          else return
+        }
+      }
+      const next = resolveActiveHeading(offsets, {
+        scrollY: window.scrollY,
+        viewportHeight: window.innerHeight,
+        scrollHeight: document.documentElement.scrollHeight,
+      })
+      setActiveId((previous) => (previous === next ? previous : next))
+    }
+
+    const schedule = () => {
+      if (frameRef.current !== null) return
+      frameRef.current = window.requestAnimationFrame(update)
+    }
+
+    const remeasure = () => {
+      offsetsRef.current = measure()
+      schedule()
+    }
+
+    // Any real user scroll takes ownership back from a pending click/hash jump.
+    const release = () => {
+      pendingRef.current = null
+    }
+
+    const onHashChange = () => {
+      const id = hashToId(window.location.hash)
+      if (!id || !offsetsRef.current.some((offset) => offset.id === id)) return
+      pendingRef.current = { id, until: performance.now() + 1500 }
+      setActiveId(id)
+    }
+
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', remeasure, { passive: true })
+    window.addEventListener('wheel', release, { passive: true })
+    window.addEventListener('touchstart', release, { passive: true })
+    window.addEventListener('keydown', release)
+    window.addEventListener('hashchange', onHashChange)
+
+    let observer: ResizeObserver | undefined
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(remeasure)
+      observer.observe(document.body)
+    }
+    document.fonts?.ready.then(remeasure).catch(() => {})
+
+    update()
+
+    return () => {
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', remeasure)
+      window.removeEventListener('wheel', release)
+      window.removeEventListener('touchstart', release)
+      window.removeEventListener('keydown', release)
+      window.removeEventListener('hashchange', onHashChange)
+      observer?.disconnect()
+      if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current)
+    }
   }, [headings])
 
+  // Keep the active link inside the TOC's own scroll box without scrolling the page.
+  React.useEffect(() => {
+    if (!activeId) return
+    const list = listRef.current
+    if (!list) return
+    const link = Array.from(list.querySelectorAll<HTMLAnchorElement>('a')).find(
+      (candidate) => candidate.dataset.tocId === activeId,
+    )
+    if (!link) return
+    const container = scrollableParent(link)
+    if (!container) return
+    const containerRect = container.getBoundingClientRect()
+    const linkRect = link.getBoundingClientRect()
+    const pad = 8
+    if (linkRect.top < containerRect.top + pad) {
+      container.scrollTop -= containerRect.top + pad - linkRect.top
+    } else if (linkRect.bottom > containerRect.bottom - pad) {
+      container.scrollTop += linkRect.bottom - (containerRect.bottom - pad)
+    }
+  }, [activeId])
+
   if (headings.length === 0) return null
+
+  const markActive = (id: string) => {
+    pendingRef.current = { id, until: performance.now() + 1500 }
+    setActiveId(id)
+  }
 
   return (
     <nav aria-label="On this page" className={cn('text-sm', className)}>
@@ -401,17 +510,19 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
         <ListIcon aria-hidden="true" className="size-4 text-muted-foreground" />
         On this page
       </p>
-      <ul className="mt-3 space-y-0.5 border-l border-border">
-        {headings.map((heading) => {
+      <ul ref={listRef} className="mt-3 border-l border-border">
+        {headings.map((heading, index) => {
           const active = activeId === heading.id
           return (
-            <li key={heading.id}>
+            <li key={heading.id} className={cn(heading.depth === 2 && index > 0 && 'mt-2')}>
               <a
                 href={`#${heading.id}`}
+                data-toc-id={heading.id}
+                onClick={() => markActive(heading.id)}
                 aria-current={active ? 'location' : undefined}
                 className={cn(
                   '-ml-px block border-l-2 py-1 pr-2 no-underline transition-colors',
-                  heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6' : 'pl-9',
+                  heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6' : 'pl-9 text-[0.8125rem]',
                   active
                     ? 'border-primary font-medium text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground',
@@ -427,6 +538,17 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
   )
 }
 
+/** Nearest ancestor that scrolls vertically, if any. */
+function scrollableParent(element: HTMLElement): HTMLElement | null {
+  let parent = element.parentElement
+  while (parent) {
+    const overflow = getComputedStyle(parent).overflowY
+    if ((overflow === 'auto' || overflow === 'scroll') && parent.scrollHeight > parent.clientHeight) return parent
+    parent = parent.parentElement
+  }
+  return null
+}
+
 /* -------------------------------------------------------------------------- */
 /* Page chrome                                                                */
 /* -------------------------------------------------------------------------- */
@@ -435,72 +557,167 @@ function markdownUrl(base: string, path: string): string {
   return withBase(base, `/${markdownPath(path)}`)
 }
 
-/** "Copy Markdown" and "Open" — reads the `.md` file emitted for every route. */
+type CopyState = 'idle' | 'copying' | 'copied' | 'error'
+
+const AI_PROMPT = 'Read this documentation page and explain it:'
+
+/**
+ * "Copy Markdown" and "Open" — reads the `.md` file served for every route.
+ *
+ * The copy path validates the response before touching the clipboard, falls back
+ * to a textarea on insecure origins, and recovers visibly when either step
+ * fails. AI links are plain anchors, so they cannot be blocked as popups.
+ */
 export function PageActions({ path }: { path: string }) {
   const base = useBase()
-  const [copied, setCopied] = React.useState(false)
   const url = markdownUrl(base, path)
+  const [state, setState] = React.useState<CopyState>('idle')
+  const [error, setError] = React.useState('')
+  const [source, setSource] = React.useState('')
+  const [absolute, setAbsolute] = React.useState(url)
+  const textRef = React.useRef<string | null>(null)
+  const controllerRef = React.useRef<AbortController | null>(null)
+  const timerRef = React.useRef<number | null>(null)
+  const requestRef = React.useRef(0)
+
+  // The AI prompts need an absolute URL; resolve it after mount so SSR and the
+  // first client render agree.
+  React.useEffect(() => {
+    setAbsolute(new URL(url, window.location.href).href)
+  }, [url])
+
+  // Abort in-flight work and drop timers when the route changes or we unmount.
+  React.useEffect(() => {
+    return () => {
+      requestRef.current += 1
+      controllerRef.current?.abort()
+      controllerRef.current = null
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current)
+    }
+  }, [url])
+
+  const load = React.useCallback(async (): Promise<string> => {
+    if (textRef.current !== null) return textRef.current
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { accept: 'text/markdown, text/plain, */*' },
+    })
+    if (!response.ok) throw new Error(`The Markdown source is unavailable (HTTP ${response.status}).`)
+    const text = await response.text()
+    if (!isMarkdownDocument(text, response.headers.get('content-type'))) {
+      throw new Error('The Markdown source could not be verified.')
+    }
+    textRef.current = text
+    controllerRef.current = null
+    return text
+  }, [url])
 
   const copy = async () => {
+    const request = ++requestRef.current
+    setState('copying')
+    setError('')
     try {
-      const response = await fetch(url)
-      await navigator.clipboard.writeText(await response.text())
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    } catch {
-      window.open(url, '_blank', 'noopener')
+      const text = await load()
+      if (request !== requestRef.current) return
+      const copied = await copyText(text)
+      if (request !== requestRef.current) return
+      if (!copied) throw new Error('clipboard')
+      setState('copied')
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current)
+      timerRef.current = window.setTimeout(() => setState('idle'), 2000)
+    } catch (cause) {
+      if (request !== requestRef.current) return
+      if (cause instanceof Error && cause.name === 'AbortError') return
+      setState('error')
+      setError(
+        cause instanceof Error && cause.message === 'clipboard'
+          ? 'Clipboard access is blocked. Select the Markdown below instead.'
+          : cause instanceof Error
+            ? cause.message
+            : 'Could not copy the Markdown.',
+      )
+      if (cause instanceof Error && cause.message === 'clipboard' && textRef.current !== null) {
+        setSource(textRef.current)
+      } else {
+        setSource('')
+      }
     }
   }
 
-  const ask = (origin: string, prompt: string) => {
-    const absolute = new URL(url, window.location.href).href
-    window.open(`${origin}${encodeURIComponent(`${prompt} ${absolute}`)}`, '_blank', 'noopener')
-  }
+  const chatgpt = `https://chatgpt.com/?q=${encodeURIComponent(`${AI_PROMPT} ${absolute}`)}`
+  const claude = `https://claude.ai/new?q=${encodeURIComponent(`${AI_PROMPT} ${absolute}`)}`
 
   return (
-    <div className="mt-6 flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        onClick={copy}
-        className="inline-flex h-8 items-center gap-2 rounded-md border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent"
-      >
-        {copied ? <Check aria-hidden="true" className="size-3.5" /> : <Copy aria-hidden="true" className="size-3.5" />}
-        {copied ? 'Copied' : 'Copy Markdown'}
-      </button>
+    <div className="mt-6 flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={copy}
+          disabled={state === 'copying'}
+          className="inline-flex h-8 items-center gap-2 rounded-md border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60"
+        >
+          {state === 'copied' ? (
+            <Check aria-hidden="true" className="size-3.5" />
+          ) : state === 'copying' ? (
+            <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
+          ) : (
+            <Copy aria-hidden="true" className="size-3.5" />
+          )}
+          {state === 'copied'
+            ? 'Copied'
+            : state === 'copying'
+              ? 'Copying…'
+              : state === 'error'
+                ? 'Retry copy'
+                : 'Copy Markdown'}
+        </button>
 
-      <Popover>
-        <PopoverTrigger className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent">
-          Open
-          <ChevronRight aria-hidden="true" className="size-3.5 rotate-90 opacity-60" />
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-56 p-1">
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm no-underline transition-colors hover:bg-accent"
-          >
-            <ArrowUpRight aria-hidden="true" className="size-3.5 opacity-70" />
-            View as Markdown
-          </a>
-          <button
-            type="button"
-            onClick={() => ask('https://chatgpt.com/?q=', 'Read this documentation page and explain it:')}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
-          >
-            <ArrowUpRight aria-hidden="true" className="size-3.5 opacity-70" />
-            Open in ChatGPT
-          </button>
-          <button
-            type="button"
-            onClick={() => ask('https://claude.ai/new?q=', 'Read this documentation page and explain it:')}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
-          >
-            <ArrowUpRight aria-hidden="true" className="size-3.5 opacity-70" />
-            Open in Claude
-          </button>
-        </PopoverContent>
-      </Popover>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
+            Open
+            <ChevronDown aria-hidden="true" className="size-3.5 opacity-60" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-64">
+            <DropdownMenuLabel>Raw source</DropdownMenuLabel>
+            <DropdownMenuItem render={<a href={url} target="_blank" rel="noreferrer" />}>
+              <SvglIcon name="markdown" />
+              <span className="flex-1">View Markdown</span>
+              <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Ask an AI</DropdownMenuLabel>
+            <DropdownMenuItem render={<a href={chatgpt} target="_blank" rel="noreferrer" />}>
+              <SvglIcon name="openai" />
+              <span className="flex-1">Open in ChatGPT</span>
+              <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<a href={claude} target="_blank" rel="noreferrer" />}>
+              <SvglIcon name="claude" />
+              <span className="flex-1">Open in Claude</span>
+              <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <span role="status" aria-live="polite" className="text-sm text-muted-foreground">
+        {state === 'copied' ? 'Markdown copied' : state === 'error' ? error : ''}
+      </span>
+
+      {state === 'error' && source ? (
+        <label className="block text-sm text-muted-foreground">
+          Select the Markdown below and copy it manually.
+          <textarea
+            readOnly
+            value={source}
+            onFocus={(event) => event.currentTarget.select()}
+            className="novon-scroll mt-1 h-32 w-full resize-y rounded-md border border-border bg-card/60 p-2 font-mono text-xs text-foreground"
+          />
+        </label>
+      ) : null}
     </div>
   )
 }
@@ -640,7 +857,13 @@ function postLabel(route: Route): string {
 export function PostItem({ route, className }: { route: Route; className?: string }) {
   const base = useBase()
   return (
-    <a href={withBase(base, route.path)} className={cn('block py-3 no-underline', className)}>
+    <a
+      href={withBase(base, route.path)}
+      className={cn(
+        '-mx-2 block rounded-lg px-2 py-3 no-underline transition-colors hover:bg-accent/50 focus-visible:bg-accent/50',
+        className,
+      )}
+    >
       <p className="font-medium text-foreground">{postLabel(route)}</p>
       {route.meta.description ? (
         <p className="mt-0.5 text-muted-foreground">{route.meta.description}</p>
@@ -826,34 +1049,55 @@ export function DocsLayout({ route, url, title, description, headings, children,
 
   // A direct load with a fragment resolves the hash before the client content
   // exists, so re-align it once the layout has settled (and again after fonts).
+  // The font pass is skipped if the reader has already changed the hash or
+  // scrolled away, so it can never yank them back.
   React.useEffect(() => {
-    const { hash } = window.location
-    if (!hash || hash.length < 2) return
-    let id: string
-    try {
-      id = decodeURIComponent(hash.slice(1))
-    } catch {
-      return
-    }
-    const target = id ? document.getElementById(id) : null
+    const initialHash = window.location.hash
+    const id = hashToId(initialHash)
+    if (!id) return
+    const target = document.getElementById(id)
     if (!target) return
+
     const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       ? 'auto'
       : 'smooth'
     let cancelled = false
-    const scroll = () => {
-      if (!cancelled) target.scrollIntoView({ behavior, block: 'start' })
+    let userMoved = false
+    // The programmatic scroll keeps emitting `scroll`, so ignore those events
+    // for its duration and treat anything after as the reader taking over.
+    let programmaticUntil = 0
+    const markMoved = () => {
+      userMoved = true
     }
+    const onScroll = () => {
+      if (performance.now() > programmaticUntil) userMoved = true
+    }
+    const scroll = () => {
+      if (cancelled) return
+      programmaticUntil = performance.now() + 1200
+      target.scrollIntoView({ behavior, block: 'start' })
+    }
+
     let frame = window.requestAnimationFrame(scroll)
     document.fonts?.ready
       .then(() => {
-        if (cancelled) return
+        if (cancelled || userMoved || window.location.hash !== initialHash) return
         frame = window.requestAnimationFrame(scroll)
       })
       .catch(() => {})
+
+    window.addEventListener('wheel', markMoved, { passive: true })
+    window.addEventListener('touchstart', markMoved, { passive: true })
+    window.addEventListener('keydown', markMoved)
+    window.addEventListener('scroll', onScroll, { passive: true })
+
     return () => {
       cancelled = true
       window.cancelAnimationFrame(frame)
+      window.removeEventListener('wheel', markMoved)
+      window.removeEventListener('touchstart', markMoved)
+      window.removeEventListener('keydown', markMoved)
+      window.removeEventListener('scroll', onScroll)
     }
   }, [])
 
@@ -921,7 +1165,7 @@ export function DocsLayout({ route, url, title, description, headings, children,
           <div
             className={cn(
               'mx-auto w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10',
-              fullWidth ? 'max-w-[80rem]' : wide ? 'max-w-[60rem]' : 'max-w-(--novon-content-width)',
+              fullWidth ? 'max-w-[80rem]' : wide ? 'max-w-[64rem]' : 'max-w-(--novon-content-width)',
             )}
           >
             {collapsed ? (
@@ -960,7 +1204,7 @@ export function DocsLayout({ route, url, title, description, headings, children,
 
         {showToc && !collapsed ? (
           <aside
-            className="sticky top-0 hidden h-screen shrink-0 overflow-y-auto px-4 py-10 xl:block"
+            className="novon-scroll sticky top-0 hidden h-screen shrink-0 overflow-y-auto px-4 py-10 xl:block"
             style={{ width: 'var(--novon-toc-width)' }}
           >
             <TableOfContents headings={headings} />
@@ -979,14 +1223,23 @@ export function BlogLayout({ route, url, title, description, children, config, s
   const isHome = url === '/'
   const isPost = Boolean(route && !route.isIndex && !route.synthetic && !route.postList && !route.tag)
   const cover = typeof route?.meta.image === 'string' ? route.meta.image : undefined
+  const date = formatDate(route?.meta.date, config.language)
+  const author =
+    typeof route?.meta.author === 'string' ? route.meta.author : (route?.meta.author?.name ?? config.author)
 
   return (
     <div className="min-h-screen">
+      <a
+        href="#novon-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:border focus:border-border focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:no-underline focus:shadow-lg"
+      >
+        Skip to content
+      </a>
       <ScrollProgress />
       <div className="mx-auto w-full max-w-(--novon-column-width) px-4 pt-14 pb-16 md:px-0">
         <Header />
 
-        <main className="mt-12">
+        <main id="novon-content" className="mt-12">
           {isHome && route?.synthetic ? (
             <HomePage site={site} config={config} />
           ) : route?.postList ? (
@@ -1007,6 +1260,13 @@ export function BlogLayout({ route, url, title, description, children, config, s
               ) : null}
 
               <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
+              {date || author ? (
+                <p className="mt-3 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                  {date ? <time dateTime={String(route?.meta.date)}>{date}</time> : null}
+                  {date && author ? <span aria-hidden="true">·</span> : null}
+                  {author ? <span>{author}</span> : null}
+                </p>
+              ) : null}
               {description ? <p className="mt-4 text-lg text-muted-foreground">{description}</p> : null}
 
               <div className="my-8 border-t border-border" />

@@ -17,7 +17,7 @@ without an import. An explicit `import` in a page always wins over the default.
 | `Steps`, `Step` | Numbered procedures |
 | `Tabs`, `Tab`, `CodeGroup` | Tabbed content and code |
 | `Accordion`, `AccordionGroup` | Collapsible sections |
-| `Frame`, `Badge`, `Icon`, `Term`, `YouTube` | Media and inline bits |
+| `Frame`, `Badge`, `Icon`, `SvglIcon`, `Term`, `YouTube` | Media and inline bits |
 | `Preview` | A live example with its MDX source and a Preview / Code toggle. |
 | `PostList`, `TagList` | Site data, no props needed |
 
@@ -114,6 +114,18 @@ Badges: <Badge>New</Badge> <Badge variant="secondary">Beta</Badge>
 Icons: <Icon icon="Rocket" /> <Icon icon="Shield" /> <Icon icon="Database" />
 
 A defined term: <Term tip="Content Delivery Network">CDN</Term>.
+
+Brand marks: <SvglIcon name="markdown" /> <SvglIcon name="openai" /> <SvglIcon name="claude" />
+
+`SvglIcon` bundles a curated set of brand marks (`markdown`, `openai`, `claude`)
+from [SVGL](https://svgl.app) as static assets — no runtime fetch and no
+third-party markup. A mark is decorative by default; add `label` when it carries
+meaning on its own. It is also exported from `novon` for your own components.
+
+```mdx
+<SvglIcon name="openai" />
+<SvglIcon name="claude" label="Claude" />
+```
 
 ### Preview
 

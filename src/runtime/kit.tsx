@@ -12,6 +12,7 @@
 import * as React from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { cn, isExternal, withBase } from './lib.ts'
+import { copyText } from './actions.ts'
 import { useBase, useConfig } from './site.tsx'
 import { Icon, type IconProps } from './icons.tsx'
 
@@ -68,25 +69,43 @@ export function Reveal({
 
 /** Reading progress for the current page, pinned to the top of the viewport. */
 export function ScrollProgress({ className }: { className?: string }) {
-  const [progress, setProgress] = React.useState(0)
+  const barRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
-    const update = () => {
+    // Paint straight to the DOM so a scroll frame never re-renders React.
+    const paint = () => {
+      const bar = barRef.current
+      if (!bar) return
       const scrollable = document.documentElement.scrollHeight - window.innerHeight
-      setProgress(scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0)
+      const progress = scrollable > 1 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0
+      bar.style.transform = `scaleX(${progress})`
     }
-    update()
-    window.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update)
+
+    let frame = 0
+    const schedule = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(() => {
+        frame = 0
+        paint()
+      })
+    }
+
+    paint()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(schedule) : undefined
+    observer?.observe(document.body)
     return () => {
-      window.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      observer?.disconnect()
+      if (frame) window.cancelAnimationFrame(frame)
     }
   }, [])
 
   return (
     <div aria-hidden="true" className={cn('fixed inset-x-0 top-0 z-50 h-0.5', className)}>
-      <div className="novon-progress h-full bg-primary" style={{ transform: `scaleX(${progress})` }} />
+      <div ref={barRef} className="novon-progress h-full bg-primary" style={{ transform: 'scaleX(0)' }} />
     </div>
   )
 }
@@ -291,13 +310,10 @@ export function CopyUrlButton({ className }: { className?: string }) {
   const [copied, setCopied] = React.useState(false)
 
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard access can be denied; leave the label alone.
-    }
+    const copied = await copyText(window.location.href)
+    if (!copied) return
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -305,7 +321,7 @@ export function CopyUrlButton({ className }: { className?: string }) {
       type="button"
       onClick={copy}
       className={cn(
-        'text-sm text-muted-foreground transition-colors hover:text-foreground',
+        'whitespace-nowrap text-sm text-muted-foreground transition-colors hover:text-foreground',
         className,
       )}
     >

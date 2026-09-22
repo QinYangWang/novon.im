@@ -56,6 +56,9 @@ export { Blobatar, type BlobatarProps } from './blobatar.tsx'
 /* Icons, shared by the theme and MDX components. */
 export { Icon, icons, type IconProps } from './icons.tsx'
 
+/* Curated brand marks from SVGL, for Open menus and MDX. */
+export { SvglIcon, svglIcons, type SvglIconName, type SvglIconProps } from './svgl.tsx'
+
 /* Theme internals, for people writing their own layout. */
 export {
   Brand,

@@ -22,6 +22,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { Icon, type IconProps } from './icons.tsx'
+import { SvglIcon } from './svgl.tsx'
 import {
   Accordion as UIAccordion,
   AccordionItem,
@@ -34,6 +35,7 @@ import {
   TabsTrigger,
 } from './ui.tsx'
 import { cn, isExternal, withBase } from './lib.ts'
+import { copyText } from './actions.ts'
 import { useBase, useSite } from './site.tsx'
 import { IconBadge } from './kit.tsx'
 import { Preview } from './preview.tsx'
@@ -44,16 +46,13 @@ import { PostList as UIPostList, TagList as UITagList } from './shell.tsx'
 /* -------------------------------------------------------------------------- */
 
 const CALLOUT_STYLES = {
-  note: { icon: InfoIcon, tone: 'border-sky-500/30 bg-sky-500/8 text-sky-600 dark:text-sky-400' },
-  info: { icon: InfoIcon, tone: 'border-sky-500/30 bg-sky-500/8 text-sky-600 dark:text-sky-400' },
-  tip: { icon: Lightbulb, tone: 'border-emerald-500/30 bg-emerald-500/8 text-emerald-600 dark:text-emerald-400' },
-  success: {
-    icon: CheckCircle2,
-    tone: 'border-emerald-500/30 bg-emerald-500/8 text-emerald-600 dark:text-emerald-400',
-  },
-  warning: { icon: AlertTriangle, tone: 'border-amber-500/30 bg-amber-500/8 text-amber-600 dark:text-amber-400' },
-  caution: { icon: AlertTriangle, tone: 'border-amber-500/30 bg-amber-500/8 text-amber-600 dark:text-amber-400' },
-  danger: { icon: XCircle, tone: 'border-red-500/30 bg-red-500/8 text-red-600 dark:text-red-400' },
+  note: { icon: InfoIcon, tone: 'text-sky-600 dark:text-sky-400' },
+  info: { icon: InfoIcon, tone: 'text-sky-600 dark:text-sky-400' },
+  tip: { icon: Lightbulb, tone: 'text-emerald-600 dark:text-emerald-400' },
+  success: { icon: CheckCircle2, tone: 'text-emerald-600 dark:text-emerald-400' },
+  warning: { icon: AlertTriangle, tone: 'text-amber-600 dark:text-amber-400' },
+  caution: { icon: AlertTriangle, tone: 'text-amber-600 dark:text-amber-400' },
+  danger: { icon: XCircle, tone: 'text-red-600 dark:text-red-400' },
 } as const
 
 export type CalloutType = keyof typeof CALLOUT_STYLES
@@ -69,10 +68,10 @@ export function Callout({ type = 'note', title, icon, className, children, ...pr
   const IconComponent = style.icon
   return (
     <div
-      className={cn('my-5 flex gap-3 rounded-xl border border-border bg-card/40 px-4 py-3 text-sm', className)}
+      className={cn('my-5 flex items-start gap-3 rounded-xl border border-border bg-card/40 px-4 py-3 text-sm', className)}
       {...props}
     >
-      <span className={cn('mt-0.5 shrink-0', style.tone)}>
+      <span className={cn('mt-0.5 inline-flex shrink-0', style.tone)}>
         {icon ? <Icon icon={icon} /> : <IconComponent aria-hidden="true" className="size-4" />}
       </span>
       <div className="min-w-0 flex-1 text-foreground/90 [&>p:first-child]:mt-0 [&>p:last-child]:mb-0">
@@ -103,22 +102,57 @@ export interface MdxCardProps extends Omit<React.ComponentProps<'div'>, 'title'>
   arrow?: boolean
 }
 
+function CardArrow({ className }: { className?: string }) {
+  return (
+    <ArrowRight
+      aria-hidden="true"
+      data-card-arrow=""
+      className={cn(
+        'size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none',
+        className,
+      )}
+    />
+  )
+}
+
 function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps) {
+  const content = (
+    <div className="min-w-0 flex-1">
+      {title ? <div className="font-medium text-foreground">{title}</div> : null}
+      {children ? (
+        <div
+          className={cn(
+            'text-sm text-muted-foreground [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2',
+            title ? 'mt-1' : '',
+          )}
+        >
+          {children}
+        </div>
+      ) : null}
+    </div>
+  )
+
+  if (horizontal) {
+    return (
+      <>
+        {icon ? <IconBadge icon={icon} className="mt-0.5" /> : null}
+        {content}
+        {arrow ? <CardArrow className="self-center" /> : null}
+      </>
+    )
+  }
+
+  // A vertical card keeps the icon and the arrow in one trailing header row, so
+  // the arrow never floats under a description of a different height.
   return (
     <>
-      {icon ? <IconBadge icon={icon} className={horizontal ? 'mt-0.5' : ''} /> : null}
-      <span className={cn('min-w-0 flex-1', icon && !horizontal ? 'mt-3' : '')}>
-        {title ? <span className="block font-medium text-foreground">{title}</span> : null}
-        {children ? (
-          <span className={cn('block text-sm text-muted-foreground', title ? 'mt-1' : '')}>{children}</span>
-        ) : null}
-      </span>
-      {arrow ? (
-        <ArrowRight
-          aria-hidden="true"
-          className="size-4 shrink-0 self-center text-muted-foreground transition-transform group-hover:translate-x-0.5"
-        />
+      {icon || arrow ? (
+        <div className="mb-3 flex items-start justify-between gap-3">
+          {icon ? <IconBadge icon={icon} /> : null}
+          {arrow ? <CardArrow className="ml-auto" /> : null}
+        </div>
       ) : null}
+      {content}
     </>
   )
 }
@@ -126,7 +160,7 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
 export function MdxCard({ title, icon, href, horizontal, arrow = Boolean(href), className, children, ...props }: MdxCardProps) {
   const base = useBase()
   const classes = cn(
-    'group flex rounded-xl border border-border bg-card/40 p-4 no-underline transition-colors',
+    'novon-not-prose group flex rounded-xl border border-border bg-card/40 p-4 no-underline transition-colors',
     horizontal ? 'flex-row items-start gap-3' : 'flex-col',
     href && 'hover:bg-accent/40',
     className,
@@ -397,13 +431,10 @@ export function CodeBlock({ children, className, ...props }: React.ComponentProp
 
   const copy = async () => {
     const text = ref.current?.textContent ?? ''
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard access can be denied; leave the block alone.
-    }
+    if (!text) return
+    if (!(await copyText(text))) return
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -449,6 +480,7 @@ export const mdxComponents = {
   Frame,
   Badge,
   Icon,
+  SvglIcon,
   Term,
   Preview,
   YouTube,

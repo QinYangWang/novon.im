@@ -7,6 +7,9 @@ dist/
 # novon build/dev cache (generated next to each site's config)
 .novon/
 
+# Template examples generated into the docs site by docs/plugins/examples.ts
+docs/public/examples/
+
 # Vite caches
 .vite/
 

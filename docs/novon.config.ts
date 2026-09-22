@@ -1,4 +1,5 @@
 import { defineConfig } from 'novon/config'
+import examples from './plugins/examples.ts'
 
 export default defineConfig({
   title: 'novon',
@@ -34,5 +35,5 @@ export default defineConfig({
     },
   },
 
-  plugins: ['search', 'sitemap', 'llms'],
+  plugins: ['search', 'sitemap', 'llms', examples],
 })

@@ -1,0 +1,43 @@
+---
+title: Examples
+label: Overview
+description: The two starter templates, built by this site.
+icon: Box
+order: 3
+---
+
+`novon new` scaffolds one of two starters. Both are built here by this same
+generator, from the templates the package ships, so what you see is exactly what
+`novon new` gives you.
+
+<CardGroup cols={2}>
+  <Card title="Documentation template" icon="Book" href="/examples/docs">
+    A sidebar, an on-this-page column, search and the full MDX component set.
+  </Card>
+  <Card title="Blog template" icon="FileText" href="/examples/blog">
+    A single reading column, a post list, tags and an RSS feed.
+  </Card>
+</CardGroup>
+
+```bash
+novon new my-docs                 # documentation site
+novon new my-blog --template blog # blog
+```
+
+## What both templates share
+
+Every template is MDX plus one config file. There is no `package.json`, no build
+script and no theme source to maintain — `novon dev` and `novon build` run
+against the installed package.
+
+| File | Role |
+| --- | --- |
+| `novon.config.ts` | Title, navigation, theme, plugins |
+| `content/**/*.mdx` | The pages; the file tree is the URL tree and the sidebar |
+| `public/` | Static files copied to the output root |
+
+<Note>
+  These examples are generated during `novon dev` and `novon build` and written
+  to `public/examples/`, so they need no second server. See
+  `docs/plugins/examples.ts` in the repository.
+</Note>

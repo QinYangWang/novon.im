@@ -1,0 +1,54 @@
+---
+title: Blog template
+description: A reading column, a post list, tags and an RSS feed.
+icon: FileText
+order: 2
+wide: true
+---
+
+Create one with:
+
+```bash
+novon new my-blog --template blog
+```
+
+<Frame caption="The blog template, built by this site and served from /examples/blog-template/.">
+  <iframe
+    src="/examples/blog-template/"
+    title="Blog template example"
+    loading="lazy"
+    className="h-[38rem] w-full bg-background"
+  />
+</Frame>
+
+[Open the blog template in a new tab](/examples/blog-template/)
+
+## What is in it
+
+| Part | Source |
+| --- | --- |
+| Post list at `/` | Generated from `content/`, newest first |
+| A post | One `.mdx` file per post, with `date`, `tags` and an optional cover |
+| Tags | `/tags/<tag>` pages, built from frontmatter |
+| Feed | `/rss.xml`, from the `rss` plugin |
+| About | `content/about.mdx`, an ordinary page |
+
+A post is frontmatter plus a body:
+
+```mdx title="content/hello-world.mdx"
+---
+title: Hello, world
+description: The first post on a brand new novon blog.
+date: 2026-01-01
+tags: [meta]
+image: /cover.svg
+---
+
+The body is Markdown, with MDX components available.
+```
+
+## Sharing and search
+
+The template ships the same theme controls as the docs template, so the same
+`novon.config.ts` keys apply — `theme.social` fills the footer, `theme.darkMode`
+adds the toggle, and adding `search` to `plugins` adds the ⌘K palette.

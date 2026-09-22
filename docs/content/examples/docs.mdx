@@ -1,0 +1,61 @@
+---
+title: Documentation template
+description: The default starter — a sidebar, a table of contents and search.
+icon: Book
+order: 1
+wide: true
+---
+
+Create one with:
+
+```bash
+novon new my-docs
+```
+
+<Frame caption="The documentation template, built by this site and served from /examples/docs-template/.">
+  <iframe
+    src="/examples/docs-template/"
+    title="Documentation template example"
+    loading="lazy"
+    className="h-[38rem] w-full bg-background"
+  />
+</Frame>
+
+[Open the documentation template in a new tab](/examples/docs-template/)
+
+## What is in it
+
+| Part | Source |
+| --- | --- |
+| Home page | `content/index.mdx` |
+| Quick start | `content/getting-started.mdx` |
+| Guide section | `content/guide/`, a folder whose `index.mdx` labels the group |
+| Sidebar order | `order` in each page's frontmatter, then the label |
+| Sidebar icons | `icon` in frontmatter, from the curated set |
+
+```text title="project layout"
+my-docs/
+├── novon.config.ts
+├── public/
+└── content/
+    ├── index.mdx
+    ├── getting-started.mdx
+    └── guide/
+        ├── index.mdx
+        ├── writing.mdx
+        └── components.mdx
+```
+
+## Turning parts off
+
+The sidebar, the on-this-page column and search are independent:
+
+```ts title="novon.config.ts"
+export default defineConfig({
+  theme: { toc: false },        // hide the right-hand column
+  plugins: ['sitemap'],         // drop 'search' for no ⌘K palette
+})
+```
+
+A page can also opt out of the column on its own with `toc: false`, or use the
+full width with `wide: true` / `fullWidth: true`.

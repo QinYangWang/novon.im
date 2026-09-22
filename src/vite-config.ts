@@ -8,6 +8,7 @@
  * - anything else falls back to `novon:fallback-resolve`
  * - `@mdx-js/react` is injected into every compiled page by MDX itself
  */
+import { existsSync, statSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
@@ -154,10 +155,46 @@ function fallbackResolve(packageRoot: string, siteRoot: string): Plugin {
   }
 }
 
+/**
+ * Resolve a request path to a real file inside the site's `public/` directory.
+ *
+ * Vite serves `public/` from its own middleware, which runs after this one, so
+ * the SPA shell would otherwise shadow any extension-less public path. That
+ * breaks a plain directory of static files — a copied example site, a generated
+ * report — in dev while `novon build` copies it correctly.
+ *
+ * Vite's dev static handler also does not resolve a directory to its
+ * `index.html`, so directory hits are reported back and rewritten before Vite
+ * sees them.
+ */
+function publicFileLookup(publicDir: string | false) {
+  if (!publicDir) return () => undefined
+  const root = resolve(publicDir)
+  return (pathname: string): { directory: boolean } | undefined => {
+    let decoded: string
+    try {
+      decoded = decodeURIComponent(pathname)
+    } catch {
+      return undefined
+    }
+    const target = resolve(root, decoded.replace(/^[/\\]+/, ''))
+    // Never let a request escape `public/`.
+    if (target !== root && !target.startsWith(root + sep)) return undefined
+    try {
+      const stats = statSync(target)
+      if (stats.isDirectory()) return existsSync(join(target, 'index.html')) ? { directory: true } : undefined
+      return stats.isFile() ? { directory: false } : undefined
+    } catch {
+      return undefined
+    }
+  }
+}
+
 /** Serve the HTML shell for every route and restart when the config changes. */
 function devServer({ config, packageRoot, configFile }: CreateViteConfigOptions): Plugin {
   const runtime = runtimeConfig(config)
   const entry = `/@fs/${toPosix(join(packageRoot, 'src', 'runtime', 'entry-client.tsx'))}`
+  const lookupPublicFile = publicFileLookup(config.publicDir)
 
   return {
     name: 'novon:dev',
@@ -167,6 +204,16 @@ function devServer({ config, packageRoot, configFile }: CreateViteConfigOptions)
         const url = request.url ?? '/'
         const path = url.split('?')[0]
         if (path.startsWith('/@') || path.startsWith('/node_modules/') || /\.[a-z0-9]{1,6}$/i.test(path)) {
+          return next()
+        }
+        // A real file in `public/` wins over the shell; a directory index has to
+        // be named explicitly because Vite's dev handler will not resolve it.
+        const publicFile = lookupPublicFile(path)
+        if (publicFile) {
+          if (publicFile.directory) {
+            const query = url.length > path.length ? url.slice(path.length) : ''
+            request.url = `${path.replace(/\/*$/, '/')}index.html${query}`
+          }
           return next()
         }
         try {

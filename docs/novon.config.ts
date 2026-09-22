@@ -9,16 +9,17 @@ export default defineConfig({
 
   nav: [
     { label: 'Guide', href: '/guide' },
-    { label: 'Components', href: '/guide/components' },
+    { label: 'Components', href: '/components' },
     { label: 'GitHub', href: 'https://github.com/QinYangWang/novon.im' },
   ],
 
   theme: {
-    accent: 'orange',
-    radius: '0.625rem',
+    accent: 'zinc',
+    radius: '0.5rem',
     darkMode: true,
     toc: true,
     logo: '/logo.svg',
+    logoDark: '/logo-dark.svg',
     favicon: '/favicon.svg',
 
     social: {

@@ -18,7 +18,7 @@ export default defineConfig({
   base: '/',
   template: 'docs',
   nav: [{ label: 'Guide', href: '/guide' }],
-  theme: { accent: 'orange' },
+  theme: { accent: 'zinc' },
   plugins: ['search', 'sitemap', 'llms'],
 })
 ```
@@ -57,7 +57,7 @@ nav: [
 ```
 
 Links with an absolute URL open in a new tab. In the docs template `nav` is shown
-in the mobile top bar; in the blog template it is the pill navigation.
+in the mobile top bar; in the blog template it is the segmented navigation.
 
 ## Output
 
@@ -74,8 +74,8 @@ copying, or point it at another directory.
 
 | Option | Type | Description |
 | --- | --- | --- |
-| `accent` | `orange` \| `blue` \| `indigo` \| `violet` \| `emerald` \| `teal` \| `rose` \| `slate` \| `zinc` | Primary colour. |
-| `radius` | `string` | Corner radius, any CSS length. Defaults to `0.625rem`. |
+| `accent` | `orange` \| `blue` \| `indigo` \| `violet` \| `emerald` \| `teal` \| `rose` \| `slate` \| `zinc` | Palette preset. Defaults to `zinc`, the monochrome scale. |
+| `radius` | `string` | Corner radius, any CSS length. Defaults to `0.5rem`. |
 | `darkMode` | `boolean` | Show the light/dark controls. Defaults to `true`. |
 | `toc` | `boolean` | Show the "On this page" panel. Defaults to `true`. |
 | `logo` | `string` | Logo path, e.g. `/logo.svg`. |

@@ -1,0 +1,109 @@
+---
+title: Components
+label: Overview
+description: The primitives every novon site is built from.
+icon: Puzzle
+order: 0
+wide: true
+---
+
+import { Input, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from 'novon'
+
+Every component below is a [`shadcn/ui`](https://ui.shadcn.com) style primitive built on
+[Base UI](https://base-ui.com). They ship inside `novon`, so a site can use them in
+MDX, in a custom page or in a theme override without installing anything.
+
+<Preview title="A composed example" description="Primitives drop into any MDX page.">
+
+<Card className="w-full max-w-sm">
+  <CardHeader>
+    <CardTitle>Weekly digest</CardTitle>
+    <CardDescription>One email, every Friday.</CardDescription>
+  </CardHeader>
+  <CardContent className="flex flex-col gap-3">
+    <Input placeholder="you@example.com" type="email" />
+    <Button className="w-full">Subscribe</Button>
+  </CardContent>
+</Card>
+
+```mdx
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from 'novon'
+
+<Card>
+  <CardHeader>
+    <CardTitle>Weekly digest</CardTitle>
+    <CardDescription>One email, every Friday.</CardDescription>
+  </CardHeader>
+  <CardContent className="flex flex-col gap-3">
+    <Input placeholder="you@example.com" type="email" />
+    <Button className="w-full">Subscribe</Button>
+  </CardContent>
+</Card>
+```
+
+</Preview>
+
+## Design conventions
+
+The set follows a small number of rules so unrelated components still read as one
+system. They are the same rules the rest of the theme is built on.
+
+- **One radius scale.** Controls use `rounded-md`, surfaces `rounded-lg` or
+  `rounded-xl`, and circles are reserved for avatars, radios and sliders. A
+  component never invents its own corner.
+- **Hairline borders and flat surfaces.** Boundaries are drawn with `border-border`,
+  not shadows. Elevation is reserved for overlays that genuinely float.
+- **Monochrome by default.** Light is black on white, dark is white on black.
+  Color marks state, action and data, so status tones stay meaningful. Hover and
+  selection use the neutral `accent` token.
+- **Geist typography.** Headings and prose use Geist, code and identifiers Geist
+  Mono. The scale is a few sizes used consistently rather than many one-offs.
+- **Sentence case.** Labels, titles and buttons are written the way a person
+  speaks, not Title Cased.
+- **Keyboard first.** Native elements, visible focus rings, `aria-*` on the
+  custom controls and hit areas that meet the 24 by 24 minimum.
+
+<Note>
+  The authoring components that only make sense inside documentation — callouts,
+  steps, tabs with a `title` — live on
+  [Components in MDX](/guide/components) instead.
+</Note>
+
+## Form controls
+
+- [Input](/components/input), [Textarea](/components/input), [Label](/components/input)
+- [Field](/components/field) for labels, descriptions and errors
+- [Select](/components/select)
+- [Checkbox](/components/checkbox)
+- [Radio Group](/components/radio-group)
+- [Switch](/components/switch)
+- [Slider](/components/slider)
+- [Toggle](/components/toggle)
+
+## Surfaces and data
+
+- [Card](/components/card)
+- [Badge](/components/badge)
+- [Avatar](/components/avatar) and [Blobatar](/components/blobatar)
+- [Table](/components/table)
+- [Separator](/components/separator), [Aspect Ratio](/components/separator), [Scroll Area](/components/separator)
+
+## Feedback
+
+- [Alert](/components/alert)
+- [Toast](/components/toast)
+- [Progress](/components/progress) with [Skeleton](/components/progress) and [Spinner](/components/progress)
+
+## Navigation and disclosure
+
+- [Tabs](/components/tabs)
+- [Accordion](/components/accordion)
+- [Collapsible](/components/collapsible)
+- [Breadcrumb](/components/breadcrumb) and [Pagination](/components/breadcrumb)
+
+## Overlays
+
+- [Dialog](/components/dialog), [Alert Dialog](/components/dialog) and [Sheet](/components/dialog)
+- [Popover](/components/popover), [Tooltip](/components/popover) and [Hover Card](/components/popover)
+- [Dropdown Menu](/components/dropdown-menu)
+- [Context Menu](/components/context-menu)

@@ -1,0 +1,75 @@
+---
+title: Radio Group
+description: Choose a single option that must stay visible.
+icon: CheckCircle
+order: 9
+wide: true
+---
+
+import { Label, RadioGroup, RadioGroupItem } from 'novon'
+
+Use a radio group when every option should be visible at once. If the list is
+long, or space is tight, a [Select](/components/select) is the better fit.
+
+## Usage
+
+<Preview title="Basic" description="One value is selected at a time.">
+
+<RadioGroup defaultValue="standard" className="w-full max-w-sm">
+  <Label><RadioGroupItem value="standard" /> Standard shipping</Label>
+  <Label><RadioGroupItem value="express" /> Express shipping</Label>
+  <Label><RadioGroupItem value="pickup" /> Pick up in store</Label>
+</RadioGroup>
+
+```mdx
+<RadioGroup defaultValue="standard">
+  <Label><RadioGroupItem value="standard" /> Standard shipping</Label>
+  <Label><RadioGroupItem value="express" /> Express shipping</Label>
+  <Label><RadioGroupItem value="pickup" /> Pick up in store</Label>
+</RadioGroup>
+```
+
+</Preview>
+
+<Preview title="With descriptions" description="Stack the label and its description.">
+
+<RadioGroup defaultValue="team" className="w-full max-w-md">
+  <Label className="items-start">
+    <RadioGroupItem value="team" className="mt-0.5" />
+    <span className="flex flex-col gap-0.5">
+      <span>Team</span>
+      <span className="text-sm font-normal text-muted-foreground">Up to 20 people, shared billing.</span>
+    </span>
+  </Label>
+  <Label className="items-start">
+    <RadioGroupItem value="company" className="mt-0.5" />
+    <span className="flex flex-col gap-0.5">
+      <span>Company</span>
+      <span className="text-sm font-normal text-muted-foreground">SSO, audit logs and priority support.</span>
+    </span>
+  </Label>
+</RadioGroup>
+
+```mdx
+<RadioGroup defaultValue="team">
+  <Label className="items-start">
+    <RadioGroupItem value="team" className="mt-0.5" />
+    <span className="flex flex-col gap-0.5">
+      <span>Team</span>
+      <span className="text-sm font-normal text-muted-foreground">Up to 20 people.</span>
+    </span>
+  </Label>
+</RadioGroup>
+```
+
+</Preview>
+
+## API
+
+| Component | Element | Notes |
+| --- | --- | --- |
+| `RadioGroup` | `div` | Takes `value`, `defaultValue`, `onValueChange`, `name`. |
+| `RadioGroupItem` | `span` + input | One option. Needs a `value`. |
+
+Arrow keys move between options, and the whole group is reachable with a single
+tab stop, which is the expected radio behavior.

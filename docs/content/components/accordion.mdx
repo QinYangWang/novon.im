@@ -1,0 +1,77 @@
+---
+title: Accordion
+description: Expand and collapse sections of a list.
+icon: List
+order: 21
+wide: true
+---
+
+import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger } from 'novon'
+
+An accordion keeps a long list of headed sections in a small space. The heading
+stays visible so the reader can scan the whole set before opening one.
+
+## Usage
+
+<Preview title="Single" description="By default only one section is open.">
+
+<Accordion defaultValue={['shipping']} className="w-full max-w-lg">
+  <AccordionItem value="shipping">
+    <AccordionTrigger>How long does shipping take?</AccordionTrigger>
+    <AccordionPanel><div className="pb-4">Two to four business days within the country.</div></AccordionPanel>
+  </AccordionItem>
+  <AccordionItem value="returns">
+    <AccordionTrigger>What is the return window?</AccordionTrigger>
+    <AccordionPanel><div className="pb-4">Thirty days from delivery, unused and in the original box.</div></AccordionPanel>
+  </AccordionItem>
+  <AccordionItem value="support">
+    <AccordionTrigger>How do I reach support?</AccordionTrigger>
+    <AccordionPanel><div className="pb-4">Reply to any order email, or write to support@example.com.</div></AccordionPanel>
+  </AccordionItem>
+</Accordion>
+
+```mdx
+<Accordion defaultValue={['shipping']}>
+  <AccordionItem value="shipping">
+    <AccordionTrigger>How long does shipping take?</AccordionTrigger>
+    <AccordionPanel>Two to four business days.</AccordionPanel>
+  </AccordionItem>
+</Accordion>
+```
+
+</Preview>
+
+<Preview title="Multiple" description="`multiple` lets several sections stay open.">
+
+<Accordion multiple defaultValue={['a', 'b']} className="w-full max-w-lg">
+  <AccordionItem value="a">
+    <AccordionTrigger>Install</AccordionTrigger>
+    <AccordionPanel><div className="pb-4">Add novon with your package manager.</div></AccordionPanel>
+  </AccordionItem>
+  <AccordionItem value="b">
+    <AccordionTrigger>Configure</AccordionTrigger>
+    <AccordionPanel><div className="pb-4">Point the config at your content directory.</div></AccordionPanel>
+  </AccordionItem>
+</Accordion>
+
+```mdx
+<Accordion multiple defaultValue={['a', 'b']}>
+  …
+</Accordion>
+```
+
+</Preview>
+
+## API
+
+| Component | Element | Notes |
+| --- | --- | --- |
+| `Accordion` | `div` | Root. `multiple` allows more than one panel. |
+| `AccordionItem` | `div` | One section, keyed by `value`. |
+| `AccordionTrigger` | `button` | The heading. Wired to its panel. |
+| `AccordionPanel` | `div` | The collapsible body. |
+
+<Note>
+  The un-imported `Accordion` in MDX is the authoring component with a `title`
+  prop. Import this one to build a panel from parts yourself.
+</Note>

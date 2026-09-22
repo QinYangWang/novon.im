@@ -19,7 +19,7 @@ export default defineConfig({
   base: '/',
   template: 'docs',
   nav: [{ label: 'Guide', href: '/guide' }],
-  theme: { accent: 'orange' },
+  theme: { accent: 'zinc' },
   plugins: ['search', 'sitemap', 'rss', 'llms'],
 })
 ```
@@ -41,7 +41,7 @@ export default defineConfig({
 
 | Option | Type | Description |
 | --- | --- | --- |
-| `accent` | `orange` \| `blue` \| `indigo` \| `violet` \| `emerald` \| `teal` \| `rose` \| `slate` \| `zinc` | Primary colour. |
+| `accent` | `orange` \| `blue` \| `indigo` \| `violet` \| `emerald` \| `teal` \| `rose` \| `slate` \| `zinc` | Palette preset. Defaults to `zinc`, the monochrome scale. |
 | `radius` | `string` | Corner radius, any CSS length. Defaults to `0.625rem`. |
 | `darkMode` | `boolean` | Show the light/dark controls. Defaults to `true`. |
 | `toc` | `boolean` | Show the "On this page" panel. Defaults to `true`. |

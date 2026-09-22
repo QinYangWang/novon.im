@@ -1,0 +1,81 @@
+---
+title: Avatar
+description: A user or entity image with a fallback.
+icon: Users
+order: 16
+wide: true
+---
+
+import { Avatar, AvatarFallback, AvatarImage, Blobatar } from 'novon'
+
+An avatar shows an image when it loads and falls back to initials or an icon when
+it does not. The fallback is not an error state, it is part of the component.
+
+## Usage
+
+<Preview title="With a fallback" description="The initials show until the image resolves.">
+
+<div className="flex items-center gap-3">
+  <Avatar>
+    <AvatarImage src="https://github.com/shadcn.png" alt="shadcn" />
+    <AvatarFallback>SC</AvatarFallback>
+  </Avatar>
+  <Avatar>
+    <AvatarImage src="/does-not-exist.png" alt="" />
+    <AvatarFallback>NV</AvatarFallback>
+  </Avatar>
+</div>
+
+```mdx
+<Avatar>
+  <AvatarImage src="https://github.com/shadcn.png" alt="shadcn" />
+  <AvatarFallback>SC</AvatarFallback>
+</Avatar>
+```
+
+</Preview>
+
+<Preview title="Blobatar fallback" description="A deterministic face for someone with no picture.">
+
+<div className="flex items-center gap-3">
+  <Avatar className="size-10"><Blobatar name="ada" className="size-full" alt="" /></Avatar>
+  <Avatar className="size-10"><Blobatar name="grace" className="size-full" alt="" /></Avatar>
+  <Avatar className="size-10"><Blobatar name="alan" className="size-full" alt="" /></Avatar>
+</div>
+
+```mdx
+import { Avatar, Blobatar } from 'novon'
+
+<Avatar>
+  <Blobatar name="ada" className="size-full" alt="" />
+</Avatar>
+```
+
+</Preview>
+
+<Preview title="Sizes" description="Size is a class, so any scale works.">
+
+<div className="flex items-center gap-3">
+  <Avatar className="size-7"><AvatarFallback className="text-[10px]">SM</AvatarFallback></Avatar>
+  <Avatar><AvatarFallback>MD</AvatarFallback></Avatar>
+  <Avatar className="size-12"><AvatarFallback>LG</AvatarFallback></Avatar>
+</div>
+
+```mdx
+<Avatar className="size-7"><AvatarFallback>SM</AvatarFallback></Avatar>
+<Avatar><AvatarFallback>MD</AvatarFallback></Avatar>
+<Avatar className="size-12"><AvatarFallback>LG</AvatarFallback></Avatar>
+```
+
+</Preview>
+
+## API
+
+| Component | Element | Notes |
+| --- | --- | --- |
+| `Avatar` | `span` | The clipped, rounded frame. |
+| `AvatarImage` | `img` | Falls back when it errors or is still loading. |
+| `AvatarFallback` | `span` | Rendered whenever the image is not ready. |
+
+Always give the image a meaningful `alt`, and mark it empty when the name is
+already next to it so a screen reader does not repeat it.

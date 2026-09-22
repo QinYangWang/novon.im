@@ -46,8 +46,8 @@ cards and a "last updated" line. Top-level directories render as labelled
 sections, deeper ones as collapsible groups.
 
 **`blog`** — a narrow single column in the style of a personal site: name and
-role, pill navigation, a **Copy URL** control, a section of posts written as
-title + description, and a "Connect" block of arrow pills (email, social, rss).
+role, segmented navigation, a **Copy URL** control, a section of posts written as
+title + description, and a "Connect" block of arrow chips (email, social, rss).
 `/` and the generated `/blog` index both list posts newest first, and a post page
 opens with its cover image and caption before the title.
 
@@ -58,7 +58,7 @@ so a custom component or theme override can use them:
 
 | Component | Purpose |
 | --- | --- |
-| `PillNav` | Pill navigation with an indicator that slides between items. |
+| `PillNav` | Segmented navigation with an indicator that slides between items. |
 | `IconBadge` | Rounded-square icon container used on cards and rows. |
 | `Section` | Titled block with the standard vertical rhythm. |
 | `Reveal` | Reveals its children on scroll. |
@@ -71,12 +71,12 @@ so a custom component or theme override can use them:
 import { ArrowPill, IconBadge, PillNav, Reveal, Section } from 'novon'
 ```
 
-The style follows rare-ui: pill-shaped controls, hairline borders, rounded
-surfaces, an orange brand accent and dark-first colour. Everything is a CSS
-custom property, so a site can override any of it with a stylesheet (see
-[Extending](README.md#extending)).
+The style follows the Vercel/Geist system: monochrome surfaces, hairline alpha
+borders, restrained radii and Geist typography, with light and dark as equal
+citizens. Everything is a CSS custom property, so a site can override any of it
+with a stylesheet (see [Extending](README.md#extending)).
 
-Motion is CSS transitions plus two small hooks — a `ResizeObserver` for the pill
+Motion is CSS transitions plus two small hooks — a `ResizeObserver` for the
 indicator and an `IntersectionObserver` for reveals. `Reveal` only hides its
 content once JavaScript is running, and both are disabled under
 `prefers-reduced-motion`, so nothing is ever hidden from a reader without JS.
@@ -160,8 +160,18 @@ appears on hover.
 ```
 
 The shadcn/ui primitives novon itself is built from are exported too, all on
-Base UI: `Button`, `Badge`, `Card`, `Input`, `Kbd`, `Separator`, `ScrollArea`,
-`Tabs`, `Accordion`, `Collapsible`, `Tooltip`, `Dialog`, `Popover`.
+[Base UI](https://base-ui.com). Every one has a live preview and a copyable MDX
+snippet in the [component reference](https://qinyangwang.github.io/novon.im/components):
+
+- **Surfaces** `Card`, `Badge`, `Avatar`, `Blobatar`, `Table`, `Separator`, `AspectRatio`,
+  `ScrollArea`, `Kbd`
+- **Forms** `Input`, `Textarea`, `Label`, `Field`, `Select`, `Checkbox`,
+  `RadioGroup`, `Switch`, `Slider`
+- **Feedback** `Alert`, `Toast`, `Progress`, `Skeleton`, `Spinner`
+- **Navigation** `Tabs`, `Accordion`, `Collapsible`, `Breadcrumb`, `Pagination`,
+  `Toggle`, `ToggleGroup`
+- **Overlays** `Dialog`, `AlertDialog`, `Sheet`, `Popover`, `Tooltip`,
+  `HoverCard`, `DropdownMenu`, `ContextMenu`
 
 ## Configuration
 

@@ -43,7 +43,10 @@ export function resolveNovonSubpath(spec: string, packageRoot: string): string |
 /** Every `novon/*` public entry, used to build Vite aliases for content files. */
 export function novonAliases(packageRoot: string): { find: RegExp; replacement: string }[] {
   return [
-    { find: /^novon$/, replacement: join(packageRoot, 'src/index.ts') },
+    // Content runs in the browser, so bare `novon` resolves to the runtime half
+    // only. The package root re-exports config and tooling that reach for Node
+    // builtins, which must never enter the client bundle.
+    { find: /^novon$/, replacement: join(packageRoot, 'src/runtime/index.ts') },
     { find: /^novon\/config$/, replacement: join(packageRoot, 'src/config.ts') },
     { find: /^novon\/plugin$/, replacement: join(packageRoot, 'src/plugins/api.ts') },
     { find: /^novon\/theme\.css$/, replacement: join(packageRoot, 'src/runtime/theme.css') },

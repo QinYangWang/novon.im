@@ -10,6 +10,7 @@ import { mdxComponents } from './mdx.tsx'
 import { SiteProvider } from './site.tsx'
 import { BlogLayout, DefaultHomePage, DefaultNotFound, DocsLayout, OverrideProvider, useOverride } from './shell.tsx'
 import { flattenNav, titleOf } from './content.ts'
+import { Toaster } from './ui/toast.tsx'
 import { customComponents } from 'virtual:novon/components'
 import { themeOverrides } from 'virtual:novon/theme'
 
@@ -72,6 +73,7 @@ export function App(props: AppProps) {
     <OverrideProvider value={{ ...themeOverrides, ...props.overrides }}>
       <SiteProvider value={{ config, base: config.base, site, url }}>
         <AppBody {...props} />
+        <Toaster />
       </SiteProvider>
     </OverrideProvider>
   )

@@ -1,0 +1,66 @@
+---
+title: Badge
+description: A small label for status, category or counts.
+icon: Tag
+order: 3
+wide: true
+---
+
+import { Check, Clock } from 'lucide-react'
+import { Badge } from 'novon'
+
+A badge is a short, non-interactive label. It sits inline with text, in a card
+header or beside a title. Reach for it when the value is a word or a count, not
+when it needs a control.
+
+## Usage
+
+<Preview title="Variants" description="Match the tone to what the label means.">
+
+<div className="flex flex-wrap items-center gap-2">
+  <Badge>Default</Badge>
+  <Badge variant="secondary">Secondary</Badge>
+  <Badge variant="outline">Outline</Badge>
+  <Badge variant="success">Stable</Badge>
+  <Badge variant="warning">Deprecated</Badge>
+  <Badge variant="danger">Broken</Badge>
+</div>
+
+```mdx
+<Badge>Default</Badge>
+<Badge variant="secondary">Secondary</Badge>
+<Badge variant="outline">Outline</Badge>
+<Badge variant="success">Stable</Badge>
+<Badge variant="warning">Deprecated</Badge>
+<Badge variant="danger">Broken</Badge>
+```
+
+</Preview>
+
+<Preview title="With an icon" description="A leading icon adds a second, non-color cue.">
+
+<div className="flex flex-wrap items-center gap-2">
+  <Badge variant="success"><Check /> Passed</Badge>
+  <Badge variant="warning"><Clock /> Queued</Badge>
+  <Badge variant="outline">v2.0.0</Badge>
+</div>
+
+```mdx
+import { Check, Clock } from 'lucide-react'
+
+<Badge variant="success"><Check /> Passed</Badge>
+<Badge variant="warning"><Clock /> Queued</Badge>
+<Badge variant="outline">v2.0.0</Badge>
+```
+
+</Preview>
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `variant` | `default` `secondary` `outline` `success` `warning` `danger` | `default` |
+| `className` | `string` | — |
+
+`badgeVariants` is exported for building your own, and `className` accepts any
+utility, so a one-off tone is a single class away.

@@ -184,7 +184,7 @@ import { ArrowPill, IconBadge, PillNav, Reveal, Section } from 'novon'
 ```
 
 `Reveal` only hides its content once JavaScript is running, and both it and the
-pill indicator are disabled under `prefers-reduced-motion`, so nothing is ever
+nav indicator are disabled under `prefers-reduced-motion`, so nothing is ever
 hidden from a reader without JS.
 
 ## Using the shadcn/ui primitives
@@ -198,10 +198,21 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Tabs, TabsList,
 <Button variant="outline" size="sm">Click me</Button>
 ```
 
-Available primitives: `Button`, `Badge`, `Card` (with `CardHeader`,
-`CardTitle`, `CardDescription`, `CardContent`, `CardFooter`), `Input`, `Kbd`,
-`Separator`, `ScrollArea`, `Tabs`, `Accordion`, `Collapsible`, `Tooltip`,
-`Dialog` and `Popover` — all built on Base UI.
+Available primitives, all built on Base UI:
+
+- **Surfaces** `Card` (with `CardHeader`, `CardTitle`, `CardDescription`,
+  `CardContent`, `CardFooter`, `CardAction`), `Badge`, `Avatar`, `Blobatar`, `Table`,
+  `Separator`, `AspectRatio`, `ScrollArea`, `Kbd`
+- **Forms** `Input`, `Textarea`, `Label`, `Field`, `Select`, `Checkbox`,
+  `RadioGroup`, `Switch`, `Slider`
+- **Feedback** `Alert`, `Toast`, `Progress`, `Skeleton`, `Spinner`
+- **Navigation** `Tabs`, `Accordion`, `Collapsible`, `Breadcrumb`, `Pagination`,
+  `Toggle`, `ToggleGroup`
+- **Overlays** `Dialog`, `AlertDialog`, `Sheet`, `Popover`, `Tooltip`,
+  `HoverCard`, `DropdownMenu`, `ContextMenu`
+
+Variant helpers `buttonVariants`, `badgeVariants`, `toggleVariants` and
+`alertVariants` are exported for building your own.
 
 <Note>
   `Card` inside MDX is the content card from this page. The shadcn/ui container

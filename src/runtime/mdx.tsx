@@ -36,6 +36,7 @@ import {
 import { cn, isExternal, withBase } from './lib.ts'
 import { useBase, useSite } from './site.tsx'
 import { IconBadge } from './kit.tsx'
+import { Preview } from './preview.tsx'
 import { PostList as UIPostList, TagList as UITagList } from './shell.tsx'
 
 /* -------------------------------------------------------------------------- */
@@ -182,7 +183,7 @@ export function Steps({ className, ...props }: React.ComponentProps<'div'>) {
 export function Step({ title, className, children, ...props }: React.ComponentProps<'div'> & { title?: React.ReactNode }) {
   return (
     <div className={cn('relative pb-6 last:pb-0 [counter-increment:novon-step]', className)} {...props}>
-      <span className="absolute -left-[calc(1.5rem+0.75rem)] top-0 flex size-6 items-center justify-center rounded-full border border-border bg-card text-xs font-medium text-muted-foreground before:content-[counter(novon-step)]" />
+      <span className="absolute -left-[calc(1.5rem+0.75rem)] top-0 flex size-6 items-center justify-center rounded-md border border-border bg-card text-xs font-medium text-muted-foreground before:content-[counter(novon-step)]" />
       {title ? <p className="mb-1 font-medium text-foreground">{title}</p> : null}
       <div className="text-sm text-muted-foreground [&>p:first-child]:mt-0">{children}</div>
     </div>
@@ -414,7 +415,7 @@ export function CodeBlock({ children, className, ...props }: React.ComponentProp
         type="button"
         onClick={copy}
         aria-label={copied ? 'Copied' : 'Copy code'}
-        className="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
+        className="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
       >
         {copied ? <Check aria-hidden="true" className="size-3.5" /> : <Copy aria-hidden="true" className="size-3.5" />}
       </button>
@@ -449,6 +450,7 @@ export const mdxComponents = {
   Badge,
   Icon,
   Term,
+  Preview,
   YouTube,
   PostList: MdxPostList,
   TagList: MdxTagList,

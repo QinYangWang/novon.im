@@ -1,0 +1,68 @@
+---
+title: Input
+description: Text input, textarea and label.
+icon: FileText
+order: 5
+wide: true
+---
+
+import { Input, Label, Textarea } from 'novon'
+
+`Input` and `Textarea` are thin wrappers over the native elements. They keep the
+platform's keyboard, selection and autofill behavior and add only the theme's
+border, radius and focus ring.
+
+## Usage
+
+<Preview title="Input" description="A single line of text.">
+
+<div className="flex w-full max-w-sm flex-col gap-2">
+  <Label htmlFor="email">Email</Label>
+  <Input id="email" type="email" placeholder="you@example.com" />
+</div>
+
+```mdx
+<Label htmlFor="email">Email</Label>
+<Input id="email" type="email" placeholder="you@example.com" />
+```
+
+</Preview>
+
+<Preview title="Textarea" description="A multi-line value that can be resized.">
+
+<Textarea className="max-w-sm" placeholder="Tell us what you are building" />
+
+```mdx
+<Textarea placeholder="Tell us what you are building" />
+```
+
+</Preview>
+
+<Preview title="States" description="Disabled and invalid inputs stay readable.">
+
+<div className="flex w-full max-w-sm flex-col gap-3">
+  <Input placeholder="Disabled" disabled />
+  <Input aria-invalid defaultValue="not-an-email" />
+  <Input type="file" />
+</div>
+
+```mdx
+<Input placeholder="Disabled" disabled />
+<Input aria-invalid defaultValue="not-an-email" />
+<Input type="file" />
+```
+
+</Preview>
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `type` | native input types | `text` |
+| `aria-invalid` | `boolean` | — |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+
+Both components spread every native attribute, so `onChange`, `name`, `required`
+and the rest behave exactly as they do on the platform element. Use
+[Field](/components/field) when an input needs a description or an error.

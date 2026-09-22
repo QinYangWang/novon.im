@@ -1,0 +1,99 @@
+---
+title: Select
+description: Choose one option from a list.
+icon: List
+order: 7
+wide: true
+---
+
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from 'novon'
+
+A select picks a single value from a known list. Pass `items` to the root so the
+trigger can render a label before the popup ever opens.
+
+## Usage
+
+<Preview title="Basic" description="`items` maps each value to its label.">
+
+<Select items={{ apple: 'Apple', banana: 'Banana', cherry: 'Cherry' }} defaultValue="apple">
+  <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+  <SelectContent>
+    <SelectItem value="apple">Apple</SelectItem>
+    <SelectItem value="banana">Banana</SelectItem>
+    <SelectItem value="cherry">Cherry</SelectItem>
+  </SelectContent>
+</Select>
+
+```mdx
+<Select items={{ apple: 'Apple', banana: 'Banana', cherry: 'Cherry' }} defaultValue="apple">
+  <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+  <SelectContent>
+    <SelectItem value="apple">Apple</SelectItem>
+    <SelectItem value="banana">Banana</SelectItem>
+    <SelectItem value="cherry">Cherry</SelectItem>
+  </SelectContent>
+</Select>
+```
+
+</Preview>
+
+<Preview title="Grouped" description="Groups, a label and a separator keep long lists scannable.">
+
+<Select items={{ starter: 'Starter', growth: 'Growth', scale: 'Scale' }} placeholder="Choose a plan">
+  <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Plans</SelectLabel>
+      <SelectItem value="starter">Starter</SelectItem>
+      <SelectItem value="growth">Growth</SelectItem>
+    </SelectGroup>
+    <SelectSeparator />
+    <SelectItem value="scale">Scale</SelectItem>
+  </SelectContent>
+</Select>
+
+```mdx
+<Select items={{ starter: 'Starter', growth: 'Growth', scale: 'Scale' }}>
+  <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+  <SelectContent>
+    <SelectGroup>
+      <SelectLabel>Plans</SelectLabel>
+      <SelectItem value="starter">Starter</SelectItem>
+      <SelectItem value="growth">Growth</SelectItem>
+    </SelectGroup>
+    <SelectSeparator />
+    <SelectItem value="scale">Scale</SelectItem>
+  </SelectContent>
+</Select>
+```
+
+</Preview>
+
+<Preview title="Disabled option" description="An item can be present but unavailable.">
+
+<Select items={{ draft: 'Draft', published: 'Published', archived: 'Archived' }} defaultValue="draft">
+  <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+  <SelectContent>
+    <SelectItem value="draft">Draft</SelectItem>
+    <SelectItem value="published">Published</SelectItem>
+    <SelectItem value="archived" disabled>Archived</SelectItem>
+  </SelectContent>
+</Select>
+
+```mdx
+<SelectItem value="archived" disabled>Archived</SelectItem>
+```
+
+</Preview>
+
+## API
+
+| Component | Element | Notes |
+| --- | --- | --- |
+| `Select` | — | Root. Takes `items`, `value`, `defaultValue`, `onValueChange`. |
+| `SelectTrigger` | `button` | The closed control. |
+| `SelectValue` | `span` | The selected label, or the placeholder. |
+| `SelectContent` | portal | The popup. Positioned and scrolled for you. |
+| `SelectItem` | `div` | One option. `disabled` and `value` are supported. |
+| `SelectGroup` / `SelectLabel` | `div` | A labelled run of options. |
+| `SelectSeparator` | `div` | A hairline between groups. |

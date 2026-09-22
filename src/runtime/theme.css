@@ -9,31 +9,32 @@
 /* Tokens                                                                     */
 /*                                                                            */
 /* One palette for both templates, so the blog and the docs read as the same   */
-/* design system. Values come from rare-ui (dark-first, orange brand, visible  */
-/* borders) with the shadcn/ui token names kept so custom CSS still works.     */
+/* design system. Values follow the Vercel/Geist monochrome scale: a black     */
+/* primary in light, a white primary in dark, alpha borders, and a blue focus  */
+/* ring. The shadcn/ui token names are kept so custom CSS still works.         */
 /* -------------------------------------------------------------------------- */
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.5rem;
 
   --background: oklch(1 0 0);
-  --foreground: oklch(0.21 0 0);
-  --card: oklch(0.985 0 0);
-  --card-foreground: oklch(0.21 0 0);
+  --foreground: oklch(0.205 0 0);
+  --card: oklch(0.984 0 0);
+  --card-foreground: oklch(0.205 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0 0);
-  --primary: oklch(0.6617 0.2215 36.934);
+  --popover-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0 0);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0 0);
-  --destructive: oklch(0.6368 0.2078 25.3313);
-  --border: oklch(0.928 0.006 264.531);
-  --input: oklch(0.928 0.006 264.531);
-  --ring: oklch(0.6617 0.2215 36.934);
+  --secondary: oklch(0.961 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.961 0 0);
+  --muted-foreground: oklch(0.42 0 0);
+  --accent: oklch(0.961 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.6256 0.2524 23.03);
+  --border: oklch(0 0 0 / 0.1);
+  --input: oklch(0 0 0 / 0.08);
+  --ring: oklch(0.5761 0.2508 258.23);
 
   /* Layout */
   --novon-sidebar-width: 20rem;
@@ -45,23 +46,23 @@
 
 [data-theme='dark'] {
   --background: oklch(0 0 0);
-  --foreground: oklch(0.9219 0 0);
-  --card: oklch(0.1822 0 0);
-  --card-foreground: oklch(1 0 0);
-  --popover: #262626;
-  --popover-foreground: oklch(0.9219 0 0);
-  --primary: oklch(0.6617 0.2215 36.934);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.1822 0 0);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: #171717;
-  --muted-foreground: oklch(0.7155 0 0);
-  --accent: oklch(0.1822 0 0);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.6368 0.2078 25.3313);
-  --border: oklch(0.32 0 0);
-  --input: oklch(0.32 0 0);
-  --ring: oklch(0.6617 0.2215 36.934);
+  --foreground: oklch(0.946 0 0);
+  --card: oklch(0.027 0 0);
+  --card-foreground: oklch(0.946 0 0);
+  --popover: oklch(0.09 0 0);
+  --popover-foreground: oklch(0.946 0 0);
+  --primary: oklch(0.946 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.218 0 0);
+  --secondary-foreground: oklch(0.946 0 0);
+  --muted: oklch(0.218 0 0);
+  --muted-foreground: oklch(0.706 0 0);
+  --accent: oklch(0.218 0 0);
+  --accent-foreground: oklch(0.946 0 0);
+  --destructive: oklch(0.6256 0.2234 23.03);
+  --border: oklch(1 0 0 / 0.13);
+  --input: oklch(1 0 0 / 0.14);
+  --ring: oklch(0.717 0.1648 250.794);
 }
 
 @theme inline {
@@ -89,8 +90,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
   --container-content: var(--novon-content-width);
   --container-column: var(--novon-column-width);
@@ -183,6 +184,12 @@
   .novon-progress {
     transform-origin: 0 50%;
     transition: transform 120ms linear;
+  }
+
+  /* The canvas behind a component example. A flat, slightly raised surface marks
+     it as a preview, distinct from the page. */
+  .novon-preview-canvas {
+    background-color: color-mix(in oklab, var(--foreground) 4%, var(--background));
   }
 }
 

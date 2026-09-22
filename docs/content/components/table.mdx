@@ -1,0 +1,92 @@
+---
+title: Table
+description: Rows and columns for exact lookup.
+icon: List
+order: 17
+wide: true
+---
+
+import { Badge, Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from 'novon'
+
+A table is for reading exact values across consistent rows. Numbers are right
+aligned and use tabular figures so the columns line up.
+
+## Usage
+
+<Preview title="Basic" description="A header, a body and a footer total.">
+
+<Table>
+  <TableCaption>Invoices for the current quarter.</TableCaption>
+  <TableHeader>
+    <tr>
+      <TableHead>Invoice</TableHead>
+      <TableHead>Status</TableHead>
+      <TableHead className="text-right">Amount</TableHead>
+    </tr>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>INV-001</TableCell>
+      <TableCell><Badge variant="success">Paid</Badge></TableCell>
+      <TableCell className="text-right tabular-nums">$250.00</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>INV-002</TableCell>
+      <TableCell><Badge variant="warning">Pending</Badge></TableCell>
+      <TableCell className="text-right tabular-nums">$150.00</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>INV-003</TableCell>
+      <TableCell><Badge variant="danger">Overdue</Badge></TableCell>
+      <TableCell className="text-right tabular-nums">$350.00</TableCell>
+    </TableRow>
+  </TableBody>
+  <TableFooter>
+    <TableRow>
+      <TableCell colSpan={2}>Total</TableCell>
+      <TableCell className="text-right tabular-nums">$750.00</TableCell>
+    </TableRow>
+  </TableFooter>
+</Table>
+
+```mdx
+<Table>
+  <TableCaption>Invoices for the current quarter.</TableCaption>
+  <TableHeader>
+    <tr>
+      <TableHead>Invoice</TableHead>
+      <TableHead>Status</TableHead>
+      <TableHead className="text-right">Amount</TableHead>
+    </tr>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>INV-001</TableCell>
+      <TableCell><Badge variant="success">Paid</Badge></TableCell>
+      <TableCell className="text-right tabular-nums">$250.00</TableCell>
+    </TableRow>
+  </TableBody>
+  <TableFooter>
+    <TableRow>
+      <TableCell colSpan={2}>Total</TableCell>
+      <TableCell className="text-right tabular-nums">$750.00</TableCell>
+    </TableRow>
+  </TableFooter>
+</Table>
+```
+
+</Preview>
+
+## API
+
+| Component | Element |
+| --- | --- |
+| `Table` | `div` wrapper + `table` |
+| `TableHeader` / `TableBody` / `TableFooter` | `thead` / `tbody` / `tfoot` |
+| `TableRow` | `tr` |
+| `TableHead` / `TableCell` | `th` / `td` |
+| `TableCaption` | `caption` |
+
+`Table` scrolls horizontally inside its own wrapper rather than breaking the
+page, and `containerClassName` targets that wrapper. Right align a numeric header
+and every cell beneath it, as the example does.

@@ -1,0 +1,94 @@
+---
+title: Alert
+description: A message that stays in the flow of the page.
+icon: Alert
+order: 14
+wide: true
+---
+
+import { TriangleAlert } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from 'novon'
+
+An alert is persistent: it is part of the layout and the reader can return to it.
+For a message that appears in response to an action and then leaves, use a
+[Toast](/components/toast).
+
+## Usage
+
+<Preview title="Variants" description="Each meaning pairs color with a title.">
+
+<div className="flex w-full max-w-xl flex-col gap-3">
+  <Alert>
+    <AlertTitle>Heads up</AlertTitle>
+    <AlertDescription>Your trial ends in three days.</AlertDescription>
+  </Alert>
+  <Alert variant="info">
+    <AlertTitle>Scheduled maintenance</AlertTitle>
+    <AlertDescription>The dashboard will be read-only on Sunday.</AlertDescription>
+  </Alert>
+  <Alert variant="success">
+    <AlertTitle>Deployed</AlertTitle>
+    <AlertDescription>Production is on the latest commit.</AlertDescription>
+  </Alert>
+  <Alert variant="warning">
+    <AlertTitle>Usage at 85%</AlertTitle>
+    <AlertDescription>Consider upgrading before the next bill.</AlertDescription>
+  </Alert>
+  <Alert variant="destructive">
+    <AlertTitle>Payment failed</AlertTitle>
+    <AlertDescription>Update your card to avoid an interruption.</AlertDescription>
+  </Alert>
+</div>
+
+```mdx
+<Alert>
+  <AlertTitle>Heads up</AlertTitle>
+  <AlertDescription>Your trial ends in three days.</AlertDescription>
+</Alert>
+<Alert variant="info">…</Alert>
+<Alert variant="success">…</Alert>
+<Alert variant="warning">…</Alert>
+<Alert variant="destructive">…</Alert>
+```
+
+</Preview>
+
+<Preview title="With an icon" description="A leading icon adds a second cue beyond color.">
+
+<Alert variant="warning">
+  <TriangleAlert />
+  <div>
+    <AlertTitle>Connection unstable</AlertTitle>
+    <AlertDescription>Changes may take a moment to sync.</AlertDescription>
+  </div>
+</Alert>
+
+```mdx
+import { TriangleAlert } from 'lucide-react'
+
+<Alert variant="warning">
+  <TriangleAlert />
+  <div>
+    <AlertTitle>Connection unstable</AlertTitle>
+    <AlertDescription>Changes may take a moment to sync.</AlertDescription>
+  </div>
+</Alert>
+```
+
+</Preview>
+
+## API
+
+| Component | Element | Notes |
+| --- | --- | --- |
+| `Alert` | `div` | `role="alert"` and a `variant`. |
+| `AlertTitle` | `div` | The message's headline. |
+| `AlertDescription` | `div` | The supporting line. |
+
+| Variant | Meaning |
+| --- | --- |
+| `default` | Neutral information tied to the page. |
+| `info` | Something the reader should know. |
+| `success` | A completed action. |
+| `warning` | A problem that is not blocking yet. |
+| `destructive` | A failure or an irreversible outcome. |

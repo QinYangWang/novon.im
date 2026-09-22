@@ -1,0 +1,82 @@
+---
+title: Breadcrumb
+description: Breadcrumb trail and pagination.
+icon: ArrowRight
+order: 19
+wide: true
+---
+
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator, Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from 'novon'
+
+Breadcrumbs show where a page sits in a hierarchy. Pagination moves through a
+sequence of pages. Both are navigation, so both render real links.
+
+## Breadcrumb
+
+<Preview title="Basic" description="The current page is not a link.">
+
+<Breadcrumb>
+  <BreadcrumbList>
+    <BreadcrumbItem><BreadcrumbLink href="/">Home</BreadcrumbLink></BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem><BreadcrumbLink href="/components">Components</BreadcrumbLink></BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem><BreadcrumbPage>Breadcrumb</BreadcrumbPage></BreadcrumbItem>
+  </BreadcrumbList>
+</Breadcrumb>
+
+```mdx
+<Breadcrumb>
+  <BreadcrumbList>
+    <BreadcrumbItem><BreadcrumbLink href="/">Home</BreadcrumbLink></BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem><BreadcrumbPage>Breadcrumb</BreadcrumbPage></BreadcrumbItem>
+  </BreadcrumbList>
+</Breadcrumb>
+```
+
+</Preview>
+
+## Pagination
+
+<Preview title="Basic" description="`active` marks the current page for assistive tech too.">
+
+<Pagination>
+  <PaginationContent>
+    <PaginationItem><PaginationPrevious href="#">Previous</PaginationPrevious></PaginationItem>
+    <PaginationItem><PaginationLink href="#" active>1</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationLink href="#">2</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationLink href="#">3</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationEllipsis /></PaginationItem>
+    <PaginationItem><PaginationLink href="#">12</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationNext href="#">Next</PaginationNext></PaginationItem>
+  </PaginationContent>
+</Pagination>
+
+```mdx
+<Pagination>
+  <PaginationContent>
+    <PaginationItem><PaginationPrevious href="#">Previous</PaginationPrevious></PaginationItem>
+    <PaginationItem><PaginationLink href="#" active>1</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationLink href="#">2</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationEllipsis />
+    <PaginationItem><PaginationNext href="#">Next</PaginationNext></PaginationItem>
+  </PaginationContent>
+</Pagination>
+```
+
+</Preview>
+
+## API
+
+| Component | Element | Notes |
+| --- | --- | --- |
+| `Breadcrumb` | `nav` | Labelled for assistive tech. |
+| `BreadcrumbList` / `BreadcrumbItem` | `ol` / `li` | The trail. |
+| `BreadcrumbLink` | `a` | Every step except the last. |
+| `BreadcrumbPage` | `span` | The current page, with `aria-current`. |
+| `BreadcrumbSeparator` | `li` | Hidden from assistive tech. |
+| `Pagination` / `PaginationContent` | `nav` / `ul` | The control. |
+| `PaginationLink` | `a` | A page. `active` and `size="default"` are supported. |
+| `PaginationPrevious` / `PaginationNext` | `a` | Step controls. |
+| `PaginationEllipsis` | `span` | A skipped range. |

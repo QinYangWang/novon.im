@@ -2,9 +2,9 @@
  * The novon component kit.
  *
  * One set of building blocks shared by the blog and the docs, so both templates
- * read as the same design system. The style follows rare-ui: pill-shaped
- * navigation and controls, rounded-square icon badges, visible hairline borders,
- * an orange brand accent and restrained motion.
+ * read as the same design system. The style follows the Vercel/Geist system:
+ * monochrome surfaces, hairline alpha borders, restrained radii and Geist
+ * typography, with restrained motion.
  *
  * Everything here is exported from `novon`, so a site can use the same pieces in
  * its own components and theme overrides.
@@ -161,14 +161,14 @@ export function PillNav({ items, className }: { items: PillNavItem[]; className?
   return (
     <div
       className={cn(
-        'relative inline-flex items-center gap-0.5 rounded-full border border-border bg-card/60 p-1 backdrop-blur',
+        'relative inline-flex items-center gap-0.5 rounded-lg border border-border bg-card/60 p-1 backdrop-blur',
         className,
       )}
     >
       {indicator ? (
         <span
           aria-hidden="true"
-          className="novon-pill-indicator absolute top-1 bottom-1 rounded-full bg-accent"
+          className="novon-pill-indicator absolute top-1 bottom-1 rounded-md bg-accent"
           style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
         />
       ) : null}
@@ -180,7 +180,7 @@ export function PillNav({ items, className }: { items: PillNavItem[]; className?
             {...(isExternal(item.href) ? { target: '_blank', rel: 'noreferrer' } : {})}
             aria-current={index === activeIndex ? 'page' : undefined}
             className={cn(
-              'relative rounded-full px-3.5 py-1.5 text-sm no-underline transition-colors',
+              'relative rounded-md px-3.5 py-1.5 text-sm no-underline transition-colors',
               index === activeIndex
                 ? 'font-medium text-foreground'
                 : 'text-muted-foreground hover:text-foreground',
@@ -199,7 +199,7 @@ export function IconBadge({ icon, className, size = 'md' }: { icon: IconProps['i
   return (
     <span
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground',
+        'flex shrink-0 items-center justify-center rounded-lg border border-border bg-card text-foreground',
         size === 'sm' ? 'size-7' : size === 'lg' ? 'size-11' : 'size-9',
         className,
       )}
@@ -257,7 +257,7 @@ export function ArrowPill({
       href={href}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-sm text-foreground no-underline transition-colors hover:bg-accent',
+        'inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-sm text-foreground no-underline transition-colors hover:bg-accent',
         className,
       )}
     >
@@ -320,6 +320,40 @@ export function CopyUrlButton({ className }: { className?: string }) {
 
 type ThemeChoice = 'system' | 'light' | 'dark'
 
+/**
+ * Flip the theme without cross-fading the whole page.
+ *
+ * A theme change touches color, background, border and shadow on almost every
+ * element, so every transition fires at once and the switch smears. Disable
+ * transitions for one frame, force a reflow, then restore them.
+ */
+function applyTheme(next: ThemeChoice): void {
+  const root = document.documentElement
+  const style = document.createElement('style')
+  style.appendChild(document.createTextNode('*,*::before,*::after{transition:none !important}'))
+  document.head.appendChild(style)
+
+  if (next === 'system') {
+    try {
+      localStorage.removeItem('novon-theme')
+    } catch {
+      // ignore
+    }
+    root.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  } else {
+    try {
+      localStorage.setItem('novon-theme', next)
+    } catch {
+      // ignore
+    }
+    root.dataset.theme = next
+  }
+
+  // Force a reflow so the untransitioned colors are committed before restoring.
+  void root.offsetHeight
+  requestAnimationFrame(() => style.remove())
+}
+
 const THEME_CHOICES: { value: ThemeChoice; label: string; path: string }[] = [
   { value: 'system', label: 'System theme', path: 'M4 5h16v10H4zM9 19h6M12 15v4' },
   { value: 'light', label: 'Light theme', path: 'M12 4V2M12 22v-2M4 12H2M22 12h-2M6 6 4.5 4.5M19.5 19.5 18 18M18 6l1.5-1.5M4.5 19.5 6 18M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' },
@@ -341,25 +375,14 @@ export function ThemeSwitch({ className }: { className?: string }) {
 
   const apply = (next: ThemeChoice) => {
     setChoice(next)
-    const root = document.documentElement
-    try {
-      if (next === 'system') {
-        localStorage.removeItem('novon-theme')
-        root.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      } else {
-        localStorage.setItem('novon-theme', next)
-        root.dataset.theme = next
-      }
-    } catch {
-      root.dataset.theme = next === 'dark' ? 'dark' : 'light'
-    }
+    applyTheme(next)
   }
 
   return (
     <div
       role="radiogroup"
       aria-label="Color theme"
-      className={cn('inline-flex items-center gap-0.5 rounded-full border border-border bg-card/60 p-0.5', className)}
+      className={cn('inline-flex items-center gap-0.5 rounded-lg border border-border bg-card/60 p-0.5', className)}
     >
       {THEME_CHOICES.map(({ value, label, path }) => (
         <button
@@ -371,7 +394,7 @@ export function ThemeSwitch({ className }: { className?: string }) {
           title={label}
           onClick={() => apply(value)}
           className={cn(
-            'inline-flex size-6 items-center justify-center rounded-full transition-colors',
+            'inline-flex size-6 items-center justify-center rounded-md transition-colors',
             choice === value ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground',
           )}
         >
@@ -390,14 +413,8 @@ export function ThemeToggle({ className }: { className?: string }) {
   React.useEffect(() => setReady(true), [])
 
   const toggle = () => {
-    const root = document.documentElement
-    const next = root.dataset.theme === 'dark' ? 'light' : 'dark'
-    root.dataset.theme = next
-    try {
-      localStorage.setItem('novon-theme', next)
-    } catch {
-      // ignore
-    }
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+    applyTheme(next)
   }
 
   return (
@@ -406,7 +423,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={toggle}
       aria-label="Toggle color theme"
       className={cn(
-        'inline-flex size-8 items-center justify-center rounded-full border border-border bg-card/60 text-muted-foreground transition-colors hover:text-foreground',
+        'inline-flex size-8 items-center justify-center rounded-md border border-border bg-card/60 text-muted-foreground transition-colors hover:text-foreground',
         className,
       )}
       {...(ready ? {} : { tabIndex: -1, 'aria-hidden': true })}

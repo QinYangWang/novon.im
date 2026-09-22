@@ -101,6 +101,8 @@ export interface Frontmatter {
   icon?: string
   /** Render the page without the sidebar and table of contents columns. */
   fullWidth?: boolean
+  /** Widen the content column for galleries and previews, keeping the TOC. */
+  wide?: boolean
   [key: string]: unknown
 }
 

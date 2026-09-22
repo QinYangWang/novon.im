@@ -1,0 +1,66 @@
+---
+title: Switch
+description: Turn a single setting on or off.
+icon: Wrench
+order: 10
+wide: true
+---
+
+import { Label, Switch } from 'novon'
+
+A switch takes effect immediately, unlike a checkbox in a form that is submitted.
+Reach for it for settings that apply the moment they change.
+
+## Usage
+
+<Preview title="With a label" description="The label describes what the switch controls.">
+
+<div className="flex flex-col gap-3">
+  <Label><Switch defaultChecked /> Public profile</Label>
+  <Label><Switch /> Email notifications</Label>
+  <Label><Switch disabled /> Managed by your organization</Label>
+</div>
+
+```mdx
+<Label><Switch defaultChecked /> Public profile</Label>
+<Label><Switch /> Email notifications</Label>
+<Label><Switch disabled /> Managed by your organization</Label>
+```
+
+</Preview>
+
+<Preview title="With a description" description="Stack a supporting line under the label.">
+
+<Label className="w-full max-w-sm items-start">
+  <Switch defaultChecked className="mt-0.5" />
+  <span className="flex flex-col gap-0.5">
+    <span>Two-factor authentication</span>
+    <span className="text-sm font-normal text-muted-foreground">Require a code at every sign-in.</span>
+  </span>
+</Label>
+
+```mdx
+<Label className="items-start">
+  <Switch defaultChecked className="mt-0.5" />
+  <span className="flex flex-col">
+    <span>Two-factor authentication</span>
+    <span className="text-sm font-normal text-muted-foreground">
+      Require a code at every sign-in.
+    </span>
+  </span>
+</Label>
+```
+
+</Preview>
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `checked` / `defaultChecked` | `boolean` | `false` |
+| `onCheckedChange` | `(checked: boolean) => void` | — |
+| `disabled` | `boolean` | `false` |
+| `name` / `uncheckedValue` | `string` | — |
+
+The switch is a button with a hidden checkbox input, so it is focusable, toggles
+with space and submits with a form.

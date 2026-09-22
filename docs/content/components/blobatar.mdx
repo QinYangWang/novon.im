@@ -1,0 +1,119 @@
+---
+title: Blobatar
+description: Deterministic geometric avatars from any string.
+icon: Sparkles
+order: 16
+wide: true
+---
+
+import { Blobatar } from 'novon'
+
+[Blobatar](https://blobatar.dev) turns any string into a stable geometric face:
+a name, handle, email or id. The same string always renders the same creature,
+so nothing is stored and nothing is fetched. It is the right fallback for
+somebody who has not uploaded a picture, not a replacement for one they have.
+
+The default is monochrome. A black body with white eyes, inverted in dark mode so
+the mark follows the theme the way the rest of the page does.
+
+## Usage
+
+<Preview title="Default" description="Any string works. The name decides the shape.">
+
+<div className="flex flex-wrap items-center gap-6">
+  <Blobatar name="novon" size={72} />
+  <Blobatar name="ada" size={72} />
+  <Blobatar name="grace" size={72} />
+  <Blobatar name="linus" size={72} />
+</div>
+
+```mdx
+<Blobatar name="novon" size={72} />
+<Blobatar name="ada" size={72} />
+```
+
+</Preview>
+
+<Preview title="Sizes" description="A number sets the box; omit it and CSS decides.">
+
+<div className="flex flex-wrap items-center gap-4">
+  <Blobatar name="small" size={24} />
+  <Blobatar name="medium" size={36} />
+  <Blobatar name="large" size={56} />
+  <Blobatar name="huge" size={88} />
+</div>
+
+```mdx
+<Blobatar name="small" size={24} />
+<Blobatar name="medium" size={36} />
+<Blobatar name="large" size={56} />
+```
+
+</Preview>
+
+<Preview title="Colour" description="`monochrome={false}` takes a palette instead.">
+
+<div className="flex flex-wrap items-center gap-4">
+  <Blobatar name="ada" size={56} monochrome={false} palette={{ head: '#4f46e5', eye: '#ffffff' }} />
+  <Blobatar name="grace" size={56} monochrome={false} palette={{ head: '#0d9488', eye: '#ffffff' }} />
+  <Blobatar name="linus" size={56} monochrome={false} palette={{ head: '#d97706', eye: '#ffffff' }} />
+</div>
+
+```mdx
+<Blobatar
+  name="ada"
+  size={56}
+  monochrome={false}
+  palette={{ head: '#4f46e5', eye: '#ffffff' }}
+/>
+```
+
+</Preview>
+
+<Preview title="In a row" description="A list of people reads as people, not placeholders.">
+
+<ul className="flex w-full max-w-sm flex-col gap-2">
+  {[
+    { name: 'Ada Lovelace', handle: 'ada' },
+    { name: 'Grace Hopper', handle: 'grace' },
+    { name: 'Alan Turing', handle: 'alan' },
+  ].map((person) => (
+    <li key={person.handle} className="flex items-center gap-3 rounded-md border border-border px-3 py-2">
+      <Blobatar name={person.handle} size={32} />
+      <span className="flex flex-col">
+        <span className="text-sm font-medium">{person.name}</span>
+        <span className="text-sm text-muted-foreground">@{person.handle}</span>
+      </span>
+    </li>
+  ))}
+</ul>
+
+```mdx
+<li className="flex items-center gap-3">
+  <Blobatar name={person.handle} size={32} />
+  <span>{person.name}</span>
+</li>
+```
+
+</Preview>
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `name` | `string` | required |
+| `size` | `number` | CSS |
+| `monochrome` | `boolean` | `true` |
+| `palette` | `{ head?: string; eye?: string; bg?: string }` | — |
+| `alt` | `string` | `name` |
+| `className` | `string` | — |
+
+The component renders an `<img>`, so a list of hundreds stays a list of images
+rather than a few thousand DOM nodes. Use `alt=""` when the name is already next
+to it, so a screen reader does not repeat it.
+
+<Note>
+  `monochrome` inverts the mark in dark mode with a CSS filter. That keeps one
+  asset for both themes without a second request. When you pass `palette`, the
+  colours are used as given and nothing is inverted.
+</Note>

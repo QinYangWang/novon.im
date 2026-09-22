@@ -1,0 +1,74 @@
+---
+title: Toggle
+description: A two-state button, alone or in a group.
+icon: Zap
+order: 12
+wide: true
+---
+
+import { Toggle, ToggleGroup, ToggleGroupItem } from 'novon'
+import { Bold, Italic, Underline } from 'lucide-react'
+
+A toggle stays pressed until it is pressed again. Use one for a mode, and a
+`ToggleGroup` for a small set where one or several can be active.
+
+## Usage
+
+<Preview title="Default" description="With and without a label.">
+
+<div className="flex flex-wrap items-center gap-3">
+  <Toggle aria-label="Bold"><Bold /></Toggle>
+  <Toggle variant="outline">Bookmark</Toggle>
+  <Toggle variant="outline" defaultPressed>Following</Toggle>
+</div>
+
+```mdx
+import { Bold } from 'lucide-react'
+
+<Toggle aria-label="Bold"><Bold /></Toggle>
+<Toggle variant="outline">Bookmark</Toggle>
+<Toggle variant="outline" defaultPressed>Following</Toggle>
+```
+
+</Preview>
+
+<Preview title="Group" description="One active item by default; `multiple` allows several.">
+
+<div className="flex flex-col gap-3">
+  <ToggleGroup defaultValue={['bold']}>
+    <ToggleGroupItem variant="outline" value="bold" aria-label="Bold"><Bold /></ToggleGroupItem>
+    <ToggleGroupItem variant="outline" value="italic" aria-label="Italic"><Italic /></ToggleGroupItem>
+    <ToggleGroupItem variant="outline" value="underline" aria-label="Underline"><Underline /></ToggleGroupItem>
+  </ToggleGroup>
+  <ToggleGroup multiple defaultValue={['bold', 'underline']}>
+    <ToggleGroupItem variant="outline" value="bold" aria-label="Bold"><Bold /></ToggleGroupItem>
+    <ToggleGroupItem variant="outline" value="italic" aria-label="Italic"><Italic /></ToggleGroupItem>
+    <ToggleGroupItem variant="outline" value="underline" aria-label="Underline"><Underline /></ToggleGroupItem>
+  </ToggleGroup>
+</div>
+
+```mdx
+<ToggleGroup defaultValue={['bold']}>
+  <ToggleGroupItem variant="outline" value="bold" aria-label="Bold"><Bold /></ToggleGroupItem>
+  <ToggleGroupItem variant="outline" value="italic" aria-label="Italic"><Italic /></ToggleGroupItem>
+</ToggleGroup>
+
+<ToggleGroup multiple defaultValue={['bold', 'underline']}>
+  ...
+</ToggleGroup>
+```
+
+</Preview>
+
+## API
+
+| Component | Prop | Type | Default |
+| --- | --- | --- | --- |
+| `Toggle` | `variant` | `default` `outline` | `default` |
+| `Toggle` | `size` | `sm` `default` `lg` | `default` |
+| `Toggle` | `pressed` / `defaultPressed` | `boolean` | `false` |
+| `ToggleGroup` | `value` / `defaultValue` | `string[]` | — |
+| `ToggleGroup` | `multiple` | `boolean` | `false` |
+| `ToggleGroup` | `orientation` | `horizontal` `vertical` | `horizontal` |
+
+Arrow keys move focus inside a group; space or enter toggles the focused item.

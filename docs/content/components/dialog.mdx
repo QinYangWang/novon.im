@@ -1,0 +1,143 @@
+---
+title: Dialog
+description: Dialog, alert dialog and sheet.
+icon: MessageSquare
+order: 23
+wide: true
+---
+
+import { AlertDialog, AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, Button, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from 'novon'
+
+All three are modal: they trap focus, dim the page behind them and close on
+Escape. Pick by intent rather than by size.
+
+- **Dialog** asks for input or shows detail.
+- **Alert Dialog** confirms a decision and cannot be dismissed by clicking away.
+- **Sheet** is a dialog anchored to an edge, for filters, navigation or detail.
+
+## Dialog
+
+<Preview title="Basic" description="A header, a body and a footer action.">
+
+<Dialog>
+  <DialogTrigger render={<Button variant="outline" />}>Edit profile</DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Edit profile</DialogTitle>
+      <DialogDescription>Make changes and save when you are done.</DialogDescription>
+    </DialogHeader>
+    <div className="mt-4 flex flex-col gap-2">
+      <Label htmlFor="dialog-name">Name</Label>
+      <Input id="dialog-name" defaultValue="Ada Lovelace" />
+    </div>
+    <DialogFooter>
+      <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+      <DialogClose render={<Button />}>Save</DialogClose>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+```mdx
+<Dialog>
+  <DialogTrigger render={<Button variant="outline" />}>Edit profile</DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Edit profile</DialogTitle>
+      <DialogDescription>Make changes and save when you are done.</DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <DialogClose render={<Button />}>Save</DialogClose>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+</Preview>
+
+## Alert Dialog
+
+<Preview title="Destructive confirmation" description="The confirm action states what it does.">
+
+<AlertDialog>
+  <AlertDialogTrigger render={<Button variant="destructive" />}>Delete project</AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+      <AlertDialogDescription>
+        Every deployment, environment variable and domain will be removed. This cannot be undone.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogClose render={<Button variant="outline" />}>Cancel</AlertDialogClose>
+      <AlertDialogClose render={<Button variant="destructive" />}>Delete project</AlertDialogClose>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+```mdx
+<AlertDialog>
+  <AlertDialogTrigger render={<Button variant="destructive" />}>Delete project</AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+      <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogClose render={<Button variant="outline" />}>Cancel</AlertDialogClose>
+      <AlertDialogClose render={<Button variant="destructive" />}>Delete</AlertDialogClose>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+</Preview>
+
+## Sheet
+
+<Preview title="Edges" description="`side` anchors the panel to left, right, top or bottom.">
+
+<div className="flex flex-wrap gap-3">
+  <Sheet>
+    <SheetTrigger render={<Button variant="outline" />}>Open right</SheetTrigger>
+    <SheetContent side="right">
+      <SheetHeader>
+        <SheetTitle>Filters</SheetTitle>
+        <SheetDescription>Narrow the results.</SheetDescription>
+      </SheetHeader>
+      <SheetFooter><SheetClose render={<Button />}>Apply</SheetClose></SheetFooter>
+    </SheetContent>
+  </Sheet>
+  <Sheet>
+    <SheetTrigger render={<Button variant="outline" />}>Open bottom</SheetTrigger>
+    <SheetContent side="bottom">
+      <SheetHeader><SheetTitle>Share</SheetTitle></SheetHeader>
+    </SheetContent>
+  </Sheet>
+</div>
+
+```mdx
+<Sheet>
+  <SheetTrigger render={<Button variant="outline" />}>Open</SheetTrigger>
+  <SheetContent side="right">
+    <SheetHeader>
+      <SheetTitle>Filters</SheetTitle>
+      <SheetDescription>Narrow the results.</SheetDescription>
+    </SheetHeader>
+  </SheetContent>
+</Sheet>
+```
+
+</Preview>
+
+## API
+
+| Component | Notes |
+| --- | --- |
+| `Dialog` / `AlertDialog` / `Sheet` | Root. `open`, `defaultOpen`, `onOpenChange`. |
+| `…Trigger` | Opens the overlay. Use `render` to style another element. |
+| `DialogContent` | Centred popup with a close button. `showClose={false}` removes it. |
+| `AlertDialogContent` | Like `DialogContent`, without a close button. |
+| `SheetContent` | Edge panel. `side` is `right` by default. |
+| `DialogHeader` / `DialogFooter` (`AlertDialog…`, `Sheet…`) | Standard padding and alignment. |
+| `DialogTitle` / `DialogDescription` | Required for the accessible name and description. |
+| `DialogClose` / `AlertDialogClose` / `SheetClose` | Closes the overlay. |

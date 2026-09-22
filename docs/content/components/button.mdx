@@ -1,0 +1,96 @@
+---
+title: Button
+description: Triggers an action or event.
+icon: Box
+order: 1
+wide: true
+---
+
+import { Plus } from 'lucide-react'
+import { Button } from 'novon'
+
+Buttons communicate the actions a user can take. Pick a variant that matches how
+important the action is, and a size that matches the density of the surface.
+
+## Usage
+
+<Preview title="Default" description="The primary action in a section.">
+
+<Button>Continue</Button>
+
+```mdx
+<Button>Continue</Button>
+```
+
+</Preview>
+
+<Preview title="Variants" description="Lower-emphasis styles for secondary or supporting actions.">
+
+<div className="flex flex-wrap items-center gap-3">
+  <Button>Default</Button>
+  <Button variant="secondary">Secondary</Button>
+  <Button variant="outline">Outline</Button>
+  <Button variant="ghost">Ghost</Button>
+  <Button variant="destructive">Destructive</Button>
+  <Button variant="link">Link</Button>
+</div>
+
+```mdx
+<Button>Default</Button>
+<Button variant="secondary">Secondary</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="ghost">Ghost</Button>
+<Button variant="destructive">Destructive</Button>
+<Button variant="link">Link</Button>
+```
+
+</Preview>
+
+<Preview title="Sizes" description="Size is tuned to the density of the surrounding interface.">
+
+<div className="flex flex-wrap items-center gap-3">
+  <Button size="sm">Small</Button>
+  <Button>Default</Button>
+  <Button size="lg">Large</Button>
+  <Button size="icon" aria-label="Add"><Plus /></Button>
+</div>
+
+```mdx
+<Button size="sm">Small</Button>
+<Button>Default</Button>
+<Button size="lg">Large</Button>
+<Button size="icon" aria-label="Add"><Plus /></Button>
+```
+
+</Preview>
+
+<Preview title="Disabled and loading" description="Disable while a request is in flight, and keep the label stable.">
+
+<div className="flex flex-wrap items-center gap-3">
+  <Button disabled>Disabled</Button>
+  <Button variant="outline" disabled>Disabled</Button>
+</div>
+
+```mdx
+<Button disabled>Disabled</Button>
+<Button variant="outline" disabled>Disabled</Button>
+```
+
+</Preview>
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `variant` | `default` `secondary` `outline` `ghost` `destructive` `link` | `default` |
+| `size` | `sm` `default` `lg` `icon` `icon-sm` | `default` |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+
+Every native button attribute is forwarded. `buttonVariants` is exported so a
+link or another element can wear the same styles.
+
+<Note>
+  Reach for `variant="link"` only for a tertiary action inside a paragraph. For
+  navigation, use an anchor rather than a button.
+</Note>

@@ -1,133 +1,17 @@
 /**
- * Public API of novon, for `novon.config.ts`, custom components and themes.
+ * Node-facing public API of novon, for `novon.config.ts` and build tooling.
  *
- * Prefer `novon/config` in a config file: it avoids pulling React in while the
- * config is being loaded.
+ * The runtime half is re-exported so `import { Button } from 'novon'` works in
+ * custom components. Config files should prefer `novon/config`, which avoids
+ * pulling React in while the config is being loaded.
+ *
+ * Content that runs in the browser resolves `novon` to `src/runtime/index.ts`
+ * through the Vite alias, which keeps Node builtins out of the client bundle.
  */
 export { defineConfig, loadConfig, resolveConfig, normalizeBase, NovonError } from './config.ts'
 export type { ResolvedConfig } from './config.ts'
 export { definePlugin, BUILTIN_PLUGINS } from './plugins/api.ts'
 export type { NovonPlugin, PluginContext, BuildContext, BuiltPage } from './plugins/api.ts'
-export type {
-  NovonConfig,
-  RuntimeConfig,
-  ThemeOptions,
-  ThemeOverrides,
-  Frontmatter,
-  NavItem,
-  Route,
-  TocEntry,
-  TemplateKind,
-  AccentColor,
-} from './types.ts'
+export type { NovonConfig } from './types.ts'
 
-/* The shadcn/ui-style primitives, for custom components and theme overrides. */
-export {
-  Accordion,
-  AccordionGroup,
-  AccordionItem,
-  AccordionPanel,
-  AccordionTrigger,
-  Badge,
-  badgeVariants,
-  Button,
-  buttonVariants,
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  Collapsible,
-  CollapsiblePanel,
-  CollapsibleTrigger,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTrigger,
-  Input,
-  Kbd,
-  Popover,
-  PopoverClose,
-  PopoverContent,
-  PopoverTrigger,
-  ScrollArea,
-  Separator,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './runtime/ui.tsx'
-
-/* Writing components for MDX, plus the map injected into every page. */
-export {
-  Callout,
-  Caution,
-  CodeGroup,
-  Columns,
-  CardGroup,
-  Danger,
-  Frame,
-  Info,
-  MdxCard,
-  MdxPostList,
-  MdxTagList,
-  Note,
-  Step,
-  Steps,
-  Term,
-  Tip,
-  Warning,
-  YouTube,
-  mdxComponents,
-} from './runtime/mdx.tsx'
-
-/* Icons, shared by the theme and MDX components. */
-export { Icon, icons, type IconProps } from './runtime/icons.tsx'
-
-/* Theme internals, for people writing their own layout. */
-export {
-  Brand,
-  DefaultDocsHeader,
-  DefaultFooter,
-  DefaultHeader,
-  DefaultHomePage,
-  DefaultNotFound,
-  DefaultSidebar,
-  DefaultTableOfContents,
-  PageActions,
-  PageHeading,
-  PageNav,
-  PostCard,
-  PostItem,
-  PostList,
-  PostListPage,
-  Prose,
-  TagList,
-  TagPage,
-  useOverride,
-  type LayoutProps,
-} from './runtime/shell.tsx'
-export { SiteProvider, useBase, useConfig, useSite } from './runtime/site.tsx'
-
-/* The shared component kit: pill navigation, reveals, icon badges, theme controls. */
-export {
-  ArrowPill,
-  CopyUrlButton,
-  IconBadge,
-  PillNav,
-  Reveal,
-  ScrollProgress,
-  Section,
-  SocialPills,
-  ThemeSwitch,
-  ThemeToggle,
-  type PillNavItem,
-} from './runtime/kit.tsx'
-export { createSiteIndex, flattenNav, loadPage } from './runtime/content.ts'
-export type { NavGroup, NavNode, NavPage, PageModule, SiteIndex } from './runtime/content.ts'
-export { cn, formatDate, humanize, withBase } from './runtime/lib.ts'
+export * from './runtime/index.ts'

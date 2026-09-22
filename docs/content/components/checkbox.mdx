@@ -1,0 +1,59 @@
+---
+title: Checkbox
+description: A binary choice, optionally in a group.
+icon: Check
+order: 8
+wide: true
+---
+
+import { Checkbox, Label } from 'novon'
+
+A checkbox is for a yes or no, or for several independent choices in a group. It
+is a real `<input type="checkbox">` underneath, so it submits with a form and
+matches the platform's keyboard behavior.
+
+## Usage
+
+<Preview title="With a label" description="Wrap the checkbox and label in a native label.">
+
+<div className="flex flex-col gap-3">
+  <Label><Checkbox defaultChecked /> Accept the terms</Label>
+  <Label><Checkbox /> Send me product updates</Label>
+</div>
+
+```mdx
+<Label><Checkbox defaultChecked /> Accept the terms</Label>
+<Label><Checkbox /> Send me product updates</Label>
+```
+
+</Preview>
+
+<Preview title="Indeterminate and disabled" description="A mixed state, and a disabled option.">
+
+<div className="flex flex-col gap-3">
+  <Label><Checkbox indeterminate /> Select all</Label>
+  <Label><Checkbox disabled /> Unavailable</Label>
+  <Label><Checkbox disabled defaultChecked /> Locked on</Label>
+</div>
+
+```mdx
+<Checkbox indeterminate />
+<Checkbox disabled />
+<Checkbox disabled defaultChecked />
+```
+
+</Preview>
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `checked` / `defaultChecked` | `boolean` | `false` |
+| `onCheckedChange` | `(checked: boolean) => void` | — |
+| `indeterminate` | `boolean` | `false` |
+| `disabled` | `boolean` | `false` |
+| `required` | `boolean` | `false` |
+| `name` / `value` | `string` | — |
+
+`Checkbox` renders a span plus a hidden input, so it needs a label with an
+accessible name. The simplest label is the native one shown above.

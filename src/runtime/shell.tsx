@@ -2,8 +2,8 @@
  * Built-in theme.
  *
  * Both templates are built from the same kit (`./kit.tsx`), so the blog and the
- * docs share one visual language: pill controls, hairline borders, rounded
- * surfaces and the orange brand accent.
+ * docs share one visual language: monochrome surfaces, hairline borders,
+ * restrained radii and Geist typography.
  *
  * - `blog` — a narrow single column in the style of a personal site: name and
  *   role, a section of posts written as title + description, and a "Connect"
@@ -150,7 +150,7 @@ export function DefaultFooter({ className, variant = 'blog' }: { className?: str
                 key={pill.href}
                 href={pill.href}
                 {...(pill.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-sm text-foreground no-underline transition-colors hover:bg-accent"
+                className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-sm text-foreground no-underline transition-colors hover:bg-accent"
               >
                 {pill.label}
                 <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
@@ -193,7 +193,7 @@ function NavLink({
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex w-full items-center gap-2 rounded-full py-1.5 pr-3 text-sm no-underline transition-colors',
+        'flex w-full items-center gap-2 rounded-md py-1.5 pr-3 text-sm no-underline transition-colors',
         indent ? 'pl-6' : 'pl-2.5',
         active
           ? 'bg-accent font-medium text-foreground'
@@ -248,7 +248,7 @@ function NavTree({
           <li key={node.label}>
             <Accordion defaultValue={contains(node) ? ['group'] : []}>
               <AccordionItem value="group" className="border-0 py-0">
-                <AccordionTrigger className="gap-2 rounded-full py-1.5 pl-2.5 pr-3 text-sm font-normal text-muted-foreground hover:bg-accent/60 hover:text-foreground">
+                <AccordionTrigger className="gap-2 rounded-md py-1.5 pl-2.5 pr-3 text-sm font-normal text-muted-foreground hover:bg-accent/60 hover:text-foreground">
                   <span className="flex min-w-0 items-center gap-2">
                     {node.icon ? <Icon icon={node.icon} className="size-4 shrink-0 opacity-80" /> : null}
                     <span className="truncate">{node.label}</span>
@@ -294,7 +294,7 @@ export function DefaultSidebar({
             type="button"
             onClick={onCollapse}
             aria-label="Collapse sidebar"
-            className="ml-auto inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+            className="ml-auto inline-flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground"
           >
             <PanelLeft aria-hidden="true" className="size-3.5" />
           </button>
@@ -318,7 +318,7 @@ export function DefaultSidebar({
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub"
-            className="inline-flex size-7 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground"
           >
             <GithubIcon className="size-3.5" />
           </a>
@@ -342,7 +342,7 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
           type="button"
           onClick={onToggleNav}
           aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
-          className="inline-flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground"
+          className="inline-flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
         >
           {navOpen ? <X aria-hidden="true" className="size-3.5" /> : <Menu aria-hidden="true" className="size-3.5" />}
         </button>
@@ -354,7 +354,7 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
             key={item.href}
             href={isExternal(item.href) ? item.href : withBase(base, item.href)}
             {...(isExternal(item.href) ? { target: '_blank', rel: 'noreferrer' } : {})}
-            className="rounded-full px-3 py-1.5 text-sm text-muted-foreground no-underline transition-colors hover:bg-accent hover:text-foreground"
+            className="rounded-md px-3 py-1.5 text-sm text-muted-foreground no-underline transition-colors hover:bg-accent hover:text-foreground"
           >
             {item.label}
           </a>
@@ -462,14 +462,14 @@ export function PageActions({ path }: { path: string }) {
       <button
         type="button"
         onClick={copy}
-        className="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent"
+        className="inline-flex h-8 items-center gap-2 rounded-md border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent"
       >
         {copied ? <Check aria-hidden="true" className="size-3.5" /> : <Copy aria-hidden="true" className="size-3.5" />}
         {copied ? 'Copied' : 'Copy Markdown'}
       </button>
 
       <Popover>
-        <PopoverTrigger className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent">
+        <PopoverTrigger className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent">
           Open
           <ChevronRight aria-hidden="true" className="size-3.5 rotate-90 opacity-60" />
         </PopoverTrigger>
@@ -754,7 +754,7 @@ export function DefaultNotFound({ url }: { url: string }) {
       </p>
       <a
         href={withBase(base, '/')}
-        className="mt-6 inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-sm no-underline transition-colors hover:bg-accent"
+        className="mt-6 inline-flex items-center gap-1.5 rounded-md border border-border px-3.5 py-1.5 text-sm no-underline transition-colors hover:bg-accent"
       >
         <ChevronLeft aria-hidden="true" className="size-3.5" /> Back to the start
       </a>
@@ -806,6 +806,7 @@ export function DocsLayout({ route, url, title, description, headings, children,
   }
 
   const fullWidth = route?.meta.fullWidth === true
+  const wide = route?.meta.wide === true
   const showToc = config.theme.toc && headings.length > 0 && route?.meta.toc !== false && !fullWidth
   // `/` is a synthetic copy of the first page; highlight that page instead.
   const activePath =
@@ -840,7 +841,7 @@ export function DocsLayout({ route, url, title, description, headings, children,
           <div
             className={cn(
               'mx-auto w-full px-4 py-8 lg:px-10 lg:py-10',
-              fullWidth ? 'max-w-[80rem]' : 'max-w-(--novon-content-width)',
+              fullWidth ? 'max-w-[80rem]' : wide ? 'max-w-[60rem]' : 'max-w-(--novon-content-width)',
             )}
           >
             {collapsed ? (
@@ -848,7 +849,7 @@ export function DocsLayout({ route, url, title, description, headings, children,
                 type="button"
                 onClick={toggleCollapsed}
                 aria-label="Show sidebar"
-                className="mb-6 hidden size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
+                className="mb-6 hidden size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
               >
                 <PanelLeft aria-hidden="true" className="size-3.5" />
               </button>

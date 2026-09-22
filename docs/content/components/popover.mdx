@@ -1,0 +1,114 @@
+---
+title: Popover
+description: Popover, tooltip and hover card.
+icon: MessageSquare
+order: 24
+wide: true
+---
+
+import { Copy } from 'lucide-react'
+import { Avatar, AvatarFallback, Button, HoverCard, HoverCardContent, HoverCardTrigger, Input, Popover, PopoverContent, PopoverTrigger, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from 'novon'
+
+Three floating surfaces with different jobs.
+
+- **Popover** holds interactive content and opens on click.
+- **Tooltip** names an icon or control and opens on hover and focus.
+- **Hover Card** previews an entity and opens on hover.
+
+## Popover
+
+<Preview title="With a form" description="A popover can hold any interactive content.">
+
+<Popover>
+  <PopoverTrigger render={<Button variant="outline" />}>Set dimensions</PopoverTrigger>
+  <PopoverContent align="start" className="w-64">
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium" htmlFor="pop-w">Width</label>
+        <Input id="pop-w" defaultValue="100%" />
+      </div>
+      <Button size="sm">Apply</Button>
+    </div>
+  </PopoverContent>
+</Popover>
+
+```mdx
+<Popover>
+  <PopoverTrigger render={<Button variant="outline" />}>Set dimensions</PopoverTrigger>
+  <PopoverContent align="start">
+    <Input defaultValue="100%" />
+    <Button size="sm">Apply</Button>
+  </PopoverContent>
+</Popover>
+```
+
+</Preview>
+
+## Tooltip
+
+<Preview title="On an icon button" description="The tooltip is the button's only visible name.">
+
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Copy link" />}>
+      <Copy />
+    </TooltipTrigger>
+    <TooltipContent>Copy link</TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+
+```mdx
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger render={<Button variant="outline" size="icon" aria-label="Copy link" />}>
+      <Copy />
+    </TooltipTrigger>
+    <TooltipContent>Copy link</TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+```
+
+</Preview>
+
+## Hover Card
+
+<Preview title="Entity preview" description="Useful for a name that links somewhere.">
+
+<HoverCard>
+  <HoverCardTrigger render={<Button variant="link" />}>@ada</HoverCardTrigger>
+  <HoverCardContent align="start">
+    <div className="flex gap-3">
+      <Avatar><AvatarFallback>AL</AvatarFallback></Avatar>
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium">Ada Lovelace</p>
+        <p className="text-sm text-muted-foreground">Writes about analytical engines.</p>
+      </div>
+    </div>
+  </HoverCardContent>
+</HoverCard>
+
+```mdx
+<HoverCard>
+  <HoverCardTrigger render={<Button variant="link" />}>@ada</HoverCardTrigger>
+  <HoverCardContent>
+    <Avatar><AvatarFallback>AL</AvatarFallback></Avatar>
+  </HoverCardContent>
+</HoverCard>
+```
+
+</Preview>
+
+## API
+
+| Component | Prop | Notes |
+| --- | --- | --- |
+| `Popover` | `open`, `defaultOpen`, `onOpenChange` | Controlled or not. |
+| `PopoverContent` | `align`, `side`, `sideOffset` | Positioning. |
+| `TooltipProvider` | `delay` | Wraps one or more tooltips. |
+| `TooltipContent` | `side`, `sideOffset` | Positioning. |
+| `HoverCard` | `openDelay`, `closeDelay` | Hover timing. |
+| `HoverCardContent` | `align`, `side`, `sideOffset` | Positioning. |
+
+A tooltip must never be the only place a piece of information lives, and it must
+describe a control that already has an accessible name. The examples above carry
+both.

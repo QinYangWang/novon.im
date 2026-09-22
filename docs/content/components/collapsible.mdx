@@ -1,0 +1,51 @@
+---
+title: Collapsible
+description: Show and hide one region on demand.
+icon: Layers
+order: 22
+wide: true
+---
+
+import { Button, Collapsible, CollapsiblePanel, CollapsibleTrigger } from 'novon'
+
+A collapsible is a single show and hide region with your own trigger. Reach for
+it for a details block that is not a list, such as advanced settings.
+
+## Usage
+
+<Preview title="Basic" description="Any button can be the trigger.">
+
+<Collapsible className="w-full max-w-md">
+  <div className="flex items-center justify-between gap-3">
+    <span className="text-sm font-medium">Advanced settings</span>
+    <CollapsibleTrigger render={<Button variant="outline" size="sm" />}>
+      Toggle
+    </CollapsibleTrigger>
+  </div>
+  <CollapsiblePanel className="mt-3">
+    <div className="flex flex-col gap-2 rounded-xl border border-border p-4 text-sm text-muted-foreground">
+      <p>Cache duration: 60 seconds</p>
+      <p>Retry on failure: 3 attempts</p>
+    </div>
+  </CollapsiblePanel>
+</Collapsible>
+
+```mdx
+<Collapsible>
+  <CollapsibleTrigger render={<Button variant="outline" />}>Toggle</CollapsibleTrigger>
+  <CollapsiblePanel>Hidden content</CollapsiblePanel>
+</Collapsible>
+```
+
+</Preview>
+
+## API
+
+| Component | Element | Notes |
+| --- | --- | --- |
+| `Collapsible` | `div` | Root. `open` / `defaultOpen` control it. |
+| `CollapsibleTrigger` | `button` | The control. |
+| `CollapsiblePanel` | `div` | The region. Animates its height. |
+
+The trigger carries `aria-expanded` and `aria-controls` automatically, so the
+hidden region stays discoverable to assistive tech while it is closed.

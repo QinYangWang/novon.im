@@ -18,6 +18,7 @@ without an import. An explicit `import` in a page always wins over the default.
 | `Tabs`, `Tab`, `CodeGroup` | Tabbed content and code |
 | `Accordion`, `AccordionGroup` | Collapsible sections |
 | `Frame`, `Badge`, `Icon`, `Term`, `YouTube` | Media and inline bits |
+| `Preview` | A live example with its MDX source and a Preview / Code toggle. |
 | `PostList`, `TagList` | Site data, no props needed |
 
 ### Callouts
@@ -114,6 +115,26 @@ Icons: <Icon icon="Rocket" /> <Icon icon="Shield" /> <Icon icon="Database" />
 
 A defined term: <Term tip="Content Delivery Network">CDN</Term>.
 
+### Preview
+
+`Preview` pairs a live example with the MDX that produced it. Put a fenced
+`mdx` code block between the tags and it moves into the Code tab, so the source
+is written once:
+
+<Preview title="Badge" description="The source is lifted from the fence below.">
+
+<Badge variant="success">Stable</Badge>
+
+```mdx
+<Badge variant="success">Stable</Badge>
+```
+
+</Preview>
+
+The `title` and `description` props are optional, and `code` takes a string when
+you would rather not nest a fence. Every component in the
+[reference](/components) is built with it.
+
 ## The shared kit
 
 Both templates are assembled from these, and they are exported from `novon` so
@@ -121,7 +142,7 @@ your own components and theme overrides can use them.
 
 | Component | Purpose |
 | --- | --- |
-| `PillNav` | Pill navigation with an indicator that slides between items. |
+| `PillNav` | Segmented navigation with an indicator that slides between items. |
 | `IconBadge` | Rounded-square icon container used on cards and rows. |
 | `Section` | Titled block with the standard vertical rhythm. |
 | `Reveal` | Reveals its children on scroll. |
@@ -145,18 +166,28 @@ export default function Banner() {
 
 <Note>
   `Reveal` only hides its content once JavaScript is running, and both it and the
-  pill indicator are disabled under `prefers-reduced-motion`, so nothing is ever
+  nav indicator are disabled under `prefers-reduced-motion`, so nothing is ever
   hidden from a reader without JS.
 </Note>
 
 ## shadcn/ui primitives
 
 The components novon itself is built from, all on
-[Base UI](https://base-ui.com): `Button`, `Badge`, `Card` (with `CardHeader`,
-`CardTitle`, `CardDescription`, `CardContent`, `CardFooter`), `Input`, `Kbd`,
-`Separator`, `ScrollArea`, `Tabs`, `Accordion`, `Collapsible`, `Tooltip`,
-`Dialog` and `Popover`. Variant helpers `buttonVariants` and `badgeVariants` are
-exported for building your own.
+[Base UI](https://base-ui.com). Every one has a live preview and an MDX snippet
+in the [component reference](/components):
+
+- **Surfaces** `Card`, `Badge`, `Avatar`, `Blobatar`, `Table`, `Separator`, `AspectRatio`,
+  `ScrollArea`
+- **Forms** `Input`, `Textarea`, `Label`, `Field`, `Select`, `Checkbox`,
+  `RadioGroup`, `Switch`, `Slider`
+- **Feedback** `Alert`, `Toast`, `Progress`, `Skeleton`, `Spinner`
+- **Navigation** `Tabs`, `Accordion`, `Collapsible`, `Breadcrumb`, `Pagination`,
+  `Toggle`, `ToggleGroup`
+- **Overlays** `Dialog`, `AlertDialog`, `Sheet`, `Popover`, `Tooltip`,
+  `HoverCard`, `DropdownMenu`, `ContextMenu`
+
+Variant helpers `buttonVariants`, `badgeVariants`, `toggleVariants` and
+`alertVariants` are exported for building your own.
 
 ```mdx
 import { Button, Card, CardContent } from 'novon'

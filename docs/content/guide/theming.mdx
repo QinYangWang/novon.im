@@ -10,12 +10,13 @@ novon is built from three replaceable layers: **styles**, **components** and
 
 ## Colours
 
-`theme.accent` switches the primary palette, `theme.radius` the corner radius:
+The default theme is monochrome, following the Vercel/Geist scale: a black
+primary in light mode, a white primary in dark, alpha borders and a blue focus
+ring. `theme.radius` sets the corner radius:
 
 ```ts
 theme: {
-  accent: 'violet',
-  radius: '1rem',
+  radius: '0.5rem',
 }
 ```
 
@@ -25,11 +26,14 @@ tokens directly, in `oklch()` or any other colour space:
 ```css title="styles/extra.css"
 :root {
   --primary: oklch(0.55 0.2 250);
+  --primary-foreground: oklch(1 0 0);
+  --ring: oklch(0.55 0.2 250);
   --background: oklch(0.99 0.005 250);
 }
 
 [data-theme='dark'] {
   --primary: oklch(0.75 0.15 250);
+  --primary-foreground: oklch(0 0 0);
 }
 ```
 
@@ -42,8 +46,9 @@ theme: { css: ['./styles/extra.css'] }
   `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`,
   `--destructive`, `--border`, `--input`, `--ring`. Layout widths are
   `--novon-sidebar-width`, `--novon-toc-width`, `--novon-content-width` and
-  `--novon-column-width`. The typeface is `--font-sans`, which you can override
-  from your own stylesheet with `@theme { --font-sans: … }`.
+  `--novon-column-width`. The typefaces are `--font-sans` (Geist) and
+  `--font-mono` (Geist Mono), which you can override from your own stylesheet
+  with `@theme { --font-sans: … }`.
 </Note>
 
 Your stylesheet is loaded after the theme's, so it wins on equal specificity.

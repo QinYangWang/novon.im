@@ -68,9 +68,25 @@ export function Preview({
   const tabRefs = { preview: React.useRef<HTMLButtonElement>(null), code: React.useRef<HTMLButtonElement>(null) }
 
   const onTabKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    let next: 'preview' | 'code'
+    switch (event.key) {
+      // Arrows cycle between the two tabs; Home/End jump to the endpoints.
+      case 'ArrowRight':
+        next = tab === 'preview' ? 'code' : 'preview'
+        break
+      case 'ArrowLeft':
+        next = tab === 'code' ? 'preview' : 'code'
+        break
+      case 'Home':
+        next = 'preview'
+        break
+      case 'End':
+        next = 'code'
+        break
+      default:
+        return
+    }
     event.preventDefault()
-    const next = tab === 'preview' ? 'code' : 'preview'
     setTab(next)
     tabRefs[next].current?.focus()
   }
@@ -80,54 +96,57 @@ export function Preview({
   const preview = nodes.filter((node) => node !== codeNode && !isBlank(node))
 
   return (
-    <div className={cn('my-5', className)}>
+    <div className={cn('my-6', className)}>
       {title ? <p className="text-sm font-semibold text-foreground">{title}</p> : null}
       {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
 
-      <div className="mt-3 flex items-center gap-1 rounded-lg border border-border bg-card/60 p-0.5" role="tablist" aria-label="Example view">
-        {(['preview', 'code'] as const).map((value) => (
-          <button
-            key={value}
-            ref={tabRefs[value]}
-            type="button"
-            role="tab"
-            id={`${id}-${value}-tab`}
-            aria-selected={tab === value}
-            aria-controls={`${id}-panel`}
-            tabIndex={tab === value ? 0 : -1}
-            onClick={() => setTab(value)}
-            onKeyDown={onTabKeyDown}
-            className={cn(
-              'rounded-md px-3 py-1 text-xs font-medium capitalize transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40',
-              tab === value ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {value}
-          </button>
-        ))}
-      </div>
+      <div className="mt-3 overflow-hidden rounded-xl border border-border bg-card/40">
+        <div
+          role="tablist"
+          aria-label="Example view"
+          className="flex items-center gap-1 border-b border-border bg-card/60 px-2 py-1.5"
+        >
+          {(['preview', 'code'] as const).map((value) => (
+            <button
+              key={value}
+              ref={tabRefs[value]}
+              type="button"
+              role="tab"
+              id={`${id}-${value}-tab`}
+              aria-selected={tab === value}
+              aria-controls={`${id}-panel`}
+              tabIndex={tab === value ? 0 : -1}
+              onClick={() => setTab(value)}
+              onKeyDown={onTabKeyDown}
+              className={cn(
+                'inline-flex h-8 items-center rounded-md px-3 text-xs font-medium capitalize transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                tab === value
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+              )}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
 
-      <div
-        role="tabpanel"
-        id={`${id}-panel`}
-        aria-labelledby={`${id}-${tab}-tab`}
-        className="mt-2 overflow-hidden rounded-xl border border-border"
-      >
-        {tab === 'preview' ? (
-          <div
-            className={cn(
-              'novon-preview-canvas flex min-h-44 w-full flex-wrap gap-3 p-6',
-              align === 'center' ? 'items-center justify-center' : 'items-start justify-start',
-              previewClassName,
-            )}
-          >
-            {preview}
-          </div>
-        ) : codeNode ? (
-          <div className="bg-card/40 [&_figure]:m-0 [&_figure]:rounded-none [&_figure]:border-0">{codeNode}</div>
-        ) : (
-          <CodeFallback code={code} />
-        )}
+        <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab}-tab`} tabIndex={0}>
+          {tab === 'preview' ? (
+            <div
+              className={cn(
+                'novon-not-prose novon-preview-canvas flex min-h-44 w-full flex-wrap gap-3 p-6',
+                align === 'center' ? 'items-center justify-center' : 'items-start justify-start',
+                previewClassName,
+              )}
+            >
+              {preview}
+            </div>
+          ) : codeNode ? (
+            <div className="min-w-0 bg-card/40 [&_figure]:m-0 [&_figure]:rounded-none [&_figure]:border-0">{codeNode}</div>
+          ) : (
+            <CodeFallback code={code} />
+          )}
+        </div>
       </div>
     </div>
   )

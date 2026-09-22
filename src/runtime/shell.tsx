@@ -25,7 +25,7 @@ import { cn, formatDate, isExternal, tagSlug, withBase } from './lib.ts'
 import { markdownPath } from '../paths.ts'
 import { useBase, useConfig } from './site.tsx'
 import { SearchTrigger } from './search.tsx'
-import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Popover, PopoverContent, PopoverTrigger, ScrollArea } from './ui.tsx'
+import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Dialog, DialogClose, DialogContent, Popover, PopoverContent, PopoverTrigger, ScrollArea } from './ui.tsx'
 import { Icon } from './icons.tsx'
 import { CopyUrlButton, PillNav, Reveal, ScrollProgress, Section, SocialPills, ThemeSwitch, ThemeToggle } from './kit.tsx'
 import type { NavNode, PageLink, SiteIndex } from './content.ts'
@@ -236,7 +236,7 @@ function NavTree({
           // A section: a label, then its pages.
           return (
             <li key={node.label} className="pt-4 first:pt-1">
-              <p className="px-2.5 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <p className="px-2.5 pb-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                 {node.label}
               </p>
               <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} />
@@ -286,7 +286,7 @@ export function DefaultSidebar({
   const social = config.theme.social ?? {}
 
   return (
-    <div className={cn('flex h-full flex-col', className)}>
+    <div className={cn('flex h-full flex-col bg-card/40', className)}>
       <div className="flex h-14 shrink-0 items-center gap-2 px-4">
         <Brand />
         {onCollapse ? (
@@ -294,7 +294,7 @@ export function DefaultSidebar({
             type="button"
             onClick={onCollapse}
             aria-label="Collapse sidebar"
-            className="ml-auto inline-flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground"
+            className="ml-auto inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <PanelLeft aria-hidden="true" className="size-3.5" />
           </button>
@@ -318,7 +318,7 @@ export function DefaultSidebar({
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub"
-            className="inline-flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <GithubIcon className="size-3.5" />
           </a>
@@ -342,7 +342,7 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
           type="button"
           onClick={onToggleNav}
           aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
-          className="inline-flex size-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
+          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           {navOpen ? <X aria-hidden="true" className="size-3.5" /> : <Menu aria-hidden="true" className="size-3.5" />}
         </button>
@@ -786,11 +786,74 @@ export function DocsLayout({ route, url, title, description, headings, children,
   const [navOpen, setNavOpen] = React.useState(false)
   const [collapsed, setCollapsed] = React.useState(false)
 
+  // Remember what opened the mobile nav so focus can return to it, but only
+  // while it is still visible (the trigger is hidden at the desktop breakpoint).
+  const navTriggerRef = React.useRef<HTMLElement | null>(null)
+  const openNav = () => {
+    navTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setNavOpen(true)
+  }
+  const toggleNav = () => {
+    if (navOpen) setNavOpen(false)
+    else openNav()
+  }
+  const finalFocus = React.useCallback((): HTMLElement | false => {
+    const trigger = navTriggerRef.current
+    if (trigger?.isConnected && trigger.checkVisibility?.() !== false) return trigger
+    return false
+  }, [])
+
   React.useEffect(() => {
     try {
       setCollapsed(localStorage.getItem('novon-sidebar') === 'collapsed')
     } catch {
       // ignore
+    }
+  }, [])
+
+  // Leaving the mobile nav open across the desktop breakpoint would keep an
+  // invisible, focus-trapping dialog mounted, so close it on the transition.
+  React.useEffect(() => {
+    if (!navOpen) return
+    const query = window.matchMedia('(min-width: 1024px)')
+    const onChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setNavOpen(false)
+    }
+    query.addEventListener('change', onChange)
+    if (query.matches) setNavOpen(false)
+    return () => query.removeEventListener('change', onChange)
+  }, [navOpen])
+
+  // A direct load with a fragment resolves the hash before the client content
+  // exists, so re-align it once the layout has settled (and again after fonts).
+  React.useEffect(() => {
+    const { hash } = window.location
+    if (!hash || hash.length < 2) return
+    let id: string
+    try {
+      id = decodeURIComponent(hash.slice(1))
+    } catch {
+      return
+    }
+    const target = id ? document.getElementById(id) : null
+    if (!target) return
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth'
+    let cancelled = false
+    const scroll = () => {
+      if (!cancelled) target.scrollIntoView({ behavior, block: 'start' })
+    }
+    let frame = window.requestAnimationFrame(scroll)
+    document.fonts?.ready
+      .then(() => {
+        if (cancelled) return
+        frame = window.requestAnimationFrame(scroll)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(frame)
     }
   }, [])
 
@@ -816,8 +879,14 @@ export function DocsLayout({ route, url, title, description, headings, children,
 
   return (
     <div className="min-h-screen">
+      <a
+        href="#novon-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:border focus:border-border focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:no-underline focus:shadow-lg"
+      >
+        Skip to content
+      </a>
       <ScrollProgress />
-      <Header onToggleNav={() => setNavOpen((value) => !value)} navOpen={navOpen} />
+      <Header onToggleNav={toggleNav} navOpen={navOpen} />
 
       <div className="flex">
         {!collapsed ? (
@@ -829,18 +898,29 @@ export function DocsLayout({ route, url, title, description, headings, children,
           </aside>
         ) : null}
 
-        {navOpen ? (
-          <div className="fixed inset-0 top-14 z-30 bg-background lg:hidden">
+        <Dialog open={navOpen} onOpenChange={setNavOpen}>
+          <DialogContent
+            showClose={false}
+            finalFocus={finalFocus}
+            aria-label="Documentation navigation"
+            className="fixed inset-x-0 top-14 bottom-0 h-auto max-w-none rounded-none border-0 bg-background p-0 shadow-none lg:hidden"
+          >
+            <DialogClose
+              aria-label="Close navigation"
+              className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X aria-hidden="true" className="size-4" />
+            </DialogClose>
             <ScrollArea className="h-full">
               <Sidebar nav={site.nav} current={activePath} onNavigate={() => setNavOpen(false)} />
             </ScrollArea>
-          </div>
-        ) : null}
+          </DialogContent>
+        </Dialog>
 
-        <main className="min-w-0 flex-1">
+        <main id="novon-content" className="min-w-0 flex-1">
           <div
             className={cn(
-              'mx-auto w-full px-4 py-8 lg:px-10 lg:py-10',
+              'mx-auto w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10',
               fullWidth ? 'max-w-[80rem]' : wide ? 'max-w-[60rem]' : 'max-w-(--novon-content-width)',
             )}
           >
@@ -849,7 +929,7 @@ export function DocsLayout({ route, url, title, description, headings, children,
                 type="button"
                 onClick={toggleCollapsed}
                 aria-label="Show sidebar"
-                className="mb-6 hidden size-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground lg:inline-flex"
+                className="mb-6 hidden size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:inline-flex"
               >
                 <PanelLeft aria-hidden="true" className="size-3.5" />
               </button>

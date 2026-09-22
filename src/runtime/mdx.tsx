@@ -254,7 +254,7 @@ export function Accordion({ title, icon, children, ...props }: TabLikeProps & { 
         </span>
       </AccordionTrigger>
       <AccordionPanel className="pb-4">
-        <div className="text-sm text-muted-foreground [&>p:first-child]:mt-0">{children}</div>
+        <div className="pl-10 pr-4 text-sm text-muted-foreground [&>p:first-child]:mt-0">{children}</div>
       </AccordionPanel>
     </AccordionItem>
   )

@@ -423,7 +423,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={toggle}
       aria-label="Toggle color theme"
       className={cn(
-        'inline-flex size-8 items-center justify-center rounded-md border border-border bg-card/60 text-muted-foreground transition-colors hover:text-foreground',
+        'inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
         className,
       )}
       {...(ready ? {} : { tabIndex: -1, 'aria-hidden': true })}

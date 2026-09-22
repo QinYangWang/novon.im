@@ -31,10 +31,10 @@ export function AccordionTrigger({
   ...props
 }: BaseProps<typeof BaseAccordion.Trigger>) {
   return (
-    <BaseAccordion.Header className="flex">
+    <BaseAccordion.Header className="novon-not-prose flex">
       <BaseAccordion.Trigger
         className={cn(
-          'group flex w-full flex-1 items-center gap-2 px-4 py-3 text-left text-sm font-medium transition-colors outline-none hover:bg-accent/50 focus-visible:bg-accent/50',
+          'group flex w-full flex-1 items-center gap-2 px-4 py-3 text-left text-sm font-medium transition-colors outline-none hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none',
           className,
         )}
         {...props}
@@ -42,7 +42,7 @@ export function AccordionTrigger({
         <svg
           aria-hidden="true"
           viewBox="0 0 16 16"
-          className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[panel-open]:rotate-90"
+          className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[panel-open]:rotate-90 motion-reduce:transition-none"
         >
           <path
             d="M6 4l4 4-4 4"
@@ -63,7 +63,7 @@ export function AccordionPanel({ className, ...props }: BaseProps<typeof BaseAcc
   return (
     <BaseAccordion.Panel
       className={cn(
-        'overflow-hidden text-sm text-muted-foreground transition-all data-[ending-style]:h-0 data-[starting-style]:h-0',
+        'overflow-hidden text-sm text-muted-foreground transition-[height] data-[ending-style]:h-0 data-[starting-style]:h-0 motion-reduce:transition-none',
         className,
       )}
       {...props}
@@ -99,7 +99,7 @@ export function TabsTrigger({ className, ...props }: BaseProps<typeof BaseTabs.T
   return (
     <BaseTabs.Tab
       className={cn(
-        'shrink-0 rounded-md px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 data-[active]:bg-accent data-[active]:text-foreground',
+        'shrink-0 rounded-md px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 data-[active]:bg-accent data-[active]:text-foreground motion-reduce:transition-none',
         className,
       )}
       {...props}

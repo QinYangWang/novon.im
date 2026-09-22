@@ -18,15 +18,15 @@ stays visible so the reader can scan the whole set before opening one.
 <Accordion defaultValue={['shipping']} className="w-full max-w-lg">
   <AccordionItem value="shipping">
     <AccordionTrigger>How long does shipping take?</AccordionTrigger>
-    <AccordionPanel><div className="pb-4">Two to four business days within the country.</div></AccordionPanel>
+    <AccordionPanel><div className="pl-10 pr-4 pb-4">Two to four business days within the country.</div></AccordionPanel>
   </AccordionItem>
   <AccordionItem value="returns">
     <AccordionTrigger>What is the return window?</AccordionTrigger>
-    <AccordionPanel><div className="pb-4">Thirty days from delivery, unused and in the original box.</div></AccordionPanel>
+    <AccordionPanel><div className="pl-10 pr-4 pb-4">Thirty days from delivery, unused and in the original box.</div></AccordionPanel>
   </AccordionItem>
   <AccordionItem value="support">
     <AccordionTrigger>How do I reach support?</AccordionTrigger>
-    <AccordionPanel><div className="pb-4">Reply to any order email, or write to support@example.com.</div></AccordionPanel>
+    <AccordionPanel><div className="pl-10 pr-4 pb-4">Reply to any order email, or write to support@example.com.</div></AccordionPanel>
   </AccordionItem>
 </Accordion>
 
@@ -41,16 +41,16 @@ stays visible so the reader can scan the whole set before opening one.
 
 </Preview>
 
-<Preview title="Multiple" description="`multiple` lets several sections stay open.">
+<Preview title="Multiple" description={<>The <code>multiple</code> prop lets several sections stay open.</>}>
 
 <Accordion multiple defaultValue={['a', 'b']} className="w-full max-w-lg">
   <AccordionItem value="a">
     <AccordionTrigger>Install</AccordionTrigger>
-    <AccordionPanel><div className="pb-4">Add novon with your package manager.</div></AccordionPanel>
+    <AccordionPanel><div className="pl-10 pr-4 pb-4">Add novon with your package manager.</div></AccordionPanel>
   </AccordionItem>
   <AccordionItem value="b">
     <AccordionTrigger>Configure</AccordionTrigger>
-    <AccordionPanel><div className="pb-4">Point the config at your content directory.</div></AccordionPanel>
+    <AccordionPanel><div className="pl-10 pr-4 pb-4">Point the config at your content directory.</div></AccordionPanel>
   </AccordionItem>
 </Accordion>
 

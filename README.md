@@ -201,6 +201,38 @@ export default defineConfig({
 Files in `public/` are copied to the output root. Extra stylesheets go in
 `theme.css`; token names follow shadcn/ui (`--primary`, `--background`, …).
 
+### Syntax highlighting
+
+Fenced code is highlighted at build time with [Shiki](https://shiki.style), in a
+light and dark theme at once. The theme pair is emitted as CSS variables, so
+switching theme never re-highlights and no highlighting JavaScript ships.
+
+```ts
+mdx: {
+  highlight: {
+    theme: { light: 'github-light', dark: 'github-dark' },
+    defaultLanguage: 'plaintext',
+  },
+}
+```
+
+`highlight: false` keeps code blocks and the copy button and drops only the
+token colors. Language grammars load on demand, and an unknown language falls
+back to plain text rather than failing the build.
+
+### Social images
+
+With no image configured, the build renders a `1200×630` PNG per page from its
+title, description and route, writes it to `_og/<route>.png`, and points
+`og:image` and `twitter:image` at it. Rendering is local and deterministic —
+`satori` lays out the card and `@resvg/resvg-js` rasterizes it, so there is no
+headless browser, no network request and no serverless endpoint.
+
+A page's `ogImage` (or `image`) frontmatter, then `theme.ogImage`, takes
+precedence; `theme.generateOgImages: false` disables generation. The bundled
+font covers Latin, Greek and Cyrillic, so set an explicit image for other
+scripts. `novon dev` serves the same renderer from `/_og/…` on demand.
+
 ### Built-in plugins
 
 | Name | Output |
@@ -209,6 +241,9 @@ Files in `public/` are copied to the output root. Extra stylesheets go in
 | `sitemap` | `sitemap.xml` |
 | `rss` | `rss.xml` (dated pages only) |
 | `llms` | `llms.txt` |
+
+OG image generation is built in rather than a plugin — see
+[Social images](#social-images).
 
 ## Extending
 
@@ -289,8 +324,11 @@ bun run test:browser
   changed content still requires a build; this is not server-side regeneration.
 - Sidebar nesting is derived from directories; there is no separate nav file, and
   there is no version or multi-product switcher.
-- Social preview images are static (`theme.ogImage` or per-page `image`); novon
-  does not render OG images at build time.
+- Social preview images are generated at build time: `satori` + `@resvg/resvg-js`
+  render a `1200×630` PNG per page from its title, description and route, with no
+  headless browser and no serverless endpoint. `theme.ogImage`, or a page's
+  `image`/`ogImage` frontmatter, overrides the generated card. The bundled font
+  covers Latin, Greek and Cyrillic; other scripts need an explicit image.
 - The search palette and tag pages are opt-in for the blog template: enable the
   `search` plugin and add `tags` to posts.
 - The blog list shows titles and descriptions rather than dates, following the

@@ -3,7 +3,7 @@
  *
  * `novon new` scaffolds `templates/docs` and `templates/blog` with `__TITLE__`
  * substitution. This plugin performs the same substitution, builds each template
- * with `--base /examples/<name>-template/`, and copies the finished site into
+ * with `--base <parent-base>/examples/<name>-template/`, and copies the finished site into
  * `public/examples/`, which Vite serves in dev and ships in the build.
  *
  * The examples are therefore always exactly the templates this package ships,
@@ -15,6 +15,7 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { definePlugin } from 'novon/plugin'
+import { absoluteUrl } from '../../src/url.ts'
 
 /** Templates to build, and what `novon new`'s placeholders become for each. */
 const TEMPLATES = {
@@ -111,9 +112,11 @@ export default definePlugin({
       }
 
       const output = join(publicRoot, `${name}-template`)
-      const base = `/examples/${name}-template/`
+      const examplePath = `/examples/${name}-template/`
+      const base = `${ctx.base.replace(/\/$/, '')}${examplePath}`
+      const url = ctx.config.url ? absoluteUrl(ctx.config, examplePath) : undefined
       const stampFile = join(stampRoot, name)
-      const stamp = `${newestMtime(template)}:${statSync(import.meta.filename).mtimeMs}:${newestMtime(join(ctx.packageRoot, 'src'))}`
+      const stamp = `${base}:${url}:${newestMtime(template)}:${statSync(import.meta.filename).mtimeMs}:${newestMtime(join(ctx.packageRoot, 'src'))}`
       if (existsSync(join(output, 'index.html')) && existsSync(stampFile) && readFileSync(stampFile, 'utf8') === stamp) {
         built.push(base)
         continue
@@ -127,6 +130,13 @@ export default definePlugin({
         __TEMPLATE__: name,
       })
 
+      // Keep starter configs reusable; only the embedded examples inherit the
+      // parent's public URL. This also makes canonical and OG URLs crawlable.
+      const configFile = join(work, 'novon.config.ts')
+      const source = readFileSync(configFile, 'utf8')
+      writeFileSync(configFile, source.replace('defineConfig({',
+        `defineConfig({\n  url: ${JSON.stringify(url) ?? 'undefined'},`))
+
       const result = Bun.spawnSync(
         [process.execPath, cli, 'build', '--base', base, '--out-dir', 'dist'],
         {
@@ -137,11 +147,10 @@ export default definePlugin({
         },
       )
       if (result.exitCode !== 0) {
-        console.warn(
-          `[examples] building the ${name} template failed (exit ${result.exitCode}); the example will be missing\n` +
+        throw new Error(
+          `[examples] building the ${name} template failed (exit ${result.exitCode})\n` +
             `${result.stdout.toString()}${result.stderr.toString()}`,
         )
-        continue
       }
 
       rmSync(output, { recursive: true, force: true })

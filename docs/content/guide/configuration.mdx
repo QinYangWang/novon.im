@@ -81,7 +81,8 @@ copying, or point it at another directory.
 | `logo` | `string` | Logo path, e.g. `/logo.svg`. |
 | `logoDark` | `string` | Logo used in dark mode. |
 | `favicon` | `string` | Favicon path. |
-| `ogImage` | `string` | Default social preview image. |
+| `ogImage` | `string` | Explicit default social image. Disables generated cards. |
+| `generateOgImages` | `boolean` | Generate a page-specific PNG when no image is set. Defaults to `true`. |
 | `editLink` | `{ base, label }` | "Edit this page" link, prefixed with `base`. |
 | `social` | `object` | `github`, `x`, `discord`, `npm`, `youtube`, `linkedin`, `email`. |
 | `footer` | `{ text, links }` | Footer text and links. |
@@ -110,6 +111,10 @@ See [Theming and plugins](/guide/theming) for a full example.
 
 ```ts
 mdx: {
+  highlight: {
+    theme: { light: 'github-light', dark: 'github-dark' },
+    defaultLanguage: 'plaintext',
+  },
   remarkPlugins: [myRemarkPlugin],
   rehypePlugins: [[myRehypePlugin, { option: true }]],
 }
@@ -119,6 +124,48 @@ Your plugins run after the built-in ones, which are GitHub-flavoured Markdown,
 frontmatter, heading anchors, Shiki highlighting and the exported `headings`
 list. Both lists take
 [unified](https://github.com/unifiedjs/unified#plugin) plugins.
+
+### Syntax highlighting
+
+Fenced code is highlighted with [Shiki](https://shiki.style) at build time, in
+a light and a dark theme at once. The theme pair is emitted as CSS variables, so
+switching the site theme never re-highlights anything and no highlighting
+JavaScript reaches the browser.
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `theme` | `{ light, dark }` | Bundled Shiki theme names. Defaults to `github-light` and `github-dark`. |
+| `defaultLanguage` | `string` | Language for fences without one. Defaults to `plaintext`. |
+
+Set `highlight: false` to turn token colors off while keeping code blocks,
+filenames, line numbers and the copy button.
+
+<Note>
+  Language grammars are loaded on demand, so only the languages your content
+  actually uses are bundled. An unknown language falls back to plain text rather
+  than failing the build.
+</Note>
+
+## Social images
+
+With no image configured, the build renders a card per page from its `title`,
+`description` and route, and writes it to `_og/<route>.png`. Generation is local
+and deterministic: `satori` lays out the card and `@resvg/resvg-js` rasterizes
+it, so there is no headless browser, no network request and no serverless
+endpoint. `og:image`, `twitter:image` and the image dimensions are written into
+the static HTML, and the `.png` files are ordinary assets on your host.
+
+Resolution order for a page's image:
+
+1. Frontmatter `ogImage`, then `image`.
+2. `theme.ogImage`.
+3. A generated card, unless `theme.generateOgImages: false`.
+
+<Warning>
+  Generated cards use a bundled Noto Sans Regular, covering Latin, Greek and
+  Cyrillic. Other scripts and emoji fall back to tofu, so set an explicit
+  `ogImage` for pages that need them.
+</Warning>
 
 ## Plugins
 

@@ -94,7 +94,7 @@ content model.
 | Markdown | `remark-gfm` |
 | Outline | `remarkNovonHeadings` — exports `headings` |
 | Anchors | `rehype-slug`, `rehype-autolink-headings` |
-| Highlighting | `rehype-pretty-code` (Shiki, light + dark) |
+| Highlighting | `rehype-pretty-code` (Shiki, light + dark, build time) |
 
 `remarkNovonHeadings` runs at the remark stage on purpose: the table of contents
 is exported from the page module, which is the only way the server-rendered panel
@@ -141,6 +141,20 @@ This is progressive client navigation, not incremental static regeneration.
 Every route still works as a direct static URL and without JavaScript. Content
 changes are published by rebuilding and deploying the site.
 
+## Social images
+
+A route's social card is derived from the same content model as its HTML. The
+build calls `resolveOgImage` (`src/social.ts`) once per route, which decides
+between an explicit `ogImage`/`image` and a generated card, and both the HTML
+head and the written file come from that one decision.
+
+Generated cards render with `satori` and `@resvg/resvg-js` (`src/og/`), loaded
+lazily so a site that supplies its own images never pays for the native binary.
+The card name is a hex encoding of the route (`/_og/<hex>.png`), which is stable,
+collision-free and filesystem-safe for Unicode and long paths, so two pages can
+never overwrite each other's image. `novon dev` serves the same renderer from
+`/_og/…` on demand, so the preview matches the build without a rebuild.
+
 ## Where things live
 
 ```text
@@ -152,7 +166,9 @@ novon/
     ├── load.ts             # config/plugin specifier rewriting
     ├── content-plugin.ts   # the content index
     ├── vite-config.ts      # the Vite config, virtual modules, resolution
-    ├── mdx.ts              # the Markdown pipeline
+    ├── mdx.ts              # the Markdown pipeline (incl. Shiki)
+    ├── social.ts           # social metadata and OG image paths
+    ├── og/                 # satori/resvg card renderer + bundled font
     ├── document.ts         # the HTML shell
     ├── paths.ts            # route → file mapping
     ├── plugins/            # builtin plugins and the plugin API

@@ -428,18 +428,21 @@ export function MdxTagList() {
 export function CodeBlock({ children, className, ...props }: React.ComponentProps<'pre'>) {
   const ref = React.useRef<HTMLPreElement>(null)
   const [copied, setCopied] = React.useState(false)
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  React.useEffect(() => () => clearTimeout(timer.current), [])
 
   const copy = async () => {
     const text = ref.current?.textContent ?? ''
     if (!text) return
     if (!(await copyText(text))) return
     setCopied(true)
-    window.setTimeout(() => setCopied(false), 2000)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setCopied(false), 2000)
   }
 
   return (
     <div className="novon-code-wrap group/code relative">
-      <pre ref={ref} className={className} {...props}>
+      <pre ref={ref} tabIndex={0} className={className} {...props}>
         {children}
       </pre>
       <button
@@ -487,6 +490,12 @@ export const mdxComponents = {
   PostList: MdxPostList,
   TagList: MdxTagList,
   pre: CodeBlock,
+  // Site-relative media in Markdown also has to survive a subdirectory deploy.
+  img: ({ src, alt, ...props }: React.ComponentProps<'img'>) => {
+    const base = useBase()
+    const relative = typeof src === 'string' && src.startsWith('/') && !src.startsWith('//')
+    return <img src={relative ? withBase(base, src) : src} alt={alt ?? ''} {...props} />
+  },
   a: ({ href = '', ...props }: React.ComponentProps<'a'>) => {
     const base = useBase()
     const external = isExternal(href) || href.startsWith('#')

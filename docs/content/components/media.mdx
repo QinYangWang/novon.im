@@ -22,9 +22,10 @@ and place files in `public/`.
 </Frame>
 ```
 
-A caption adds context; it does not replace alt text. For deployments under a
-subdirectory, use `withBase(useBase(), '/screenshot.svg')` in a custom component
-for raw image URLs.
+A caption adds context; it does not replace alt text. A site-relative `src` is
+automatically prefixed with the configured `base`, so the same page works at the
+root and under `/my-repo/`. External URLs, data URIs and protocol-relative URLs
+are left untouched.
 
 ## Video
 

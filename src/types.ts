@@ -51,7 +51,10 @@ export interface ThemeOptions {
   logo?: string
   logoDark?: string
   favicon?: string
+  /** Default explicit social image; takes precedence over automatic cards. */
   ogImage?: string
+  /** Generate a page-specific 1200×630 PNG when no image is supplied. Default: true. */
+  generateOgImages?: boolean
   /** Render the light/dark toggle in the header. */
   darkMode?: boolean
   /** Render the right-hand "on this page" table of contents. */
@@ -87,8 +90,10 @@ export interface Frontmatter {
   updated?: string
   author?: string | { name: string; avatar?: string; url?: string }
   tags?: string[]
-  /** Social preview image. */
+  /** Blog cover image, also used for social sharing unless ogImage is set. */
   image?: string
+  /** Social-only image override; does not change the blog cover. */
+  ogImage?: string
   /** Caption shown under the cover image on a blog post. */
   caption?: string
   /** Override the URL segment derived from the file path. */
@@ -107,6 +112,13 @@ export interface Frontmatter {
 }
 
 export interface MdxOptions {
+  /** Build-time syntax highlighting. false disables it, not code copying. */
+  highlight?: false | {
+    /** Bundled Shiki theme names. */
+    theme?: { light: string; dark: string }
+    /** Language used by fences without a language. Default: plaintext. */
+    defaultLanguage?: string
+  }
   remarkPlugins?: unknown[]
   rehypePlugins?: unknown[]
 }

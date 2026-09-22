@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { normalizeBase } from '../config.ts'
 import { renderDocument } from '../document.ts'
+import { resolveOgImage } from '../social.ts'
 import { markdownPath, outputPath } from '../paths.ts'
 import type { BuiltPage, BuildContext } from '../plugins/api.ts'
 import type { Route, TocEntry } from '../types.ts'
@@ -132,6 +133,25 @@ export async function build(site: Site, flags: BuildFlags): Promise<void> {
       outputPath: join(outDir, outputFile(route.path)),
     }
 
+    const ogImage = typeof result.frontmatter.ogImage === 'string'
+      ? result.frontmatter.ogImage
+      : typeof result.frontmatter.image === 'string' ? result.frontmatter.image : undefined
+    const socialImage = resolveOgImage(runtime, route.path, ogImage)
+    if (socialImage?.generated) {
+      // Import the native renderer only when a generated card is actually needed.
+      const { renderOgImage } = await import('../og/render.ts')
+      const author = route.meta.author
+      const png = await renderOgImage({
+        site: runtime.title,
+        title: result.title,
+        description: result.description,
+        path: route.path,
+        template: runtime.template,
+        author: typeof author === 'string' ? author : author?.name ?? runtime.author,
+      })
+      writeFileEnsured(join(outDir, socialImage.path), png)
+    }
+
     let document = renderDocument({
       config: runtime,
       title: result.title,
@@ -141,7 +161,7 @@ export async function build(site: Site, flags: BuildFlags): Promise<void> {
       styles,
       scripts,
       ogType: result.frontmatter.date ? 'article' : 'website',
-      ogImage: typeof result.frontmatter.image === 'string' ? result.frontmatter.image : undefined,
+      ogImage,
     })
 
     const context = { root, config, outDir, base: config.base, packageRoot }
@@ -204,6 +224,6 @@ export async function build(site: Site, flags: BuildFlags): Promise<void> {
   const seconds = ((Date.now() - started) / 1000).toFixed(2)
   console.log(`\n  ✓ ${pages.length} pages built in ${seconds}s → ${outDir}\n`)
   if (!config.url) {
-    console.log('  tip: set `url` in novon.config.ts for absolute sitemap and RSS links\n')
+    console.log('  tip: set `url` in novon.config.ts for absolute social image, sitemap and RSS links\n')
   }
 }

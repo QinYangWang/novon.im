@@ -22,7 +22,8 @@ date: 2026-01-31              # blog lists, RSS and sitemap use this
 updated: 2026-01-18           # "Last updated on …" at the bottom of the page
 tags: [guide, mdx]
 author: Ada Lovelace
-image: /cover.svg             # social preview, and the cover on a blog post
+image: /cover.svg             # cover on a blog post, and social preview fallback
+ogImage: /social/custom.png   # social-only override (optional)
 caption: Shown under the cover image on a blog post
 toc: false                    # hide "On this page" for this page
 sidebar: false                # not a page in the sidebar, not a post in lists
@@ -45,7 +46,8 @@ The page heading comes from `title`, so start your body at `##`.
 | `updated` | Shown as "Last updated on …". |
 | `tags` | Badges on a post, and tag pages in the blog template. |
 | `author` | Name or `{ name, avatar, url }`. |
-| `image` | Social preview; also the cover image on a blog post. |
+| `image` | Cover image on a blog post, and the social preview fallback. |
+| `ogImage` | Social preview image only; leaves the blog cover unchanged. |
 | `caption` | Caption under the cover image. |
 | `toc` | `false` hides the table of contents for this page. |
 | `sidebar` | `false` keeps it out of the sidebar, lists and feeds. |
@@ -116,6 +118,22 @@ const highlighted = 2
 const c = 3
 ```
 
+Highlighting runs at build time, so it adds no browser JavaScript and the
+languages you never use are never downloaded. Configure it in
+[Markdown options](/guide/configuration#markdown):
+
+```ts
+mdx: {
+  highlight: {
+    theme: { light: 'github-light', dark: 'github-dark' },
+    defaultLanguage: 'plaintext',
+  },
+}
+```
+
+Set `highlight: false` to disable it. Code blocks, filenames and the copy button
+keep working; only the token colors are dropped.
+
 ## Markdown for other tools
 
 Every page is published twice: as HTML, and as the original Markdown at the same
@@ -141,6 +159,18 @@ is written as `/images/diagram.png`:
   <img src="/screenshot.svg" alt="The novon dev server" />
 </Frame>
 ```
+
+## Social preview images
+
+Every page gets a `1200×630` PNG generated at build time from its title,
+description and path — no server, no headless browser and no remote font. The
+build writes it to `_og/<route>.png` and points `og:image` and
+`twitter:image` at it.
+
+A page's `image` or `ogImage` frontmatter, or `theme.ogImage`, takes precedence
+and is used verbatim. Set `theme.generateOgImages: false` to stop generating
+cards site-wide. See [Social images](/guide/configuration#social-images) for the
+trade-offs, including scripts the bundled font does not cover.
 
 ## Blog posts
 

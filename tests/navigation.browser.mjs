@@ -6,7 +6,7 @@ import { readFile, stat } from 'node:fs/promises'
 import { resolve, extname, sep } from 'node:path'
 
 const root = resolve('docs/dist')
-const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.md': 'text/markdown' }
+const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.md': 'text/markdown' }
 const server = createServer(async (request, response) => {
   try {
     let file = resolve(root, '.' + decodeURIComponent(new URL(request.url, 'http://localhost').pathname))
@@ -24,11 +24,21 @@ try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] })
   const page = await context.newPage()
   const errors = []
+  const failedResponses = []
   page.on('pageerror', error => errors.push(String(error)))
+  page.on('response', response => { if (response.status() >= 400) failedResponses.push([response.status(), response.url()]) })
   const settle = () => page.waitForFunction(() => !document.documentElement.hasAttribute('data-navigating'))
   const link = (href) => page.locator(`#novon-sidebar a[href="${href}"]`)
   const click = async (href) => { await link(href).click(); await page.waitForURL(origin + href); await settle() }
   const sentinel = () => page.evaluate(() => window.__sentinel)
+  // Metadata keeps the public URL; fetch through it by mapping back to the test server.
+  const SITE_URL = 'https://qinyangwang.github.io/novon.im'
+  const local = (url) => url.startsWith(SITE_URL) ? origin + url.slice(SITE_URL.length) : url
+  const ogImage = async () => {
+    const url = await page.locator('meta[property="og:image"]').getAttribute('content')
+    const response = await page.request.get(local(url))
+    return { url, status: response.status(), type: response.headers()['content-type'], bytes: (await response.body()).length }
+  }
 
   await page.goto(origin + '/guide/architecture/')
   await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
@@ -45,6 +55,20 @@ try {
   assert.equal(await page.evaluate(() => scrollY), 0)
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), 'https://qinyangwang.github.io/novon.im/components')
   assert.equal(await page.locator('main').evaluate(el => el === document.activeElement), true)
+
+  // Generated OG cards are real PNGs, differ per route, and follow client navigation.
+  const componentsOg = await ogImage()
+  assert(componentsOg.url.startsWith('https://qinyangwang.github.io/novon.im/_og/'), componentsOg.url)
+  assert.equal(componentsOg.status, 200)
+  assert.equal(componentsOg.type, 'image/png')
+  assert(componentsOg.bytes > 5000, 'OG card is a rendered image')
+  assert.equal(await page.locator('meta[property="og:image:width"]').getAttribute('content'), '1200')
+  assert.equal(await page.locator('meta[property="og:image:height"]').getAttribute('content'), '630')
+  assert.equal(await page.locator('meta[name="twitter:card"]').getAttribute('content'), 'summary_large_image')
+  await click('/guide/architecture')
+  assert.notEqual((await ogImage()).url, componentsOg.url, 'each route gets its own card')
+  assert.equal(await page.locator('meta[property="og:type"]').getAttribute('content'), 'website')
+  await click('/components')
 
   await click('/components/tabs')
   await page.getByRole('tab', { name: 'npm', exact: true }).click()
@@ -114,6 +138,25 @@ try {
   await page.waitForURL('**/examples/blog-template/hello-world'); await settle()
   assert.equal(await sentinel(), 43)
 
+  // The published example must ship working, correctly based assets.
+  for (const path of ['/examples/docs-template/guide/writing/', '/examples/blog-template/hello-world/']) {
+    const example = await context.newPage()
+    const bad = []
+    example.on('response', response => { if (response.status() >= 400) bad.push([response.status(), response.url()]) })
+    await example.goto(origin + path, { waitUntil: 'networkidle' })
+    assert.deepEqual(bad, [], `no failed requests under ${path}`)
+    assert.notEqual(await example.locator('body').evaluate(el => getComputedStyle(el).fontFamily), '"Times New Roman"', 'stylesheet applied')
+    const card = await example.locator('meta[property="og:image"]').getAttribute('content')
+    assert(card.startsWith('https://qinyangwang.github.io/novon.im/examples/'), card)
+    const cardResponse = await example.request.get(local(card))
+    assert.equal(cardResponse.status(), 200)
+    assert((cardResponse.headers()['content-type'] ?? '').startsWith('image/'), card)
+    // The docs example has no image frontmatter, so it must get a generated card;
+    // the blog post sets `image: /cover.svg` and keeps it.
+    assert.equal(card.includes('/_og/'), path.includes('/docs-template/'), card)
+    await example.close()
+  }
+
   const noJS = await browser.newPage({ javaScriptEnabled: false })
   await noJS.goto(origin + '/components/callouts/')
   assert.equal(await noJS.locator('h1').textContent(), 'Callouts')
@@ -129,21 +172,24 @@ try {
   // load does not wait for top-level-await hydration of the entry module.
   await page.waitForFunction(() => Boolean(history.state?.novonKey))
 
+  // No unexpected 404s anywhere up to this point.
+  assert.deepEqual(failedResponses, [], `no failed responses: ${JSON.stringify(failedResponses)}`)
+
   // Missing deployment chunks recover via the generated HTML rather than a
   // blank article. Allow the retry made by the fresh document to succeed.
-  let failed = false
+  let aborted = false
   await page.route('**/assets/media-*.js', async route => {
-    if (!failed) { failed = true; await route.abort('failed') }
+    if (!aborted) { aborted = true; await route.abort('failed') }
     else await route.continue()
   })
   await page.evaluate(() => window.__sentinel = 45)
   await injectClick('/components/media')
   await page.waitForURL('**/components/media'); await page.waitForLoadState()
   await page.getByRole('heading', { name: 'Media', exact: true }).waitFor()
-  assert(failed)
+  assert(aborted)
   assert.equal(await sentinel(), undefined)
   assert.deepEqual(errors, [])
-  console.log('PASS: progressive docs/blog navigation, shell, state, metadata, copy, search, history, hashes, races, mobile, reduced motion, no-JS and opt-out')
+  console.log('PASS: progressive docs/blog navigation, shell, state, metadata, OG cards, highlighted code, copy, search, history, hashes, races, mobile, reduced motion, no-JS and opt-out')
 } finally {
   await browser?.close()
   server.close()

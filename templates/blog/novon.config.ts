@@ -18,6 +18,10 @@ export default defineConfig({
     accent: 'orange',
     darkMode: true,
 
+    // Social previews are generated per page by default (1200×630 PNG), from
+    // each post's title and description. A post's `image` frontmatter is used
+    // as its cover and preview instead. Set `generateOgImages: false` to stop.
+
     // Static files live in `public/` and are copied to the output root,
     // so `/logo.svg` below refers to `public/logo.svg`.
     // logo: '/logo.svg',
@@ -48,4 +52,11 @@ export default defineConfig({
 
   // Add 'search' for the ⌘K palette.
   plugins: ['rss', 'sitemap', 'llms'],
+
+  // Extra remark/rehype plugins, and Shiki syntax highlighting:
+  // mdx: {
+  //   highlight: { theme: { light: 'github-light', dark: 'github-dark' } },
+  //   remarkPlugins: [],
+  //   rehypePlugins: [],
+  // },
 })

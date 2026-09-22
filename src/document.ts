@@ -4,6 +4,7 @@
  */
 import type { RuntimeConfig } from './types.ts'
 import { absoluteUrl } from './url.ts'
+import { socialMeta } from './social.ts'
 
 export interface DocumentOptions {
   config: RuntimeConfig
@@ -50,19 +51,16 @@ export function renderDocument(options: DocumentOptions): string {
   const base = config.base
   const fullTitle = title && title !== config.title ? `${title} · ${config.title}` : config.title
   const canonical = config.url ? absoluteUrl(config, options.path ?? '/') : undefined
-  const ogImage = options.ogImage ?? config.theme.ogImage
 
   const head = [
     '<meta charset="utf-8" />',
     '<meta name="viewport" content="width=device-width, initial-scale=1" />',
     `<title>${escapeHtml(fullTitle)}</title>`,
-    description ? `<meta name="description" content="${escapeHtml(description)}" />` : '',
     config.theme.favicon ? `<link rel="icon" href="${escapeHtml(joinUrl(base, config.theme.favicon))}" />` : '',
     canonical ? `<link rel="canonical" href="${escapeHtml(canonical)}" />` : '',
-    `<meta property="og:title" content="${escapeHtml(fullTitle)}" />`,
-    description ? `<meta property="og:description" content="${escapeHtml(description)}" />` : '',
-    `<meta property="og:type" content="${escapeHtml(options.ogType ?? 'website')}" />`,
-    ogImage ? `<meta property="og:image" content="${escapeHtml(joinUrl(base, ogImage))}" />` : '',
+    ...socialMeta(config, { title, description, path: options.path, ogImage: options.ogImage, ogType: options.ogType })
+      .filter((tag) => tag.content)
+      .map((tag) => `<meta ${tag.attribute}="${tag.key}" content="${escapeHtml(tag.content)}" />`),
     `<meta name="generator" content="novon" />`,
     '<meta name="color-scheme" content="light dark" />',
     '<link rel="preconnect" href="https://fonts.googleapis.com" />',

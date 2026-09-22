@@ -18,6 +18,11 @@ export default defineConfig({
     darkMode: true,
     toc: true,
 
+    // Social previews are generated per page by default (1200×630 PNG).
+    // Set `ogImage` to use one image everywhere, or
+    // `generateOgImages: false` to turn generation off.
+    // ogImage: '/social.png',
+
     // Static files live in `public/` and are copied to the output root,
     // so `/logo.svg` below refers to `public/logo.svg`.
     // logo: '/logo.svg',
@@ -49,6 +54,10 @@ export default defineConfig({
   // Enable built-in plugins by name.
   plugins: ['search', 'sitemap', 'rss', 'llms'],
 
-  // Extra remark/rehype plugins:
-  // mdx: { remarkPlugins: [], rehypePlugins: [] },
+  // Extra remark/rehype plugins, and Shiki syntax highlighting:
+  // mdx: {
+  //   highlight: { theme: { light: 'github-light', dark: 'github-dark' } },
+  //   remarkPlugins: [],
+  //   rehypePlugins: [],
+  // },
 })

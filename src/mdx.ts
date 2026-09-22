@@ -11,6 +11,7 @@ import rehypePrettyCode from 'rehype-pretty-code'
 import GithubSlugger from 'github-slugger'
 import { valueToEstree } from 'estree-util-value-to-estree'
 import { define } from 'unist-util-mdx-define'
+import type { MdxOptions } from './types.ts'
 
 export interface Heading {
   depth: number
@@ -61,18 +62,17 @@ export const defaultRemarkPlugins: PluggableList = [
 export const defaultRehypePlugins: PluggableList = [
   rehypeSlug,
   [rehypeAutolinkHeadings, { behavior: 'wrap', properties: { className: 'novon-heading-anchor' } }],
-  [
-    rehypePrettyCode,
-    {
-      theme: { light: 'github-light', dark: 'github-dark' },
-      keepBackground: false,
-      defaultLang: 'plaintext',
-    },
-  ],
 ]
 
-/** Options passed to `@mdx-js/rollup`. */
-export function mdxOptions(extra?: { remarkPlugins?: unknown[]; rehypePlugins?: unknown[] }) {
+/** Options passed to `@mdx-js/rollup`. Highlighting stays entirely build-time. */
+export function mdxOptions(extra?: MdxOptions) {
+  const highlight = extra?.highlight
+  const highlighting: PluggableList = highlight === false ? [] : [[rehypePrettyCode, {
+    theme: highlight?.theme ?? { light: 'github-light', dark: 'github-dark' },
+    keepBackground: false,
+    // Leave ordinary inline code alone; explicit `{:ts}` annotations still work.
+    defaultLang: { block: highlight?.defaultLanguage ?? 'plaintext', inline: '' },
+  }]]
   return {
     // Emit plain `_jsx()` calls instead of JSX syntax: Vite 8 transforms JSX in
     // the native bundler, which does not run for a `.mdx` module id.
@@ -81,6 +81,6 @@ export function mdxOptions(extra?: { remarkPlugins?: unknown[]; rehypePlugins?: 
     // Makes every component in the MDX map available without an import.
     providerImportSource: '@mdx-js/react',
     remarkPlugins: [...defaultRemarkPlugins, remarkNovonHeadings, ...((extra?.remarkPlugins as PluggableList) ?? [])],
-    rehypePlugins: [...defaultRehypePlugins, ...((extra?.rehypePlugins as PluggableList) ?? [])],
+    rehypePlugins: [...defaultRehypePlugins, ...highlighting, ...((extra?.rehypePlugins as PluggableList) ?? [])],
   }
 }

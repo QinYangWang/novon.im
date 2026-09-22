@@ -35,7 +35,7 @@ export async function render(url: string): Promise<RenderResult> {
   return {
     html,
     title,
-    description: typeof route?.meta.description === 'string' ? route.meta.description : undefined,
+    description: route?.meta.description ?? (route?.isIndex ? config.description : undefined),
     headings: page?.headings ?? [],
     frontmatter: { ...route?.meta },
     excerpt: toText(html).slice(0, 240),

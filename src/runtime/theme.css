@@ -418,6 +418,23 @@
   /* Code blocks (rehype-pretty-code / shiki, dual theme)                     */
   /* ------------------------------------------------------------------------ */
 
+  /* Also style unhighlighted/unknown-language fences. Long lines scroll inside
+     the code block, never behind a clipped figure or outside the article. */
+  .novon-prose .novon-code-wrap {
+    min-width: 0;
+    max-width: 100%;
+    border-radius: var(--radius-xl);
+    background: var(--secondary);
+  }
+
+  .novon-prose .novon-code-wrap pre {
+    overflow-x: auto;
+    padding: 1rem;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    tab-size: 2;
+  }
+
   .novon-prose figure[data-rehype-pretty-code-figure] {
     margin-top: 1.5em;
     margin-bottom: 1.5em;
@@ -447,6 +464,7 @@
 
   .novon-prose figure[data-rehype-pretty-code-figure] code {
     display: grid;
+    min-width: max-content;
     background: transparent;
   }
 
@@ -474,18 +492,28 @@
     counter-increment: line;
     content: counter(line);
     display: inline-block;
-    width: 1rem;
+    width: var(--novon-line-number-width, 2ch);
     margin-right: 1rem;
     text-align: right;
     color: var(--muted-foreground);
   }
 
+  .novon-prose code[data-line-numbers-max-digits='3'] { --novon-line-number-width: 3ch; }
+  .novon-prose code[data-line-numbers-max-digits='4'] { --novon-line-number-width: 4ch; }
+  .novon-prose code[data-line-numbers-max-digits='5'] { --novon-line-number-width: 5ch; }
+
   /* shiki dual theme */
   .novon-prose code[data-theme*=' '] span {
-    color: var(--shiki-light);
+    color: var(--shiki-light, inherit);
+    font-style: var(--shiki-light-font-style, inherit);
+    font-weight: var(--shiki-light-font-weight, inherit);
+    text-decoration: var(--shiki-light-text-decoration, inherit);
   }
 
   [data-theme='dark'] .novon-prose code[data-theme*=' '] span {
-    color: var(--shiki-dark);
+    color: var(--shiki-dark, inherit);
+    font-style: var(--shiki-dark-font-style, inherit);
+    font-weight: var(--shiki-dark-font-weight, inherit);
+    text-decoration: var(--shiki-dark-text-decoration, inherit);
   }
 }

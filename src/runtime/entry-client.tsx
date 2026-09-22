@@ -21,6 +21,7 @@ if (root) {
   // Dev has no server render to attach to, so mount instead of hydrating.
   const reactRoot = import.meta.env.DEV ? createRoot(root) : hydrateRoot(root, app)
   if (import.meta.env.DEV) reactRoot.render(app)
+  if (route) updatePageHead(config, route, { absolute: !import.meta.env.DEV })
   const dispose = installNavigation({
     base: config.base,
     paths: site.byPath,

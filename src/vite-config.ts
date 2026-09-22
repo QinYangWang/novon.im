@@ -15,6 +15,7 @@ import tailwindcss from '@tailwindcss/vite'
 import type { Plugin, UserConfig } from 'vite'
 import { novonAliases } from './load.ts'
 import { contentPlugin } from './content-plugin.ts'
+import { devMarkdownPlugin } from './dev-markdown.ts'
 import { mdxOptions } from './mdx.ts'
 import { renderDocument } from './document.ts'
 import type { ResolvedConfig } from './config.ts'
@@ -260,6 +261,7 @@ export function createNovonViteConfig(options: CreateViteConfigOptions): UserCon
     },
     plugins: [
       contentPlugin(siteRoot),
+      devMarkdownPlugin({ siteRoot, template: config.template, base: config.base }),
       virtualModules(options),
       devServer(options),
       fallbackResolve(packageRoot, siteRoot),

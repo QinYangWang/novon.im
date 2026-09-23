@@ -490,12 +490,13 @@ export const mdxComponents = {
   PostList: MdxPostList,
   TagList: MdxTagList,
   pre: CodeBlock,
-  // Site-relative media in Markdown also has to survive a subdirectory deploy.
-  img: ({ src, alt, ...props }: React.ComponentProps<'img'>) => {
-    const base = useBase()
-    const relative = typeof src === 'string' && src.startsWith('/') && !src.startsWith('//')
-    return <img src={relative ? withBase(base, src) : src} alt={alt ?? ''} {...props} />
-  },
+  // Markdown tables keep the prose width; the wrapper scrolls horizontally so
+  // a wide table never compresses its columns to fit.
+  table: (props: React.ComponentProps<'table'>) => (
+    <div className="novon-table">
+      <table {...props} />
+    </div>
+  ),
   a: ({ href = '', ...props }: React.ComponentProps<'a'>) => {
     const base = useBase()
     const external = isExternal(href) || href.startsWith('#')

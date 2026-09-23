@@ -79,9 +79,15 @@ try {
   await page.getByRole('button', { name: 'Copied', exact: true }).waitFor()
   assert((await page.evaluate(() => navigator.clipboard.readText())).includes('title: Tabs'))
   await click('/components/card')
+  // The label changes on click, but the button must not resize and shove the
+  // neighbouring "Open" control around.
+  const copyWidth = (await page.getByRole('button', { name: 'Copy Markdown', exact: true }).boundingBox()).width
   await page.getByRole('button', { name: 'Copy Markdown', exact: true }).click()
-  await page.getByRole('button', { name: 'Copied', exact: true }).waitFor()
+  const copiedButton = page.getByRole('button', { name: 'Copied', exact: true })
+  await copiedButton.waitFor()
+  assert(Math.abs((await copiedButton.boundingBox()).width - copyWidth) < 0.5, 'copy button keeps its width')
   assert((await page.evaluate(() => navigator.clipboard.readText())).includes('title: Cards'))
+  await page.getByRole('button', { name: 'Copy Markdown', exact: true }).waitFor()
 
   await page.keyboard.press('Control+k')
   assert.equal(await page.getByRole('dialog').count(), 1, 'only the visible search trigger owns the shortcut')
@@ -151,6 +157,20 @@ try {
   assert.equal(await page.locator('#novon-sidebar a[href="/blog/layout-layers"]').count(), 0)
   await page.goBack(); await page.waitForURL('**/blog/tags/layouts'); await settle()
   assert.equal(await page.locator('html').getAttribute('data-layout'), 'blog')
+
+  // Markdown tables keep the prose width instead of shrinking to their content,
+  // and an embedded example iframe resolves inside the deployment base.
+  await page.goto(origin + '/guide/deploying/')
+  await settle()
+  const table = await page.evaluate(() => {
+    const prose = document.querySelector('.novon-prose')
+    const table = prose?.querySelector('table')
+    return { prose: prose.getBoundingClientRect().width, table: table?.getBoundingClientRect().width ?? 0 }
+  })
+  assert(Math.abs(table.table - table.prose) < 2, `table spans the prose width: ${JSON.stringify(table)}`)
+  await page.goto(origin + '/examples/docs/')
+  await settle()
+  assert.equal(await page.locator('iframe').getAttribute('src'), '/examples/docs-template/')
 
   // Starter presets are still available as standalone scaffolding examples.
   await page.goto(origin + '/examples/blog-template/')

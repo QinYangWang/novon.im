@@ -252,7 +252,7 @@ export function createNovonViteConfig(options: CreateViteConfigOptions): UserCon
   const modules = join(packageRoot, 'node_modules')
   const isServer = target === 'server'
 
-  const mdxPlugin = mdx(mdxOptions(config.mdx)) as Plugin
+  const mdxPlugin = mdx(mdxOptions(config.mdx, config.base)) as Plugin
   mdxPlugin.enforce = 'pre'
 
   return {

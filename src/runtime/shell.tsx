@@ -575,6 +575,18 @@ function markdownUrl(base: string, path: string): string {
 
 type CopyState = 'idle' | 'copying' | 'copied' | 'error'
 
+/**
+ * Every label is rendered in the same grid cell so the button keeps the width
+ * of the longest one. A width that changed with the state would shift the
+ * neighbouring controls on every click.
+ */
+const COPY_LABELS: Record<CopyState, string> = {
+  idle: 'Copy Markdown',
+  copying: 'Copying…',
+  copied: 'Copied',
+  error: 'Retry copy',
+}
+
 const AI_PROMPT = 'Read this documentation page and explain it:'
 
 /**
@@ -686,13 +698,13 @@ export function PageActions({ path }: { path: string }) {
           ) : (
             <Copy aria-hidden="true" className="size-3.5" />
           )}
-          {state === 'copied'
-            ? 'Copied'
-            : state === 'copying'
-              ? 'Copying…'
-              : state === 'error'
-                ? 'Retry copy'
-                : 'Copy Markdown'}
+          <span className="grid">
+            {(Object.keys(COPY_LABELS) as CopyState[]).map((key) => (
+              <span key={key} className={cn('col-start-1 row-start-1', key !== state && 'invisible')}>
+                {COPY_LABELS[key]}
+              </span>
+            ))}
+          </span>
         </button>
 
         <DropdownMenu>

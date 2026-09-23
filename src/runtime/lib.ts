@@ -16,6 +16,15 @@ export function withBase(base: string, path: string): string {
   return `${prefix}${path.startsWith('/') ? path : `/${path}`}`
 }
 
+/**
+ * Prefix a site-relative media `src` (img, iframe, …) with the deployment
+ * base. Absolute, protocol-relative, data and fragment values pass through
+ * unchanged; so do bare relative paths, which resolve against the page URL.
+ */
+export function withBaseSrc(base: string, src: string | undefined): string | undefined {
+  return typeof src === 'string' && src.startsWith('/') ? withBase(base, src) : src
+}
+
 /** `/guide/setup/` -> `/guide/setup`. Keeps `/`. */
 export function normalizePathname(pathname: string, base: string): string {
   let path = pathname || '/'

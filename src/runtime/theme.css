@@ -399,7 +399,13 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.875rem;
-    display: block;
+  }
+
+  /* The scroll container is the wrapper, not the table: `display: block` on a
+     table would shrink it to its content and break the prose width. */
+  .novon-prose > .novon-table:not(:where(.novon-not-prose, .novon-not-prose *)) {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
   }
 

@@ -30,7 +30,7 @@ import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Dial
 import { Icon } from './icons.tsx'
 import { SvglIcon } from './svgl.tsx'
 import { copyText, isMarkdownDocument } from './actions.ts'
-import { TOC_READING_OFFSET, hashToId, initialActiveHeading, resolveActiveHeading, type HeadingOffset } from './toc.ts'
+import { TOC_READING_OFFSET, hashToId, resolveActiveHeading, type HeadingOffset } from './toc.ts'
 import { CopyUrlButton, PillNav, Reveal, ScrollProgress, Section, SocialPills, ThemeSwitch, ThemeToggle } from './kit.tsx'
 import type { NavNode, PageLink, SiteIndex } from './content.ts'
 
@@ -394,131 +394,203 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
 /* Table of contents                                                          */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * One row of the "On this page" list. Memoised so a scroll only re-renders the
+ * two rows whose active state changed, never the whole list.
+ */
+const TocItem = React.memo(function TocItem({
+  heading,
+  active,
+  spaced,
+}: {
+  heading: TocEntry
+  active: boolean
+  spaced: boolean
+}) {
+  return (
+    <li className={cn(spaced && 'mt-2')}>
+      <a
+        href={`#${heading.id}`}
+        data-toc-id={heading.id}
+        aria-current={active ? 'location' : undefined}
+        className={cn(
+          '-ml-px block border-l-2 py-1 pr-2 no-underline transition-colors',
+          heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6' : 'pl-9 text-[0.8125rem]',
+          active
+            ? 'border-primary font-medium text-foreground'
+            : 'border-transparent text-muted-foreground hover:text-foreground',
+        )}
+      >
+        {heading.text}
+      </a>
+    </li>
+  )
+})
+
 export function DefaultTableOfContents({ headings, className }: { headings: TocEntry[]; className?: string }) {
   const [activeId, setActiveId] = React.useState('')
   const listRef = React.useRef<HTMLUListElement>(null)
-  const offsetsRef = React.useRef<HeadingOffset[]>([])
-  const frameRef = React.useRef<number | null>(null)
-  const pendingRef = React.useRef<{ id: string; until: number } | null>(null)
+  const anchorsRef = React.useRef(new Map<string, HTMLAnchorElement>())
+  const containerRef = React.useRef<HTMLElement | null>(null)
+  const activeRef = React.useRef('')
+  /** Heading a click or hash jump is scrolling to; owns the highlight until the scroll settles. */
+  const pendingRef = React.useRef<string | null>(null)
+  const lastScrollRef = React.useRef(0)
+  const settledRef = React.useRef(0)
+
+  /**
+   * Apply the active heading and, in the same frame, nudge the TOC's own scroll
+   * box so the active row stays visible. Kept out of the render path: during a
+   * fast scroll this runs once per frame and must not re-render the whole list.
+   */
+  const applyActive = React.useCallback((id: string) => {
+    if (activeRef.current === id) return
+    activeRef.current = id
+    setActiveId(id)
+
+    const container = containerRef.current
+    const anchor = anchorsRef.current.get(id)
+    if (!container || !anchor) return
+    const box = container.getBoundingClientRect()
+    if (box.height === 0) return // the TOC is hidden at this breakpoint
+    const row = anchor.getBoundingClientRect()
+    const pad = 8
+    if (row.top < box.top + pad) container.scrollTop -= box.top + pad - row.top
+    else if (row.bottom > box.bottom - pad) container.scrollTop += row.bottom - (box.bottom - pad)
+  }, [])
 
   React.useEffect(() => {
-    const measure = (): HeadingOffset[] => {
-      const result: HeadingOffset[] = []
-      for (const heading of headings) {
-        const element = document.getElementById(heading.id)
-        if (element) result.push({ id: heading.id, top: element.getBoundingClientRect().top + window.scrollY })
-      }
-      return result
-    }
+    const list = listRef.current
+    if (!list || headings.length === 0) return
 
-    offsetsRef.current = measure()
-    pendingRef.current = null
-    setActiveId(initialActiveHeading(offsetsRef.current, window.location.hash))
+    const anchors = new Map<string, HTMLAnchorElement>()
+    for (const anchor of list.querySelectorAll<HTMLAnchorElement>('a[data-toc-id]')) {
+      const id = anchor.dataset.tocId
+      if (id) anchors.set(id, anchor)
+    }
+    anchorsRef.current = anchors
+    containerRef.current = scrollableAncestor(list)
+
+    const ids = headings.map((heading) => heading.id)
+    // The reading line is the position a heading lands on after an anchor jump,
+    // so the highlight agrees with the page instead of leading or trailing it.
+    const readingOffset = readingOffsetFor(document.getElementById(ids[0]))
+
+    // A new page starts clean; `update()` below paints the first active row.
+    activeRef.current = ''
+    settledRef.current = 0
+    lastScrollRef.current = window.scrollY
     const hashId = hashToId(window.location.hash)
-    if (hashId) pendingRef.current = { id: hashId, until: performance.now() + 1500 }
+    pendingRef.current = hashId && ids.includes(hashId) ? hashId : null
+
+    let frame: number | null = null
 
     const update = () => {
-      frameRef.current = null
-      const offsets = offsetsRef.current
-      if (offsets.length === 0) return
+      frame = null
+      const scrollY = window.scrollY
+      const viewportHeight = window.innerHeight
+      const scrollHeight = document.documentElement.scrollHeight
+
+      // One batched read pass over fresh positions. A heading that moved since
+      // the last frame (image, embed, font swap) can therefore never leave a
+      // stale highlight behind, and nothing is written until every measurement
+      // is in, so the frame costs a single layout instead of a read/write loop.
+      const offsets: HeadingOffset[] = []
+      for (const id of ids) {
+        const element = document.getElementById(id)
+        if (element) offsets.push({ id, top: element.getBoundingClientRect().top + scrollY })
+      }
+      let next = resolveActiveHeading(offsets, { scrollY, viewportHeight, scrollHeight, readingOffset })
+
+      // A click or hash jump owns the highlight while it is still scrolling, so
+      // it cannot flicker through the sections it passes. It is released as soon
+      // as the scroll settles, or the reader takes over — never on a timer, which
+      // left the wrong section highlighted after a slow or interrupted jump.
       const pending = pendingRef.current
       if (pending) {
-        if (performance.now() >= pending.until) {
+        if (Math.abs(scrollY - lastScrollRef.current) < 1) settledRef.current += 1
+        else settledRef.current = 0
+        if (settledRef.current >= 2) {
           pendingRef.current = null
         } else {
-          // A click or hash jump owns the active state until the destination is
-          // reached, so a long smooth scroll cannot flicker through sections.
-          const target = offsets.find((offset) => offset.id === pending.id)
-          const readingLine = window.scrollY + TOC_READING_OFFSET
-          if (!target || Math.abs(target.top - readingLine) <= 2) pendingRef.current = null
-          else return
+          next = pending
+          // A jump can stop between two scroll events (or immediately, when the
+          // reader uses the scrollbar), so keep sampling until it settles rather
+          // than waiting for a scroll event that will never arrive.
+          schedule()
         }
       }
-      const next = resolveActiveHeading(offsets, {
-        scrollY: window.scrollY,
-        viewportHeight: window.innerHeight,
-        scrollHeight: document.documentElement.scrollHeight,
-      })
-      setActiveId((previous) => (previous === next ? previous : next))
+      lastScrollRef.current = scrollY
+
+      applyActive(next)
     }
 
     const schedule = () => {
-      if (frameRef.current !== null) return
-      frameRef.current = window.requestAnimationFrame(update)
+      if (frame !== null) return
+      frame = window.requestAnimationFrame(update)
     }
 
-    const remeasure = () => {
-      offsetsRef.current = measure()
-      schedule()
-    }
-
-    // Any real user scroll takes ownership back from a pending click/hash jump.
+    // Any real user input takes ownership back from a pending click/hash jump.
     const release = () => {
       pendingRef.current = null
     }
 
     const onHashChange = () => {
       const id = hashToId(window.location.hash)
-      if (!id || !offsetsRef.current.some((offset) => offset.id === id)) return
-      pendingRef.current = { id, until: performance.now() + 1500 }
-      setActiveId(id)
+      if (!id || !ids.includes(id)) return
+      pendingRef.current = id
+      settledRef.current = 0
+      lastScrollRef.current = window.scrollY
+      applyActive(id)
     }
 
     window.addEventListener('scroll', schedule, { passive: true })
-    window.addEventListener('resize', remeasure, { passive: true })
+    window.addEventListener('resize', schedule, { passive: true })
     window.addEventListener('wheel', release, { passive: true })
     window.addEventListener('touchstart', release, { passive: true })
+    // A scrollbar drag emits no wheel event, so a pointer down also releases.
+    window.addEventListener('pointerdown', release, { passive: true })
     window.addEventListener('keydown', release)
     window.addEventListener('hashchange', onHashChange)
 
+    // Content that loads after paint moves the headings without a scroll event.
     let observer: ResizeObserver | undefined
     if (typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(remeasure)
+      observer = new ResizeObserver(schedule)
       observer.observe(document.body)
     }
-    document.fonts?.ready.then(remeasure).catch(() => {})
+    document.fonts?.ready.then(schedule).catch(() => {})
 
     update()
 
     return () => {
       window.removeEventListener('scroll', schedule)
-      window.removeEventListener('resize', remeasure)
+      window.removeEventListener('resize', schedule)
       window.removeEventListener('wheel', release)
       window.removeEventListener('touchstart', release)
+      window.removeEventListener('pointerdown', release)
       window.removeEventListener('keydown', release)
       window.removeEventListener('hashchange', onHashChange)
       observer?.disconnect()
-      if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current)
+      if (frame !== null) window.cancelAnimationFrame(frame)
     }
-  }, [headings])
+  }, [headings, applyActive])
 
-  // Keep the active link inside the TOC's own scroll box without scrolling the page.
-  React.useEffect(() => {
-    if (!activeId) return
-    const list = listRef.current
-    if (!list) return
-    const link = Array.from(list.querySelectorAll<HTMLAnchorElement>('a')).find(
-      (candidate) => candidate.dataset.tocId === activeId,
-    )
-    if (!link) return
-    const container = scrollableParent(link)
-    if (!container) return
-    const containerRect = container.getBoundingClientRect()
-    const linkRect = link.getBoundingClientRect()
-    const pad = 8
-    if (linkRect.top < containerRect.top + pad) {
-      container.scrollTop -= containerRect.top + pad - linkRect.top
-    } else if (linkRect.bottom > containerRect.bottom - pad) {
-      container.scrollTop += linkRect.bottom - (containerRect.bottom - pad)
-    }
-  }, [activeId])
+  // One handler for the list, so the memoised rows stay prop-stable.
+  const onListClick = React.useCallback(
+    (event: React.MouseEvent<HTMLUListElement>) => {
+      const anchor = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[data-toc-id]')
+      const id = anchor?.dataset.tocId
+      if (!id) return
+      pendingRef.current = id
+      settledRef.current = 0
+      lastScrollRef.current = window.scrollY
+      applyActive(id)
+    },
+    [applyActive],
+  )
 
   if (headings.length === 0) return null
-
-  const markActive = (id: string) => {
-    pendingRef.current = { id, until: performance.now() + 1500 }
-    setActiveId(id)
-  }
 
   return (
     <nav aria-label="On this page" className={cn('text-sm', className)}>
@@ -526,40 +598,36 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
         <ListIcon aria-hidden="true" className="size-4 text-muted-foreground" />
         On this page
       </p>
-      <ul ref={listRef} className="mt-3 border-l border-border">
-        {headings.map((heading, index) => {
-          const active = activeId === heading.id
-          return (
-            <li key={heading.id} className={cn(heading.depth === 2 && index > 0 && 'mt-2')}>
-              <a
-                href={`#${heading.id}`}
-                data-toc-id={heading.id}
-                onClick={() => markActive(heading.id)}
-                aria-current={active ? 'location' : undefined}
-                className={cn(
-                  '-ml-px block border-l-2 py-1 pr-2 no-underline transition-colors',
-                  heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6' : 'pl-9 text-[0.8125rem]',
-                  active
-                    ? 'border-primary font-medium text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {heading.text}
-              </a>
-            </li>
-          )
-        })}
+      <ul ref={listRef} onClick={onListClick} className="mt-3 border-l border-border">
+        {headings.map((heading, index) => (
+          <TocItem
+            key={heading.id}
+            heading={heading}
+            active={activeId === heading.id}
+            spaced={heading.depth === 2 && index > 0}
+          />
+        ))}
       </ul>
     </nav>
   )
 }
 
+/**
+ * The reading line is the anchor landing position: the same `scroll-margin-top`
+ * the browser applies when a TOC link is followed.
+ */
+function readingOffsetFor(element: HTMLElement | null): number {
+  if (!element) return TOC_READING_OFFSET
+  const margin = Number.parseFloat(getComputedStyle(element).scrollMarginTop)
+  return Number.isFinite(margin) ? margin : TOC_READING_OFFSET
+}
+
 /** Nearest ancestor that scrolls vertically, if any. */
-function scrollableParent(element: HTMLElement): HTMLElement | null {
+function scrollableAncestor(element: HTMLElement): HTMLElement | null {
   let parent = element.parentElement
   while (parent) {
     const overflow = getComputedStyle(parent).overflowY
-    if ((overflow === 'auto' || overflow === 'scroll') && parent.scrollHeight > parent.clientHeight) return parent
+    if (overflow === 'auto' || overflow === 'scroll') return parent
     parent = parent.parentElement
   }
   return null

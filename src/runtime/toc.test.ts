@@ -4,7 +4,6 @@ import {
   type HeadingOffset,
   TOC_READING_OFFSET,
   hashToId,
-  initialActiveHeading,
   resolveActiveHeading,
 } from './toc.ts'
 
@@ -31,23 +30,6 @@ describe('hashToId', () => {
   })
 })
 
-describe('initialActiveHeading', () => {
-  const headings = offsets(['intro', 300], ['usage', 900])
-
-  test('uses a valid hash', () => {
-    expect(initialActiveHeading(headings, '#usage')).toBe('usage')
-  })
-
-  test('falls back to the first heading for a missing or unknown hash', () => {
-    expect(initialActiveHeading(headings, '')).toBe('intro')
-    expect(initialActiveHeading(headings, '#nope')).toBe('intro')
-  })
-
-  test('returns empty without headings', () => {
-    expect(initialActiveHeading([], '#usage')).toBe('')
-  })
-})
-
 describe('resolveActiveHeading', () => {
   const headings = offsets(['intro', 300], ['usage', 900], ['api', 1500])
 
@@ -62,6 +44,19 @@ describe('resolveActiveHeading', () => {
     const only = offsets(['a', 500])
     expect(resolveActiveHeading(only, view({ scrollY: 500 - TOC_READING_OFFSET }))).toBe('a')
     expect(resolveActiveHeading(only, view({ scrollY: 500 - TOC_READING_OFFSET - 1 }))).toBe('a')
+  })
+
+  test('honours a measured reading offset', () => {
+    // A heading that an anchor jump landed on is active at its landing position.
+    const landed = offsets(['a', 0], ['b', 96])
+    expect(resolveActiveHeading(landed, view({ scrollY: 0, readingOffset: 96 }))).toBe('b')
+    expect(resolveActiveHeading(landed, view({ scrollY: 0 }))).toBe('a')
+  })
+
+  test('tolerates sub-pixel rounding at the anchor landing position', () => {
+    // Scrolling rounds to device pixels, so a heading can land just below the line.
+    const landed = offsets(['a', 0], ['b', 80.4])
+    expect(resolveActiveHeading(landed, view({ scrollY: 0, readingOffset: 80 }))).toBe('b')
   })
 
   test('keeps the first heading before any heading reaches the line', () => {

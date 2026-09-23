@@ -122,6 +122,33 @@ try {
   assert.equal(await page.title(), 'Blog lists · novon')
   assert.equal(await sentinel(), 42)
 
+  // The table of contents highlights the section at the anchor landing
+  // position, so every heading a link jumps to reports itself as active — even
+  // when scroll rounding lands it a fraction below the reading line.
+  await injectClick('/guide/architecture')
+  await page.waitForURL('**/guide/architecture'); await settle()
+  await page.waitForTimeout(100)
+  const tocIds = await page.$$eval('nav[aria-label="On this page"] a[data-toc-id]', els => els.map(el => el.dataset.tocId))
+  assert(tocIds.length > 3, 'the page has a table of contents')
+  const activeToc = () => page.locator('[aria-current="location"]').first().getAttribute('data-toc-id')
+  for (const id of tocIds) {
+    await page.evaluate((id) => {
+      const heading = document.getElementById(id)
+      const margin = parseFloat(getComputedStyle(heading).scrollMarginTop)
+      window.scrollTo({ top: heading.getBoundingClientRect().top + window.scrollY - margin, behavior: 'instant' })
+    }, id)
+    await page.waitForTimeout(60)
+    assert.equal(await activeToc(), id, `#${id} is the active section`)
+  }
+  // A fast jump must not leave the previous section highlighted.
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+  await page.waitForTimeout(120)
+  assert.equal(await activeToc(), tocIds[0], 'a fast jump updates the highlight')
+  // Following a link keeps the highlight on the destination after it settles.
+  await page.locator('nav[aria-label="On this page"] a[data-toc-id]').last().click()
+  await page.waitForTimeout(700)
+  assert.equal(await activeToc(), tocIds[tocIds.length - 1], 'a followed link stays highlighted')
+
   await page.setViewportSize({ width: 320, height: 760 })
   await page.getByRole('button', { name: 'Open navigation' }).click()
   await page.getByRole('dialog', { name: 'Documentation navigation' }).locator('a[href="/components/callouts"]').click()

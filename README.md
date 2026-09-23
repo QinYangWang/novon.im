@@ -82,7 +82,7 @@ so a custom component or theme override can use them:
 | `IconBadge` | Rounded-square icon container used on cards and rows. |
 | `Section` | Titled block with the standard vertical rhythm. |
 | `Reveal` | Reveals its children on scroll. |
-| `ScrollProgress` | Reading progress bar pinned to the top. |
+| `ScrollProgress`, `ReadingProgress` | Reading progress, pinned to the top or inline. |
 | `ArrowPill`, `SocialPills` | Pill links, and a row built from `theme.social`. |
 | `CopyUrlButton`, `PageActions` | Copy the current URL, or the page's Markdown. |
 | `ThemeSwitch`, `ThemeToggle` | Three-way and single theme controls. |

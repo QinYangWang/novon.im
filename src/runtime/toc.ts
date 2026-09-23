@@ -47,13 +47,21 @@ export interface ActiveHeadingInput {
 const READING_TOLERANCE = 1
 
 /**
+ * Share of the final viewport over which the closing section stays highlighted.
+ * Without it the catch-up would land on the last heading exactly at the bottom,
+ * leaving it lit for only the final pixel of scrolling.
+ */
+const CLOSING_WINDOW = 0.4
+
+/**
  * Extra reading offset that lets the outline reach a short closing section.
  *
  * The last heading can sit below the furthest the reading line normally reaches.
- * Without a catch-up the outline jumps straight to it and skips the sections in
- * between. This returns how far to lift the line at `scrollY`: it ramps in over
- * the final viewport of scrolling and lands exactly on the last heading at the
- * bottom, so every section still gets its turn, in order.
+ * Without a catch-up the outline would jump straight to it and skip the sections
+ * in between; with one that lands exactly at the bottom, it would only light up
+ * for the final pixel. This lifts the line over the last viewport of scrolling,
+ * reaching the last heading `CLOSING_WINDOW` viewports before the end so every
+ * section still gets its turn, in order, and the closing one stays lit.
  */
 export function closingReadingOffset(input: {
   /** Document-space top of the last heading. */
@@ -66,13 +74,15 @@ export function closingReadingOffset(input: {
   readingOffset: number
 }): number {
   const { lastTop, scrollY, viewportHeight, maxScroll, readingOffset } = input
+  if (maxScroll <= 0) return 0
   const viewport = Math.max(1, viewportHeight)
-  // How far the last heading sits beyond the furthest the line can normally
-  // reach. Zero when the last section is long enough to reach it on its own.
-  const deficit = lastTop - (maxScroll + readingOffset)
-  if (deficit <= 0 || maxScroll <= 0) return 0
-  const progress = Math.min(1, Math.max(0, (scrollY - (maxScroll - viewport)) / viewport))
-  return deficit * progress
+  const start = Math.max(0, maxScroll - viewport)
+  const end = Math.max(start, maxScroll - viewport * CLOSING_WINDOW)
+  const extra = lastTop - (end + readingOffset)
+  if (extra <= 0) return 0
+  if (end <= start) return extra
+  const progress = Math.min(1, Math.max(0, (scrollY - start) / (end - start)))
+  return extra * progress
 }
 
 /**

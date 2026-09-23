@@ -65,6 +65,12 @@ describe('resolveActiveHeading', () => {
 
 describe('closingReadingOffset', () => {
   const page = { viewportHeight: 800, maxScroll: 2396, readingOffset: 80 }
+  const headings = offsets(['a', 361], ['b', 1820], ['c', 2565], ['d', 2828])
+  const activeAt = (scrollY: number) =>
+    resolveActiveHeading(headings, {
+      scrollY,
+      readingOffset: page.readingOffset + closingReadingOffset({ ...page, lastTop: 2828, scrollY }),
+    })
 
   test('does nothing while the last heading can reach the reading line', () => {
     expect(closingReadingOffset({ ...page, lastTop: 1000, scrollY: 500 })).toBe(0)
@@ -72,25 +78,28 @@ describe('closingReadingOffset', () => {
 
   test('leaves the reading line alone until the final viewport of scroll', () => {
     const input = { ...page, lastTop: 2828 }
-    expect(closingReadingOffset({ ...input, scrollY: page.maxScroll - 800 })).toBe(0)
-    expect(closingReadingOffset({ ...input, scrollY: page.maxScroll - 400 })).toBeGreaterThan(0)
-  })
-
-  test('lifts the reading line exactly to the last heading at the bottom', () => {
-    const extra = closingReadingOffset({ ...page, lastTop: 2828, scrollY: page.maxScroll })
-    expect(page.maxScroll + page.readingOffset + extra).toBeCloseTo(2828, 5)
+    expect(closingReadingOffset({ ...input, scrollY: page.maxScroll - page.viewportHeight })).toBe(0)
+    expect(closingReadingOffset({ ...input, scrollY: page.maxScroll - 500 })).toBeGreaterThan(0)
   })
 
   test('keeps every heading reachable when a short section closes the page', () => {
     // The heading layout of a page whose last two sections cannot reach the line
     // on their own. The outline must still visit all four, in order.
-    const headings = offsets(['a', 361], ['b', 1820], ['c', 2565], ['d', 2828])
     const seen: string[] = []
     for (let scrollY = 0; scrollY <= page.maxScroll; scrollY += 4) {
-      const extra = closingReadingOffset({ ...page, lastTop: 2828, scrollY })
-      const id = resolveActiveHeading(headings, { scrollY, readingOffset: page.readingOffset + extra })
+      const id = activeAt(scrollY)
       if (id !== seen[seen.length - 1]) seen.push(id)
     }
     expect(seen).toEqual(['a', 'b', 'c', 'd'])
+  })
+
+  test('holds the closing heading for a visible stretch before the bottom', () => {
+    // Landing exactly at the bottom lit the last heading for only the final
+    // pixel, so stopping a few pixels short showed the previous section.
+    const window = page.viewportHeight * 0.4
+    expect(activeAt(page.maxScroll)).toBe('d')
+    expect(activeAt(page.maxScroll - 1)).toBe('d')
+    expect(activeAt(page.maxScroll - window)).toBe('d')
+    expect(activeAt(page.maxScroll - window - 1)).not.toBe('d')
   })
 })

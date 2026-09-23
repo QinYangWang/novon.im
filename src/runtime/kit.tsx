@@ -67,12 +67,12 @@ export function Reveal({
   )
 }
 
-/** Reading progress for the current page, pinned to the top of the viewport. */
-export function ScrollProgress({ className }: { className?: string }) {
-  const barRef = React.useRef<HTMLDivElement>(null)
-
+/**
+ * Drives a progress bar's `scaleX` straight from the DOM, so a scroll frame
+ * never re-renders React.
+ */
+function useScrollProgress(barRef: React.RefObject<HTMLElement | null>) {
   React.useEffect(() => {
-    // Paint straight to the DOM so a scroll frame never re-renders React.
     const paint = () => {
       const bar = barRef.current
       if (!bar) return
@@ -101,10 +101,30 @@ export function ScrollProgress({ className }: { className?: string }) {
       observer?.disconnect()
       if (frame) window.cancelAnimationFrame(frame)
     }
-  }, [])
+  }, [barRef])
+}
+
+/**
+ * Reading progress as an inline bar, for embedding in the "On this page" panel
+ * so the outline itself carries the progress instead of a separate top strip.
+ */
+export function ReadingProgress({ className }: { className?: string }) {
+  const barRef = React.useRef<HTMLDivElement>(null)
+  useScrollProgress(barRef)
+  return (
+    <div aria-hidden="true" data-novon-progress="inline" className={cn('h-0.5 w-full overflow-hidden rounded-full bg-border', className)}>
+      <div ref={barRef} className="novon-progress h-full bg-primary" style={{ transform: 'scaleX(0)' }} />
+    </div>
+  )
+}
+
+/** Reading progress for the current page, pinned to the top of the viewport. */
+export function ScrollProgress({ className }: { className?: string }) {
+  const barRef = React.useRef<HTMLDivElement>(null)
+  useScrollProgress(barRef)
 
   return (
-    <div aria-hidden="true" className={cn('fixed inset-x-0 top-0 z-50 h-0.5', className)}>
+    <div aria-hidden="true" data-novon-progress="top" className={cn('fixed inset-x-0 top-0 z-50 h-0.5', className)}>
       <div ref={barRef} className="novon-progress h-full bg-primary" style={{ transform: 'scaleX(0)' }} />
     </div>
   )

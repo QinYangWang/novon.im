@@ -101,6 +101,7 @@ export {
   CopyUrlButton,
   IconBadge,
   PillNav,
+  ReadingProgress,
   Reveal,
   ScrollProgress,
   Section,

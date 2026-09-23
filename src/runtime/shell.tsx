@@ -31,7 +31,7 @@ import { Icon } from './icons.tsx'
 import { SvglIcon } from './svgl.tsx'
 import { copyText, isMarkdownDocument } from './actions.ts'
 import { TOC_READING_OFFSET, closingReadingOffset, hashToId, resolveActiveHeading, type HeadingOffset } from './toc.ts'
-import { CopyUrlButton, PillNav, Reveal, ScrollProgress, Section, SocialPills, ThemeSwitch, ThemeToggle } from './kit.tsx'
+import { CopyUrlButton, PillNav, ReadingProgress, Reveal, ScrollProgress, Section, SocialPills, ThemeSwitch, ThemeToggle } from './kit.tsx'
 import type { NavNode, PageLink, SiteIndex } from './content.ts'
 
 export { ThemeSwitch, ThemeToggle } from './kit.tsx'
@@ -605,6 +605,7 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
         <ListIcon aria-hidden="true" className="size-4 text-muted-foreground" />
         On this page
       </p>
+      <ReadingProgress className="mt-3" />
       <ul ref={listRef} onClick={onListClick} className="mt-3 border-l border-border">
         {headings.map((heading, index) => (
           <TocItem
@@ -1121,7 +1122,6 @@ export function BaseLayout({ children }: { children: React.ReactNode }) {
       >
         Skip to content
       </a>
-      <ScrollProgress />
       {children}
     </div>
   )
@@ -1258,6 +1258,9 @@ export function DocsLayout({ route, url, headings, children, config, site }: Doc
 
   return (
     <BaseLayout>
+      {/* The outline carries the progress on wide screens; below them the
+          sidebar is hidden, so the strip stays. */}
+      <ScrollProgress className="xl:hidden" />
       <Header onToggleNav={toggleNav} navOpen={navOpen} />
 
       <div className="flex">
@@ -1354,6 +1357,7 @@ export function BlogLayout({ children }: { children: React.ReactNode }) {
   const Footer = useOverride('BlogFooter', SharedFooter)
   return (
     <BaseLayout>
+      <ScrollProgress />
       <div className="mx-auto w-full max-w-(--novon-column-width) px-4 pt-14 pb-16 md:px-0">
         <Header />
         <main id="novon-content" tabIndex={-1} className="mt-12">{children}</main>

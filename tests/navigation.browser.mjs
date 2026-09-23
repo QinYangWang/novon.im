@@ -154,6 +154,21 @@ try {
   await page.waitForTimeout(700)
   assert.equal(await activeToc(), sweep.ids[sweep.ids.length - 2], 'a followed link stays highlighted')
 
+  // Reading progress lives inside the outline on wide screens, and the top
+  // strip only takes over once the sidebar is hidden.
+  const progressState = () => page.evaluate(() => {
+    const top = document.querySelector('[data-novon-progress="top"]')
+    const inline = document.querySelector('[data-novon-progress="inline"]')
+    return {
+      topShown: top ? getComputedStyle(top).display !== 'none' : false,
+      inlineShown: inline ? inline.getBoundingClientRect().width > 0 : false,
+    }
+  })
+  assert.deepEqual(await progressState(), { topShown: false, inlineShown: true }, 'the outline carries the progress')
+  await page.setViewportSize({ width: 900, height: 900 })
+  await page.waitForTimeout(150)
+  assert.deepEqual(await progressState(), { topShown: true, inlineShown: false }, 'the top strip returns without the outline')
+
   await page.setViewportSize({ width: 320, height: 760 })
   await page.getByRole('button', { name: 'Open navigation' }).click()
   await page.getByRole('dialog', { name: 'Documentation navigation' }).locator('a[href="/components/callouts"]').click()

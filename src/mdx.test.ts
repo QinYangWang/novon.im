@@ -6,6 +6,14 @@ const source = '```ts title="example.ts" showLineNumbers {2}\nconst a = 1\nconst
 const render = async (code: string, options = mdxOptions()) => String(await compile(code, options))
 
 describe('build-time syntax highlighting', () => {
+  test('MDX JSX highlighting does not depend on a previous TSX fence', async () => {
+    const mdx = '```mdx\n<Frame caption="Example"><img src="/image.svg" /></Frame>\n```'
+    const before = await render(mdx)
+    await render('```tsx\nconst element = <Frame />\n```')
+    const after = await render(mdx)
+    expect(before).toBe(after)
+    expect(before).toContain('children: "Frame"')
+  })
   test('emits both themes, filename, line numbers and highlighted lines', async () => {
     const html = await render(source)
     for (const token of ['--shiki-light', '--shiki-dark', 'example.ts', 'data-line-numbers', 'data-highlighted-line', 'github-light github-dark']) {

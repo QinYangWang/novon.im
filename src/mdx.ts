@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypePrettyCode from 'rehype-pretty-code'
+import { getSingletonHighlighter } from 'shiki'
 import GithubSlugger from 'github-slugger'
 import { valueToEstree } from 'estree-util-value-to-estree'
 import { define } from 'unist-util-mdx-define'
@@ -70,6 +71,10 @@ export function mdxOptions(extra?: MdxOptions) {
   const highlighting: PluggableList = highlight === false ? [] : [[rehypePrettyCode, {
     theme: highlight?.theme ?? { light: 'github-light', dark: 'github-dark' },
     keepBackground: false,
+    // MDX lazily embeds TSX. Load it before any grammar is tokenized so the
+    // client and SSR builds cannot depend on which document Vite visits first.
+    getHighlighter: (options: Parameters<typeof getSingletonHighlighter>[0]) =>
+      getSingletonHighlighter({ ...options, langs: ['tsx', ...(options?.langs ?? [])] }),
     // Leave ordinary inline code alone; explicit `{:ts}` annotations still work.
     defaultLang: { block: highlight?.defaultLanguage ?? 'plaintext', inline: '' },
   }]]

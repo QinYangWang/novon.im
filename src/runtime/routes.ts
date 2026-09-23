@@ -6,7 +6,8 @@
  * binds it to the generated index.
  */
 import type { ComponentType } from 'react'
-import type { Frontmatter, Route, RuntimeConfig, TocEntry } from '../types.ts'
+import type { Frontmatter, LayoutConfig, LayoutKind, LayoutLayer, Route, TocEntry } from '../types.ts'
+import { blogIndexPath, blogTagsPath, layerForPath, layoutLayers } from '../layers.ts'
 import { humanize, tagSlug } from './lib.ts'
 
 export interface PageModule {
@@ -44,7 +45,15 @@ export interface NavGroup {
 
 export type NavNode = NavPage | NavGroup
 
+export interface LayerIndex extends LayoutLayer {
+  nav: NavNode[]
+  posts: Route[]
+  tags: { tag: string; count: number }[]
+}
+
 export interface SiteIndex {
+  layers: LayerIndex[]
+  activeLayer?: LayerIndex
   routes: Route[]
   byPath: Map<string, Route>
   /** Top-level sidebar/tree nodes. */
@@ -106,10 +115,11 @@ export function titleOf(route: Route): string {
 
 /** Build the route table from the content index. */
 export function buildRoutes(
-  template: 'docs' | 'blog' = 'docs',
+  options: LayoutConfig | LayoutKind = 'docs',
   index: ContentIndex,
   isDev = false,
 ): Route[] {
+  const config = typeof options === 'string' ? { layout: options } : options
   const routes: Route[] = []
   const seen = new Set<string>()
 
@@ -122,24 +132,26 @@ export function buildRoutes(
       continue
     }
     seen.add(route.path)
-    routes.push(route)
+    const layer = layerForPath(config, route.path)
+    routes.push({ ...route, layout: layer.layout, layer: layer.path })
   }
 
   routes.sort((a, b) => a.path.localeCompare(b.path))
 
-  if (!routes.some((route) => route.path === '/')) {
-    if (template === 'blog') {
-      // A blog home is the post list, not the first post.
-      routes.unshift({ path: '/', file: '', meta: {}, segments: [], isIndex: true, synthetic: true })
-    } else {
-      // Mirror mkdocs: `/` renders the first page when there is no `content/index.mdx`.
-      const first = routes.find((route) => route.meta.sidebar !== false) ?? routes[0]
-      routes.unshift(
-        first
-          ? { ...first, path: '/', segments: [], isIndex: true, synthetic: true }
-          : { path: '/', file: '', meta: {}, segments: [], isIndex: true, synthetic: true },
-      )
-    }
+  for (const layer of layoutLayers(config)) {
+    if (seen.has(layer.path)) continue
+    const candidates = routes.filter((route) => !route.synthetic && route.layer === layer.path)
+    const first = layer.layout === 'docs'
+      ? candidates.find((route) => route.meta.sidebar !== false) ?? candidates[0]
+      : undefined
+    routes.unshift({
+      file: '', meta: {}, ...first,
+      path: layer.path,
+      segments: layer.path.split('/').filter(Boolean),
+      isIndex: true, synthetic: true,
+      layout: layer.layout, layer: layer.path,
+    })
+    seen.add(layer.path)
   }
 
   return routes
@@ -214,9 +226,14 @@ function buildNavTree(routes: Route[]): NavNode[] {
   return nodes
 }
 
+export function isBlogPost(route: Route): boolean {
+  return route.layout === 'blog' && route.path !== route.layer && !route.isIndex && !route.synthetic &&
+    !route.postList && !route.tag && route.meta.sidebar !== false
+}
+
 function collectPosts(routes: Route[]): Route[] {
   return routes
-    .filter((route) => !route.isIndex && !route.synthetic && route.meta.sidebar !== false)
+    .filter(isBlogPost)
     .sort((a, b) => {
       const dateA = a.meta.date ? Date.parse(String(a.meta.date)) : Number.NaN
       const dateB = b.meta.date ? Date.parse(String(b.meta.date)) : Number.NaN
@@ -241,23 +258,38 @@ function collectTags(posts: Route[]): { tag: string; count: number }[] {
 }
 
 export function createSiteIndex(
-  config: Pick<RuntimeConfig, 'template'>,
+  config: LayoutConfig,
   index: ContentIndex,
   isDev = false,
 ): SiteIndex {
-  const routes = buildRoutes(config.template, index, isDev)
+  const routes = buildRoutes(config, index, isDev)
   const byPath = new Map(routes.map((route) => [route.path, route]))
   const posts = collectPosts(routes)
   const tags = collectTags(posts)
 
-  // Tag pages only make sense where a post list is the main navigation.
-  if (config.template === 'blog') {
-    if (!byPath.has('/blog')) {
+  const layers: LayerIndex[] = layoutLayers(config).map((layer) => {
+    const ownRoutes = routes.filter((route) => route.layer === layer.path)
+    const ownPosts = collectPosts(ownRoutes)
+    // Sidebar hierarchy is relative to the mount, while slugs still follow the file tree.
+    const prefix = layer.path.split('/').filter(Boolean)
+    const navRoutes = ownRoutes.map((route) => ({
+      ...route,
+      segments: prefix.every((part, i) => route.segments[i] === part)
+        ? route.segments.slice(prefix.length) : route.segments,
+    }))
+    return { ...layer, nav: layer.layout === 'docs' ? buildNavTree(navRoutes) : [], posts: ownPosts, tags: collectTags(ownPosts) }
+  })
+
+  for (const layer of layers) {
+    if (layer.layout !== 'blog') continue
+    const listPath = blogIndexPath(layer.path)
+    if (!byPath.has(listPath) && layerForPath(config, listPath).path === layer.path) {
       const route: Route = {
-        path: '/blog',
+        path: listPath,
+        layout: 'blog', layer: layer.path,
         file: '',
         meta: { title: 'Blog' },
-        segments: ['blog'],
+        segments: listPath.split('/').filter(Boolean),
         isIndex: false,
         synthetic: true,
         postList: true,
@@ -266,14 +298,15 @@ export function createSiteIndex(
       byPath.set(route.path, route)
     }
 
-    for (const { tag } of tags) {
-      const path = `/tags/${tagSlug(tag)}`
-      if (byPath.has(path)) continue
+    for (const { tag } of layer.tags) {
+      const path = `${blogTagsPath(layer.path)}/${tagSlug(tag)}`
+      if (byPath.has(path) || layerForPath(config, path).path !== layer.path) continue
       const route: Route = {
         path,
         file: '',
         meta: { title: tag },
-        segments: ['tags', tagSlug(tag)],
+        layout: 'blog', layer: layer.path,
+        segments: path.split('/').filter(Boolean),
         isIndex: false,
         synthetic: true,
         tag,
@@ -281,9 +314,17 @@ export function createSiteIndex(
       routes.push(route)
       byPath.set(path, route)
     }
+    // A more specific layer can reserve the tag namespace. Do not publish dead links.
+    layer.tags = layer.tags.filter(({ tag }) => byPath.has(`${blogTagsPath(layer.path)}/${tagSlug(tag)}`))
   }
 
-  return { routes, byPath, nav: buildNavTree(routes), posts, tags }
+  return { routes, byPath, layers, nav: buildNavTree(routes.filter((route) => route.layout === 'docs')), posts, tags }
+}
+
+/** Keep global routing/search, but scope navigation and lists to the current layer. */
+export function siteForRoute(site: SiteIndex, route: Route | undefined): SiteIndex {
+  const layer = site.layers.find((layer) => layer.path === route?.layer)
+  return layer ? { ...site, nav: layer.nav, posts: layer.posts, tags: layer.tags, activeLayer: layer } : site
 }
 
 export interface PageLink {

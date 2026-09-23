@@ -2,7 +2,7 @@
  * Binds the pure content model in `routes.ts` to the index the novon Vite plugin
  * generates from `content/`.
  */
-import type { Frontmatter } from '../types.ts'
+import type { Frontmatter, LayoutConfig } from '../types.ts'
 import { createSiteIndex as buildSiteIndex, fileToRoute, type ContentIndex, type PageModule } from './routes.ts'
 import { files as contentFiles, loaders as contentLoaders, meta as contentMeta } from 'virtual:novon/content'
 
@@ -23,7 +23,7 @@ export function routePathOf(file: string): string {
 }
 
 /** `import.meta.env.DEV` decides whether drafts are included. */
-export function createSiteIndex(config: { template: 'docs' | 'blog' }) {
+export function createSiteIndex(config: LayoutConfig) {
   return buildSiteIndex(config, contentIndex, Boolean(import.meta.env.DEV))
 }
 

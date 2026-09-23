@@ -72,6 +72,19 @@ describe('dev markdown resolver', () => {
     expect(match(dev, '/guide/writing.md').file).toBe('/content/guide/writing.mdx')
   })
 
+  test('shares layer ownership with static routes under a deployment base', () => {
+    const root = makeSite({
+      'content/blog/post.mdx': 'blog body\n',
+      'content/docs/start.mdx': 'docs body\n',
+    })
+    const dev = resolver(root, { base: '/repo/', layers: [
+      { path: '/blog', layout: 'blog' }, { path: '/docs', layout: 'docs' },
+    ] })
+    expect(match(dev, '/repo/docs.md').file).toBe('/content/docs/start.mdx')
+    expect(match(dev, '/repo/blog/post.md').file).toBe('/content/blog/post.mdx')
+    expect(dev.resolve('/repo/blog.md').kind).toBe('not-found')
+  })
+
   test('honours frontmatter slugs for the markdown route', () => {
     const root = makeSite({ 'content/foo.mdx': '---\nslug: custom-url\n---\nbody\n' })
     const dev = resolver(root)

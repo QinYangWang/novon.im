@@ -27,7 +27,7 @@ export function devOgPlugin(root: string, config: RuntimeConfig): Plugin {
           const { renderOgImage } = await import('./render.ts')
           const author = route.meta.author
           const png = await renderOgImage({
-            site: config.title, title: titleOf(route), path: route.path, template: config.template,
+            site: config.title, title: titleOf(route), path: route.path, layout: route.layout ?? config.layout,
             description: route.meta.description ?? (route.isIndex ? config.description : undefined),
             author: typeof author === 'string' ? author : author?.name ?? config.author,
           })

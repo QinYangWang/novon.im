@@ -16,7 +16,8 @@ export default defineConfig({
   description: 'Documentation for My Docs.',
   url: 'https://docs.example.com',
   base: '/',
-  template: 'docs',
+  layout: 'docs',
+  layers: [{ path: '/blog', layout: 'blog' }],
   nav: [{ label: 'Guide', href: '/guide' }],
   theme: { accent: 'zinc' },
   plugins: ['search', 'sitemap', 'llms'],
@@ -36,7 +37,9 @@ export default defineConfig({
 | `description` | `string` | Default description for the home page and feeds. |
 | `url` | `string` | Canonical origin. Makes sitemap and RSS links absolute. |
 | `base` | `string` | Path the site is served from. Use `/repo/` on GitHub Pages. |
-| `template` | `docs` \| `blog` | Layout and default content structure. |
+| `layout` | `docs` \| `blog` | Default layout. Defaults to `docs`. |
+| `layers` | `{ path, layout }[]` | Mount layouts by URL prefix. See [Layout layers](/guide/layouts). |
+| `template` | `docs` \| `blog` | Deprecated fallback for `layout`; not a site mode. |
 | `language` | `string` | `lang` attribute and date formatting. Defaults to `en`. |
 | `author` | `string` | Default author for posts without one. |
 | `nav` | `NavItem[]` | Links in the top bar. |
@@ -56,8 +59,8 @@ nav: [
 ]
 ```
 
-Links with an absolute URL open in a new tab. In the docs template `nav` is shown
-in the mobile top bar; in the blog template it is the segmented navigation.
+Links with an absolute URL open in a new tab. In the docs layout `nav` is shown
+in the mobile top bar; in the blog layout it is the segmented navigation.
 
 ## Output
 
@@ -179,7 +182,7 @@ plugins: ['search', 'sitemap', 'rss', 'llms']
 | --- | --- | --- |
 | `search` | `search-index.json` | Search palette, opened with `⌘K`. |
 | `sitemap` | `sitemap.xml` | One entry per published page. |
-| `rss` | `rss.xml` | Feed of pages with a `date`. Skipped if there are none. |
+| `rss` | `rss.xml` | Feed of visible posts from all blog layers. Skipped if there are none. |
 | `llms` | `llms.txt` | Page index for language models. |
 
 Custom plugins are objects created with `definePlugin` — see

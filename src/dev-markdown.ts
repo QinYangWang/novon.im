@@ -20,7 +20,7 @@ import { normalizeBase } from './config.ts'
 import { scanContent } from './content-plugin.ts'
 import { markdownPath } from './paths.ts'
 import { createSiteIndex } from './runtime/routes.ts'
-import type { Route } from './types.ts'
+import type { LayoutConfig, Route } from './types.ts'
 
 const MARKDOWN_RE = /\.md$/
 
@@ -43,10 +43,9 @@ export type DevMarkdownResolution =
   /** No indexed route (or the source escaped `content/`). */
   | { kind: 'not-found' }
 
-export interface DevMarkdownResolverOptions {
+export interface DevMarkdownResolverOptions extends LayoutConfig {
   /** Absolute path of the site being built. */
   siteRoot: string
-  template: 'docs' | 'blog'
   /** Configured base, as returned by `normalizeBase`. */
   base?: string
   /** Include drafts, matching `import.meta.env.DEV` in the runtime. Defaults to true. */
@@ -70,7 +69,7 @@ interface ResolvedIndex {
 }
 
 export function createDevMarkdownResolver(options: DevMarkdownResolverOptions): DevMarkdownResolver {
-  const { siteRoot, template } = options
+  const { siteRoot } = options
   const isDev = options.isDev ?? true
   const base = normalizeBase(options.base)
   const contentRoot = join(siteRoot, 'content')
@@ -78,7 +77,7 @@ export function createDevMarkdownResolver(options: DevMarkdownResolverOptions): 
 
   const build = (): ResolvedIndex => {
     const scanned = scanContent(siteRoot)
-    const site = createSiteIndex({ template }, scanned, isDev)
+    const site = createSiteIndex(options, scanned, isDev)
     const byMarkdown = new Map<string, Route>()
     for (const route of site.routes) {
       // Synthetic blog/tag/404 routes have no source, so they get no `.md`.

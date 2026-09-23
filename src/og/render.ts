@@ -13,7 +13,7 @@ export interface OgCard {
   title: string
   description?: string
   path: string
-  template: 'docs' | 'blog'
+  layout: 'docs' | 'blog'
   author?: string
 }
 
@@ -36,7 +36,7 @@ export async function renderOgImage(card: OgCard): Promise<Uint8Array> {
       h('div', { style: { fontSize: title.length > 70 ? 50 : 64, lineHeight: 1.15, letterSpacing: '-2px', wordBreak: 'break-word', lineClamp: 3 } }, title),
       h('div', { style: { fontSize: 25, lineHeight: 1.5, color: '#b5b5b5', wordBreak: 'break-word', lineClamp: 2 } }, text(card.description, 150))),
     h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #404040', paddingTop: 24, gap: 32, fontSize: 18, color: '#b5b5b5' } },
-      h('div', null, text(card.author || (card.template === 'docs' ? 'Documentation' : 'Journal'), 55)),
+      h('div', null, text(card.author || (card.layout === 'docs' ? 'Documentation' : 'Journal'), 55)),
       h('div', { style: { maxWidth: 620, wordBreak: 'break-all', lineClamp: 1 } }, text(card.path, 75)))),
     { width: OG_WIDTH, height: OG_HEIGHT, fonts: [{ name: 'Noto Sans', data: await loadFont(), weight: 400, style: 'normal' }] },
   )

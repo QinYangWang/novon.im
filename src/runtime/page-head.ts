@@ -1,3 +1,4 @@
+import { layerForPath } from '../layers.ts'
 import type { Route, RuntimeConfig } from '../types.ts'
 import { absoluteUrl } from '../url.ts'
 import { titleOf } from './routes.ts'
@@ -11,6 +12,7 @@ export function updatePageHead(config: RuntimeConfig, route: Route, options: { a
   const title = titleOf(route)
   const fullTitle = title === config.title ? title : `${title} · ${config.title}`
   document.title = fullTitle
+  document.documentElement.dataset.layout = route.layout ?? layerForPath(config, route.path).layout
   const description = route.meta.description ?? (route.isIndex ? config.description : undefined)
   const setMeta = (attribute: 'name' | 'property', key: string, value?: string) => {
     let element = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${key}"]`)

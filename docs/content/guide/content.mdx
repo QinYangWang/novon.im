@@ -44,7 +44,7 @@ The page heading comes from `title`, so start your body at `##`.
 | `draft` | `true` excludes the page from a production build. Visible in `dev`. |
 | `date` | Drives post ordering, RSS and sitemap `lastmod`. |
 | `updated` | Shown as "Last updated on …". |
-| `tags` | Badges on a post, and tag pages in the blog template. |
+| `tags` | Badges on a post, and tag pages in the owning blog layer. |
 | `author` | Name or `{ name, avatar, url }`. |
 | `image` | Cover image on a blog post, and the social preview fallback. |
 | `ogImage` | Social preview image only; leaves the blog cover unchanged. |
@@ -65,8 +65,8 @@ The page heading comes from `title`, so start your body at `##`.
 
 <AccordionGroup>
   <Accordion title="What if there is no content/index.mdx?">
-    The docs template points `/` at the first page it finds, the way mkdocs
-    copies `index.md`. The blog template renders the post list at `/` instead,
+    A docs layer points its root at the first page in that layer, the way mkdocs
+    copies `index.md`. A blog layer renders a post list at its root instead,
     because a blog home is a list rather than a page.
   </Accordion>
   <Accordion title="How do I keep a page out of the navigation?">
@@ -174,6 +174,7 @@ trade-offs, including scripts the bundled font does not cover.
 
 ## Blog posts
 
-In the `blog` template every non-index page is a post. Posts sort newest first by
-`date`, and `/blog` lists them all. A page with `sidebar: false` is a normal page
-rather than a post — useful for an About page.
+In a `blog` layer, non-index pages below the layer root are posts. Posts sort
+newest first by `date`; the layer's generated index lists only its own posts.
+`sidebar: false` hides a page from post lists, tags and RSS — useful for an About
+page. Docs pages are never collected as posts. See [Layout layers](/guide/layouts).

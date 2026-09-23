@@ -122,8 +122,10 @@ theme: {
 | `Sidebar` | The docs sidebar rail. |
 | `TableOfContents` | The "On this page" panel. |
 | `Footer` | Footer. |
-| `HomePage` | What the blog template renders at `/`. |
-| `PostListPage` | The generated `/blog` index. |
+| `DocsHeader`, `BlogHeader` | Layout-specific header; takes precedence over `Header`. |
+| `DocsFooter`, `BlogFooter` | Layout-specific footer; takes precedence over `Footer`. |
+| `HomePage` | A blog layer's generated home page. |
+| `PostListPage` | The extra `/blog` index of a root blog. |
 | `NotFound` | The 404 page. |
 
 ## Plugins

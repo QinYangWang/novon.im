@@ -2,7 +2,24 @@
  * Pure type declarations shared by the CLI (node) and the theme (browser).
  * Keep this file free of `node:` imports so the runtime can bundle it.
  */
-export type TemplateKind = 'docs' | 'blog'
+export type LayoutKind = 'docs' | 'blog'
+/** @deprecated Templates are scaffolding presets; use LayoutKind for rendering. */
+export type TemplateKind = LayoutKind
+
+/** A layout mounted at a URL prefix, independent of the site's content files. */
+export interface LayoutLayer {
+  /** Site-relative prefix, without `base`. The longest segment match wins. */
+  path: string
+  layout: LayoutKind
+}
+
+export interface LayoutConfig {
+  /** Default layout for routes outside an explicit layer. Default: docs. */
+  layout?: LayoutKind
+  layers?: LayoutLayer[]
+  /** @deprecated Use `layout`. Still accepted for existing sites. */
+  template?: TemplateKind
+}
 
 export type AccentColor =
   | 'zinc'
@@ -123,7 +140,7 @@ export interface MdxOptions {
   rehypePlugins?: unknown[]
 }
 
-export interface NovonConfig {
+export interface NovonConfig extends LayoutConfig {
   /** Site name. Shown in the header, page titles and feeds. */
   title: string
   description?: string
@@ -131,8 +148,6 @@ export interface NovonConfig {
   url?: string
   /** Base path the site is served from, e.g. `/my-repo/` on GitHub Pages. */
   base?: string
-  /** Set by `novon new`. Controls the default layout and content scaffolding. */
-  template?: TemplateKind
   outDir?: string
   /** Static files copied verbatim into the build output. Defaults to `public`. */
   publicDir?: string | false
@@ -167,11 +182,14 @@ export interface Route {
   segments: string[]
   /** True for `index.mdx` files. */
   isIndex: boolean
-  /** True for the synthetic `/` route pointing at the first page. */
+  /** True for generated layer roots, post lists and tag routes. */
   synthetic?: boolean
   /** Set on generated tag pages: the tag they list. */
   tag?: string
-  /** Set on the generated `/blog` index of the blog template. */
+  /** Resolved layout and owning layer prefix (assigned by the route index). */
+  layout?: LayoutKind
+  layer?: string
+  /** Set on a generated blog index. */
   postList?: boolean
 }
 
@@ -195,12 +213,13 @@ export interface PageData {
  * plugin functions and component maps cannot cross that boundary, so features
  * are reduced to booleans here.
  */
-export interface RuntimeConfig {
+export interface RuntimeConfig extends LayoutConfig {
   title: string
   description?: string
   url?: string
   base: string
-  template: TemplateKind
+  layout: LayoutKind
+  layers: LayoutLayer[]
   language: string
   author?: string
   theme: Required<Pick<ThemeOptions, 'accent' | 'radius' | 'darkMode' | 'toc'>> & ThemeOptions
@@ -221,9 +240,14 @@ export interface ThemeOverrides {
   Sidebar?: unknown
   Footer?: unknown
   TableOfContents?: unknown
-  /** The blog home. */
+  /** Layout-specific overrides take precedence over shared Header / Footer. */
+  DocsHeader?: unknown
+  BlogHeader?: unknown
+  DocsFooter?: unknown
+  BlogFooter?: unknown
+  /** A blog layer's generated home. */
   HomePage?: unknown
-  /** The generated `/blog` index. */
+  /** The extra `/blog` index of a root blog. */
   PostListPage?: unknown
   NotFound?: unknown
 }

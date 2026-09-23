@@ -2,6 +2,7 @@
  * The HTML shell. Used by the dev server and by the prerenderer so both produce
  * the same document.
  */
+import { layerForPath } from './layers.ts'
 import type { RuntimeConfig } from './types.ts'
 import { absoluteUrl } from './url.ts'
 import { socialMeta } from './social.ts'
@@ -74,7 +75,7 @@ export function renderDocument(options: DocumentOptions): string {
     .join('\n    ')
 
   return `<!doctype html>
-<html lang="${escapeHtml(config.language)}" data-template="${escapeHtml(config.template)}" data-accent="${escapeHtml(config.theme.accent)}" style="--radius: ${escapeHtml(config.theme.radius)}">
+<html lang="${escapeHtml(config.language)}" data-layout="${escapeHtml(layerForPath(config, options.path ?? '/').layout)}" data-accent="${escapeHtml(config.theme.accent)}" style="--radius: ${escapeHtml(config.theme.radius)}">
   <head>
     ${head}
   </head>

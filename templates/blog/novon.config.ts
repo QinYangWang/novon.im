@@ -6,7 +6,9 @@ export default defineConfig({
   description: 'Writing from __TITLE__.',
   // Set `url` to get absolute links in rss.xml and sitemap.xml.
   // url: 'https://example.com',
-  template: 'blog',
+  layout: 'blog',
+  // Mount documentation in the same site:
+  // layers: [{ path: '/docs', layout: 'docs' }],
 
   nav: [
     { label: 'home', href: '/' },

@@ -6,6 +6,7 @@
  * ```
  */
 import type { BuiltPage, BuildContext, NovonPlugin } from './api.ts'
+import { isBlogPost } from '../runtime/routes.ts'
 import { absoluteUrl } from '../url.ts'
 
 /** Absolute URL for a route, or a root-relative one when `url` is not configured. */
@@ -22,11 +23,10 @@ function escapeXml(value: unknown): string {
     .replace(/'/g, '&apos;')
 }
 
-/** Blog-like pages: anything carrying a date, or living under /blog. */
+/** Only real posts owned by a blog layer; dated docs are not feed entries. */
 function posts(pages: BuiltPage[]): BuiltPage[] {
   return pages
-    .filter((page) => page.frontmatter.sidebar !== false)
-    .filter((page) => Boolean(page.frontmatter.date) || page.route.path.startsWith('/blog'))
+    .filter((page) => isBlogPost(page.route))
     .sort((a, b) => String(b.frontmatter.date ?? '').localeCompare(String(a.frontmatter.date ?? '')))
 }
 
@@ -67,7 +67,7 @@ export const rss: NovonPlugin = {
   postBuild(ctx) {
     const list = posts(ctx.pages).slice(0, 30)
     if (list.length === 0) {
-      ctx.log('rss: skipped, no dated pages found')
+      ctx.log('rss: skipped, no blog posts found')
       return
     }
     const items = list

@@ -8,8 +8,8 @@ import type { RuntimeConfig, ThemeOverrides } from '../types.ts'
 import type { PageModule, SiteIndex } from './content.ts'
 import { mdxComponents } from './mdx.tsx'
 import { SiteProvider } from './site.tsx'
-import { BlogLayout, DefaultHomePage, DefaultNotFound, DocsLayout, OverrideProvider, useOverride } from './shell.tsx'
-import { flattenNav, titleOf } from './content.ts'
+import { BlogLayout, BlogPage, DefaultNotFound, DocsLayout, DocsPage, OverrideProvider, useOverride } from './shell.tsx'
+import { flattenNav, siteForRoute, titleOf } from './content.ts'
 import { customComponents } from 'virtual:novon/components'
 import { themeOverrides } from 'virtual:novon/theme'
 
@@ -23,7 +23,6 @@ export interface AppProps {
 
 function AppBody({ config, url, site, page }: AppProps) {
   const NotFound = useOverride('NotFound', DefaultNotFound)
-  const HomePage = useOverride('HomePage', DefaultHomePage)
   const route = site.byPath.get(url)
   const headings = page?.headings ?? []
   const title = route ? titleOf(route) : 'Not found'
@@ -46,8 +45,6 @@ function AppBody({ config, url, site, page }: AppProps) {
     <MDXProvider key={url} components={components}>
       <page.default />
     </MDXProvider>
-  ) : config.template === 'blog' ? (
-    <HomePage site={site} config={config} />
   ) : null
 
   const layoutProps = {
@@ -62,16 +59,19 @@ function AppBody({ config, url, site, page }: AppProps) {
     site,
   }
 
-  return config.template === 'blog' ? <BlogLayout {...layoutProps} /> : <DocsLayout {...layoutProps} />
+  return route.layout === 'blog'
+    ? <BlogLayout><BlogPage {...layoutProps} /></BlogLayout>
+    : <DocsLayout {...layoutProps}><DocsPage {...layoutProps} /></DocsLayout>
 }
 
 
 export function App(props: AppProps) {
-  const { config, url, site } = props
+  const { config, url } = props
+  const site = React.useMemo(() => siteForRoute(props.site, props.site.byPath.get(url)), [props.site, url])
   return (
     <OverrideProvider value={{ ...themeOverrides, ...props.overrides }}>
       <SiteProvider value={{ config, base: config.base, site, url }}>
-        <AppBody {...props} />
+        <AppBody {...props} site={site} />
         <span className="sr-only" role="status" aria-live="polite">{site.byPath.has(url) ? titleOf(site.byPath.get(url)!) : 'Page not found'}</span>
       </SiteProvider>
     </OverrideProvider>

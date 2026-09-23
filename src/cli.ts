@@ -29,7 +29,7 @@ Commands
   version       Print the novon version
 
 Options for new
-  -t, --template <docs|blog>   Site template (default: docs)
+  -t, --template <docs|blog>   Starter preset (default: docs)
       --title <name>           Site title (default: derived from the directory name)
   -f, --force                  Scaffold into a non-empty directory
 

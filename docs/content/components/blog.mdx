@@ -5,8 +5,9 @@ icon: Book
 order: 12
 ---
 
-The blog template already supplies a homepage, `/blog` and `/tags/<tag>` pages.
-Use these components only when composing a custom homepage or topic index.
+A blog layer supplies a post list at its root and tags at `<layer>/tags/<tag>`.
+A root blog also keeps `/blog` and `/tags/<tag>`. Use these components when
+composing a custom homepage or topic index inside a blog layer.
 
 ```mdx
 ## Recent writing
@@ -20,8 +21,8 @@ Use these components only when composing a custom homepage or topic index.
 
 `PostList` accepts an optional `limit` and `title`. It reads titles, descriptions
 and dates from frontmatter and links to the published posts. `TagList` links to
-the generated topic pages; use it with the blog template, which creates those
-routes. Drafts are excluded from production builds.
+the generated topic pages in the current blog layer. Lists never include docs
+or another blog layer's posts. Drafts are excluded from production builds.
 
 For a custom React theme, import `PostList`, `PostItem`, `PostCard` and `TagList`
 from `novon` and pass the posts or tags from `useSite().site` explicitly.

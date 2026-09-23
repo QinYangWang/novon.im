@@ -45,7 +45,8 @@ export function runtimeConfig(config: ResolvedConfig): RuntimeConfig {
     description: config.description,
     url: config.url,
     base: config.base,
-    template: config.template,
+    layout: config.layout,
+    layers: config.layers,
     language: config.language,
     author: config.author,
     theme: {
@@ -310,7 +311,7 @@ export function createNovonViteConfig(options: CreateViteConfigOptions): UserCon
     plugins: [
       contentPlugin(siteRoot),
       devOgPlugin(siteRoot, runtimeConfig(config)),
-      devMarkdownPlugin({ siteRoot, template: config.template, base: config.base }),
+      devMarkdownPlugin({ siteRoot, layout: config.layout, layers: config.layers, base: config.base }),
       virtualModules(options),
       devServer(options),
       fallbackResolve(packageRoot, siteRoot),

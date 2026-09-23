@@ -4,6 +4,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { layerForPath } from '../layers.ts'
 import { normalizeBase } from '../config.ts'
 import { renderDocument } from '../document.ts'
 import { resolveOgImage } from '../social.ts'
@@ -77,7 +78,7 @@ export async function build(site: Site, flags: BuildFlags): Promise<void> {
   const outDir = config.outDir
   const started = Date.now()
   console.log(`\n  novon build — ${config.title}`)
-  console.log(`  template  ${config.template}`)
+  console.log(`  layout    ${config.layout} (${config.layers.length} route layers)`)
   console.log(`  base      ${config.base}`)
   console.log(`  output    ${outDir}\n`)
 
@@ -146,7 +147,7 @@ export async function build(site: Site, flags: BuildFlags): Promise<void> {
         title: result.title,
         description: result.description,
         path: route.path,
-        template: runtime.template,
+        layout: route.layout ?? layerForPath(runtime, route.path).layout,
         author: typeof author === 'string' ? author : author?.name ?? runtime.author,
       })
       writeFileEnsured(join(outDir, socialImage.path), png)

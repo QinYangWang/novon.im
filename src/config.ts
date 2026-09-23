@@ -6,9 +6,11 @@ import { join, resolve } from 'node:path'
 import { importSiteModule } from './load.ts'
 import { builtinPlugins } from './plugins/builtin.ts'
 import type { NovonPlugin } from './plugins/api.ts'
+import { defaultLayout, normalizeLayerPath } from './layers.ts'
 import { DEFAULT_ACCENT, DEFAULT_RADIUS, type NovonConfig, type Route } from './types.ts'
 
 export type { NovonConfig, Route }
+export type { LayoutConfig, LayoutKind, LayoutLayer } from './types.ts'
 
 export const CONFIG_FILENAMES = ['novon.config.ts', 'novon.config.js', 'novon.config.mjs']
 export const CONTENT_DIR = 'content'
@@ -20,7 +22,8 @@ export function defineConfig(config: NovonConfig): NovonConfig {
 
 export interface ResolvedConfig extends NovonConfig {
   root: string
-  template: NonNullable<NovonConfig['template']>
+  layout: NonNullable<NovonConfig['layout']>
+  layers: NonNullable<NovonConfig['layers']>
   outDir: string
   publicDir: string | false
   base: string
@@ -102,15 +105,32 @@ export function resolveConfig(root: string, config: NovonConfig, plugins?: Novon
     throw new NovonError('novon.config.ts is missing the required `title` field.')
   }
 
-  const template = config.template ?? 'docs'
-  if (template !== 'docs' && template !== 'blog') {
-    throw new NovonError(`Invalid template "${template}". Expected "docs" or "blog".`)
+  const layout = defaultLayout(config)
+  const validLayout = (value: unknown) => value === 'docs' || value === 'blog'
+  if (!validLayout(layout) || (config.template !== undefined && !validLayout(config.template))) {
+    throw new NovonError('Invalid layout. Expected "docs" or "blog".')
   }
+  if (config.layers !== undefined && !Array.isArray(config.layers)) {
+    throw new NovonError('Invalid layers: expected an array of { path, layout }.')
+  }
+  const seen = new Set<string>()
+  const layers = (config.layers ?? []).map((layer) => {
+    if (!layer || !validLayout(layer.layout) || typeof layer.path !== 'string' ||
+        !layer.path.startsWith('/') || /[?#\\\\]/.test(layer.path) ||
+        layer.path.replace(/\/$/, '').includes('//') || layer.path.split('/').some((part) => part === '.' || part === '..')) {
+      throw new NovonError('Invalid layer: expected an absolute URL path and a "docs" or "blog" layout.')
+    }
+    const path = normalizeLayerPath(layer.path)
+    if (seen.has(path)) throw new NovonError(`Duplicate layer path "${path}".`)
+    seen.add(path)
+    return { ...layer, path }
+  })
 
   return {
     ...config,
     root,
-    template,
+    layout,
+    layers,
     outDir: resolve(root, config.outDir ?? 'dist'),
     publicDir: config.publicDir === false ? false : resolve(root, config.publicDir ?? 'public'),
     base: normalizeBase(config.base),

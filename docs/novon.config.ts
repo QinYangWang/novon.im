@@ -6,10 +6,12 @@ export default defineConfig({
   description: 'A static blog and documentation generator built on Bun, Vite, React and shadcn/ui.',
   // Absolute links in sitemap.xml. Change this if you fork the repository.
   url: 'https://qinyangwang.github.io/novon.im',
-  template: 'docs',
+  layout: 'docs',
+  layers: [{ path: '/blog', layout: 'blog' }],
 
   nav: [
     { label: 'Guide', href: '/guide' },
+    { label: 'Blog', href: '/blog' },
     { label: 'Components', href: '/components' },
     { label: 'GitHub', href: 'https://github.com/QinYangWang/novon.im' },
   ],

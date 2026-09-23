@@ -35,9 +35,24 @@ The file tree becomes the URL structure and the sidebar. Add a file, get a page.
 
 ## Layouts
 
-`template` picks one of two shells. Both are built from the same component kit
-and the same palette, so a blog and a docs site from the same project look like
-one product.
+Docs and blog are **layout layers**, not separate site modes. Share one config,
+content tree and build, and mount a layout by URL prefix:
+
+```ts
+export default defineConfig({
+  title: 'My project',
+  layout: 'docs',
+  layers: [{ path: '/blog', layout: 'blog' }],
+  nav: [{ label: 'Guide', href: '/guide' }, { label: 'Blog', href: '/blog' }],
+})
+```
+
+The longest segment prefix wins; layer paths exclude `base`. Sidebars,
+previous/next links, post lists and tags are scoped to their layer. Search and
+sitemap stay site-wide; RSS includes posts from all blog layers.
+
+`template` is a deprecated alias for the default `layout`. The CLI's
+`--template` flag only selects starter content.
 
 **`docs`** — a full-height sidebar rail (brand, search, grouped navigation with
 icons, and a system/light/dark switcher in its footer), a content header with
@@ -48,12 +63,17 @@ sections, deeper ones as collapsible groups.
 **`blog`** — a narrow single column in the style of a personal site: name and
 role, segmented navigation, a **Copy URL** control, a section of posts written as
 title + description, and a "Connect" block of arrow chips (email, social, rss).
-`/` and the generated `/blog` index both list posts newest first, and a post page
-opens with its cover image and caption before the title.
+The layer root lists posts newest first; a root blog also keeps `/blog`.
+Tags live at `<layer>/tags/<tag>` (or `/tags/<tag>` for a root blog). A real
+index page replaces the generated list. A post opens with its cover and caption.
+
+`BaseLayout`, `DocsLayout`, `BlogLayout`, `DocsPage` and `BlogPage` are exported
+from `novon`: layouts own chrome, pages own content. Both share the same
+provider and component kit. See [Layout layers](docs/content/guide/layouts.mdx).
 
 ## The component kit
 
-Both templates are assembled from one set of components, exported from `novon`
+Both layouts are assembled from one set of components, exported from `novon`
 so a custom component or theme override can use them:
 
 | Component | Purpose |
@@ -182,7 +202,8 @@ export default defineConfig({
   description: 'Documentation for My Docs.',
   url: 'https://docs.example.com',   // absolute links in sitemap.xml / rss.xml
   base: '/',                         // or '/my-repo/' on GitHub Pages
-  template: 'docs',                  // or 'blog'
+  layout: 'docs',                    // default layout
+  layers: [{ path: '/blog', layout: 'blog' }],
   nav: [{ label: 'Guide', href: '/guide' }],
   theme: {
     accent: 'violet',
@@ -239,7 +260,7 @@ scripts. `novon dev` serves the same renderer from `/_og/…` on demand.
 | --- | --- |
 | `search` | `search-index.json` — client-side search with `⌘K` |
 | `sitemap` | `sitemap.xml` |
-| `rss` | `rss.xml` (dated pages only) |
+| `rss` | `rss.xml` (visible posts from all blog layers) |
 | `llms` | `llms.txt` |
 
 OG image generation is built in rather than a plugin — see
@@ -329,7 +350,7 @@ bun run test:browser
   headless browser and no serverless endpoint. `theme.ogImage`, or a page's
   `image`/`ogImage` frontmatter, overrides the generated card. The bundled font
   covers Latin, Greek and Cyrillic; other scripts need an explicit image.
-- The search palette and tag pages are opt-in for the blog template: enable the
+- The search palette and tag pages are opt-in for blog layers: enable the
   `search` plugin and add `tags` to posts.
 - The blog list shows titles and descriptions rather than dates, following the
   layout it is modelled on. Dates still drive ordering, RSS and the sitemap.

@@ -1,0 +1,29 @@
+---
+title: One site, two layouts
+description: Documentation and a blog can share a site without sharing every piece of page chrome.
+date: '2026-09-22'
+tags: [novon, layouts]
+---
+
+This post uses the blog layer of the same site as the documentation. It shares
+navigation, search, theme settings and a deployment with the guide, but it does
+not appear in the documentation sidebar.
+
+## Choose a layout by route
+
+```ts
+layout: 'docs',
+layers: [{ path: '/blog', layout: 'blog' }],
+```
+
+Files under `content/blog/` become blog pages. The post list and tag pages stay
+inside `/blog`, while the rest of the site continues to use the docs layout.
+
+## Keep the shell separate from the page
+
+`DocsLayout` and `BlogLayout` provide navigation and reading chrome.
+`DocsPage` and `BlogPage` render the content inside them. Both build on a shared
+base layer and the same component kit.
+
+[Read the layout guide](/guide/layouts) for configuration, scoping and custom
+composition examples.

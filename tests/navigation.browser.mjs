@@ -25,7 +25,7 @@ try {
   const page = await context.newPage()
   const errors = []
   const failedResponses = []
-  page.on('pageerror', error => errors.push(String(error)))
+  page.on('pageerror', error => errors.push(`${page.url()}: ${String(error)}`))
   page.on('response', response => { if (response.status() >= 400) failedResponses.push([response.status(), response.url()]) })
   const settle = () => page.waitForFunction(() => !document.documentElement.hasAttribute('data-navigating'))
   const link = (href) => page.locator(`#novon-sidebar a[href="${href}"]`)
@@ -126,7 +126,33 @@ try {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   assert.equal(await page.getByRole('button', { name: 'Copy Markdown', exact: true }).evaluate(el => getComputedStyle(el).transitionDuration), '0s')
 
-  // Nested static examples are separate sites: native entry, then progressive links.
+  // Docs and blog are layers of one app: switching layouts keeps the document.
+  await injectClick('/blog')
+  await page.waitForURL('**/blog'); await settle()
+  assert.equal(await sentinel(), 42)
+  assert.equal(await page.locator('html').getAttribute('data-layout'), 'blog')
+  assert.equal(await page.locator('#novon-sidebar').count(), 0)
+  assert.equal(await page.locator('main').count(), 1)
+  assert.equal(await page.locator('h1').textContent(), 'Blog')
+  assert.equal(await page.locator('main a[href="/guide/architecture"]').count(), 0)
+  await page.locator('main a[href="/blog/layout-layers"]').click()
+  await page.waitForURL('**/blog/layout-layers'); await settle()
+  assert.equal(await page.locator('h1').textContent(), 'One site, two layouts')
+  assert.equal(await page.locator('main a').filter({ hasText: 'All posts' }).getAttribute('href'), '/blog')
+  await injectClick('/blog/tags/layouts')
+  await page.waitForURL('**/blog/tags/layouts'); await settle()
+  assert.equal(await page.locator('h1').textContent(), 'Posts tagged “layouts”')
+  assert.equal(await page.locator('a[href="/blog/tags/layouts"]').count(), 1)
+  await injectClick('/guide/layouts')
+  await page.waitForURL('**/guide/layouts'); await settle()
+  assert.equal(await sentinel(), 42)
+  assert.equal(await page.locator('html').getAttribute('data-layout'), 'docs')
+  assert.equal(await page.locator('#novon-sidebar').count(), 1)
+  assert.equal(await page.locator('#novon-sidebar a[href="/blog/layout-layers"]').count(), 0)
+  await page.goBack(); await page.waitForURL('**/blog/tags/layouts'); await settle()
+  assert.equal(await page.locator('html').getAttribute('data-layout'), 'blog')
+
+  // Starter presets are still available as standalone scaffolding examples.
   await page.goto(origin + '/examples/blog-template/')
   await page.waitForTimeout(300)
   await page.evaluate(() => window.__sentinel = 43)
@@ -162,6 +188,12 @@ try {
   assert.equal(await noJS.locator('h1').textContent(), 'Callouts')
   await noJS.locator('#novon-sidebar a[href="/components/card"]').click()
   assert.equal(await noJS.locator('h1').textContent(), 'Cards')
+  await noJS.goto(origin + '/blog/layout-layers/')
+  assert.equal(await noJS.locator('h1').textContent(), 'One site, two layouts')
+  assert.equal(await noJS.locator('html').getAttribute('data-layout'), 'blog')
+  assert.equal(await noJS.locator('main').count(), 1)
+  await noJS.locator('main a').filter({ hasText: 'All posts' }).click()
+  assert.equal(await noJS.locator('h1').textContent(), 'Blog')
 
   // Opt-out links still cause a document load.
   await page.goto(origin + '/components')

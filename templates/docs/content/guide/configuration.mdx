@@ -17,7 +17,8 @@ export default defineConfig({
   description: 'Documentation for My Docs.',
   url: 'https://docs.example.com',
   base: '/',
-  template: 'docs',
+  layout: 'docs',
+  layers: [{ path: '/blog', layout: 'blog' }],
   nav: [{ label: 'Guide', href: '/guide' }],
   theme: { accent: 'zinc' },
   plugins: ['search', 'sitemap', 'rss', 'llms'],
@@ -32,7 +33,8 @@ export default defineConfig({
 | `description` | `string` | Default description, used for the home page and feeds. |
 | `url` | `string` | Canonical origin. Makes sitemap and RSS links absolute. |
 | `base` | `string` | Path the site is served from. Use `/repo/` on GitHub Pages. |
-| `template` | `docs` \| `blog` | Layout and default palette. |
+| `layout` | `docs` \| `blog` | Default layout. |
+| `layers` | `{ path, layout }[]` | Mount a docs or blog layout by URL prefix. |
 | `language` | `string` | `lang` attribute and date formatting. Defaults to `en`. |
 | `author` | `string` | Default author for posts without one. |
 | `nav` | `NavItem[]` | Links in the top bar. |

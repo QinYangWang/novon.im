@@ -18,6 +18,9 @@ export type {
   Route,
   TocEntry,
   TemplateKind,
+  LayoutKind,
+  LayoutConfig,
+  LayoutLayer,
   AccentColor,
 } from '../types.ts'
 
@@ -61,6 +64,11 @@ export { SvglIcon, svglIcons, type SvglIconName, type SvglIconProps } from './sv
 
 /* Theme internals, for people writing their own layout. */
 export {
+  BaseLayout,
+  BlogLayout,
+  BlogPage,
+  DocsLayout,
+  DocsPage,
   Brand,
   DefaultDocsHeader,
   DefaultFooter,
@@ -81,6 +89,9 @@ export {
   TagPage,
   useOverride,
   type LayoutProps,
+  type DocsLayoutProps,
+  type DocsPageProps,
+  type BlogPageProps,
 } from './shell.tsx'
 export { SiteProvider, useBase, useConfig, useSite } from './site.tsx'
 
@@ -98,6 +109,7 @@ export {
   ThemeToggle,
   type PillNavItem,
 } from './kit.tsx'
-export { createSiteIndex, flattenNav, loadPage } from './content.ts'
-export type { NavGroup, NavNode, NavPage, PageModule, SiteIndex } from './content.ts'
+export { createSiteIndex, flattenNav, loadPage, siteForRoute } from './content.ts'
+export type { LayerIndex, NavGroup, NavNode, NavPage, PageModule, SiteIndex } from './content.ts'
 export { cn, formatDate, humanize, withBase } from './lib.ts'
+export { layerForPath, layoutLayers } from '../layers.ts'

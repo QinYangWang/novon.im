@@ -20,9 +20,8 @@ theme: {
 }
 ```
 
-Each template ships its own default palette: the docs layout uses a soft grey
-shell with subtle cards, the blog layout is pure black on white. Both are CSS
-custom properties, so a stylesheet can override them directly:
+Docs and blog layers share the same palette and CSS custom properties.
+A stylesheet can override them directly:
 
 ```css title="styles/extra.css"
 :root {
@@ -112,7 +111,9 @@ Available overrides:
 | `Sidebar` | The docs sidebar rail. |
 | `TableOfContents` | The "On this page" panel. |
 | `Footer` | Footer. |
-| `HomePage` | What the blog template renders at `/`. |
+| `DocsHeader`, `BlogHeader` | Header for one layout, overriding the shared `Header`. |
+| `DocsFooter`, `BlogFooter` | Footer for one layout, overriding the shared `Footer`. |
+| `HomePage` | A blog layer's generated home. |
 | `PostListPage` | The generated `/blog` index. |
 | `NotFound` | The 404 page. |
 

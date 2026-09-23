@@ -1,0 +1,117 @@
+---
+title: Layout layers
+description: Compose documentation and a blog in one site, with shared options and independent page chrome.
+icon: Layers
+order: 4
+---
+
+A template is only a starter preset. Layout layers decide how routes render;
+you do not need separate sites, builds or deployments for docs and a blog.
+
+## Shared options, different layouts
+
+```ts title="novon.config.ts"
+import { defineConfig } from 'novon/config'
+
+export default defineConfig({
+  title: 'My project',
+  layout: 'docs',
+  layers: [{ path: '/blog', layout: 'blog' }],
+  nav: [
+    { label: 'Guide', href: '/guide' },
+    { label: 'Blog', href: '/blog' },
+  ],
+  theme: { accent: 'zinc', darkMode: true },
+  plugins: ['search', 'rss', 'sitemap'],
+})
+```
+
+```text
+content/
+├── index.mdx          → /                  docs
+├── guide/start.mdx    → /guide/start       docs
+└── blog/hello.mdx     → /blog/hello        blog
+```
+
+This documentation site uses that configuration. [Open the blog](/blog) or
+[read a post](/blog/layout-layers) without leaving the site.
+
+Title, navigation, colors, theme controls, search and plugins are shared.
+`layout` is the fallback (`docs` by default). `layers` assigns a layout to a URL
+prefix. The longest complete-segment match wins: `/blog` matches `/blog/hello`,
+but not `/blogroll`. A nested layer can switch back to docs:
+
+```ts
+layers: [
+  { path: '/blog', layout: 'blog' },
+  { path: '/blog/reference', layout: 'docs' },
+  { path: '/notes', layout: 'blog' },
+]
+```
+
+Paths exclude the deployment `base`. With `base: '/repo/'`, keep the layer path
+as `/blog`; its published URL is `/repo/blog`. Frontmatter `slug` changes the
+route URL and therefore its owning layer.
+
+## Scoped content
+
+- **Docs:** sidebar and previous/next links contain only pages in that layer.
+  If the mount has no index, it renders the first visible page in that layer.
+- **Blog:** non-index, non-synthetic pages are posts, sorted newest first.
+  `sidebar: false` hides a page from lists, tags and RSS, without removing its URL.
+- **Generated indexes:** a blog mounted at `/blog` gets a post list at `/blog`
+  when there is no real index. A root blog retains both `/` and `/blog`.
+- **Tags:** `/blog/tags/<tag>` belongs to the `/blog` layer; `/notes/tags/<tag>`
+  belongs to `/notes`. A root blog retains `/tags/<tag>`.
+- **Custom indexes:** real content wins over generated routes. Add
+  `content/blog/index.mdx` with `<PostList />` and `<TagList />` to design your own.
+- **Shared services:** search and sitemap cover the whole site. RSS combines
+  visible posts from all blog layers, not dated docs or generated lists.
+
+## Layout and page components
+
+Like [Fumadocs layouts](https://www.fumadocs.dev/docs/ui/layouts), the shell and
+the page body are separate components:
+
+| Layer | Responsibility |
+| --- | --- |
+| `SiteProvider` | Shared config, route index and current layer context. |
+| `BaseLayout` | Skip link and reading progress. Used by both layouts. |
+| `DocsLayout` | Sidebar, mobile navigation, TOC and footer. |
+| `DocsPage` | Page heading, Markdown actions, prose and previous/next. |
+| `BlogLayout` | Header, reading column and footer. |
+| `BlogPage` | Post cover, metadata, prose or generated list/tag content. |
+
+These components and their props are exported from `novon`. The runtime
+composes them inside the site provider:
+
+```tsx
+import { DocsLayout, DocsPage, BlogLayout, BlogPage } from 'novon'
+
+// props contains the current route, scoped site, config and MDX children.
+const docs = <DocsLayout {...props}><DocsPage {...props} /></DocsLayout>
+const blog = <BlogLayout><BlogPage {...props} /></BlogLayout>
+```
+
+Layouts do not implicitly render the page body, so custom compositions can
+replace the page without replacing the navigation. Do not nest `BaseLayout`
+around a built-in layout: each layout already includes it.
+
+### Layout-specific overrides
+
+`Header` and `Footer` remain shared fallback overrides. Use `DocsHeader`,
+`BlogHeader`, `DocsFooter` and `BlogFooter` to replace chrome for one layout
+without affecting the other:
+
+```ts
+theme: {
+  override: { BlogHeader: './theme/BlogHeader.tsx' },
+}
+```
+
+## Migrating from templates
+
+Replace `template: 'docs'` with `layout: 'docs'` (or `blog`). The old `template`
+config still works as a deprecated fallback; an explicit `layout` takes
+precedence. `novon new --template blog` remains a scaffolding shortcut and now
+writes `layout: 'blog'`. Add layers whenever the site needs another layout.

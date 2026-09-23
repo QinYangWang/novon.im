@@ -1,7 +1,7 @@
 /**
  * Built-in theme.
  *
- * Both templates are built from the same kit (`./kit.tsx`), so the blog and the
+ * Both layout layers are built from the same kit (`./kit.tsx`), so the blog and the
  * docs share one visual language: monochrome surfaces, hairline borders,
  * restrained radii and Geist typography.
  *
@@ -23,7 +23,8 @@ import { ArrowUpRight, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, List
 import type { Frontmatter, Route, RuntimeConfig, ThemeOverrides, TocEntry } from '../types.ts'
 import { cn, formatDate, isExternal, tagSlug, withBase } from './lib.ts'
 import { markdownPath } from '../paths.ts'
-import { useBase, useConfig } from './site.tsx'
+import { blogIndexPath, blogTagsPath } from '../layers.ts'
+import { useBase, useConfig, useSite } from './site.tsx'
 import { SearchTrigger } from './search.tsx'
 import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Dialog, DialogClose, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, ScrollArea } from './ui.tsx'
 import { Icon } from './icons.tsx'
@@ -936,11 +937,13 @@ export function PostCard({ route }: { route: Route }) {
 
 export function TagList({ tags, active }: { tags: { tag: string; count: number }[]; active?: string }) {
   const base = useBase()
+  const { site } = useSite()
+  const tagsPath = blogTagsPath(site.activeLayer?.path ?? '/')
   if (tags.length === 0) return null
   return (
     <div className="my-8 flex flex-wrap gap-2">
       {tags.map(({ tag, count }) => (
-        <a key={tag} href={withBase(base, `/tags/${tagSlug(tag)}`)} className="no-underline">
+        <a key={tag} href={withBase(base, `${tagsPath}/${tagSlug(tag)}`)} className="no-underline">
           <Badge variant={active === tag ? 'default' : 'secondary'}>
             {tag} <span className="opacity-60">{count}</span>
           </Badge>
@@ -950,14 +953,15 @@ export function TagList({ tags, active }: { tags: { tag: string; count: number }
   )
 }
 
-/** Rendered for the generated `/tags/<tag>` routes of the blog template. */
+/** Rendered for generated tag routes within the current blog layer. */
 export function TagPage({ site, tag }: { site: SiteIndex; tag: string }) {
   const base = useBase()
+  const config = useConfig()
   const posts = site.posts.filter((post) => (post.meta.tags ?? []).includes(tag))
   return (
     <div>
       <p className="text-sm">
-        <a href={withBase(base, '/blog')} className="text-muted-foreground no-underline hover:text-foreground">
+        <a href={withBase(base, blogIndexPath(site.activeLayer?.path ?? '/', config))} className="text-muted-foreground no-underline hover:text-foreground">
           ← All posts
         </a>
       </p>
@@ -976,7 +980,7 @@ export function DefaultHomePage({ site }: { site: SiteIndex; config: RuntimeConf
   )
 }
 
-/** The generated `/blog` index of the blog template. */
+/** The generated index of a blog layer. */
 export function PostListPage({ site }: { site: SiteIndex }) {
   return (
     <Section title="Blog" headingLevel={1}>
@@ -1020,11 +1024,31 @@ export interface LayoutProps {
   site: SiteIndex
 }
 
-export function DocsLayout({ route, url, title, description, headings, children, prevNext, config, site }: LayoutProps) {
-  const Header = useOverride('Header', DefaultDocsHeader)
+/** Shared outer layer. Layouts own chrome; page components own article content. */
+export function BaseLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen">
+      <a
+        href="#novon-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:border focus:border-border focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:no-underline focus:shadow-lg"
+      >
+        Skip to content
+      </a>
+      <ScrollProgress />
+      {children}
+    </div>
+  )
+}
+
+export type DocsLayoutProps = Pick<LayoutProps, 'route' | 'url' | 'headings' | 'children' | 'config' | 'site'>
+
+export function DocsLayout({ route, url, headings, children, config, site }: DocsLayoutProps) {
+  const SharedHeader = useOverride('Header', DefaultDocsHeader)
+  const Header = useOverride('DocsHeader', SharedHeader)
   const Sidebar = useOverride('Sidebar', DefaultSidebar)
   const TableOfContents = useOverride('TableOfContents', DefaultTableOfContents)
-  const Footer = useOverride('Footer', DefaultFooter)
+  const SharedFooter = useOverride('Footer', DefaultFooter)
+  const Footer = useOverride('DocsFooter', SharedFooter)
   const [navOpen, setNavOpen] = React.useState(false)
   const [collapsed, setCollapsed] = React.useState(false)
   const sidebarRef = React.useRef<HTMLElement>(null)
@@ -1138,23 +1162,15 @@ export function DocsLayout({ route, url, title, description, headings, children,
   }
 
   const fullWidth = route?.meta.fullWidth === true
-  const wide = route?.meta.wide === true
   const showToc = config.theme.toc && headings.length > 0 && route?.meta.toc !== false && !fullWidth
-  // `/` is a synthetic copy of the first page; highlight that page instead.
+  // A synthetic layer root copies its first page; highlight that page instead.
   const activePath =
     route?.synthetic && route.file
       ? (site.routes.find((candidate) => !candidate.synthetic && candidate.file === route.file)?.path ?? url)
       : url
 
   return (
-    <div className="min-h-screen">
-      <a
-        href="#novon-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:border focus:border-border focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:no-underline focus:shadow-lg"
-      >
-        Skip to content
-      </a>
-      <ScrollProgress />
+    <BaseLayout>
       <Header onToggleNav={toggleNav} navOpen={navOpen} />
 
       <div className="flex">
@@ -1209,33 +1225,8 @@ export function DocsLayout({ route, url, title, description, headings, children,
         </Dialog>
 
         <main id="novon-content" tabIndex={-1} className="min-w-0 flex-1">
-          <div
-            className={cn(
-              'mx-auto w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10',
-              fullWidth ? 'max-w-[80rem]' : wide ? 'max-w-[64rem]' : 'max-w-(--novon-content-width)',
-            )}
-          >
-            {route ? (
-              <PageHeading
-                title={title}
-                description={description}
-                meta={route.meta}
-                path={route.path}
-                actions={!route.synthetic}
-                className={fullWidth ? '' : 'mb-6'}
-              />
-            ) : null}
-
-            {route && !route.synthetic ? <div className="mb-8 border-b border-border" /> : null}
-
-            <Prose>{children}</Prose>
-
-            {!route?.synthetic && !fullWidth ? (
-              <PageNav links={prevNext} current={url} meta={route?.meta} file={route?.file} />
-            ) : null}
-
-            <Footer variant="docs" />
-          </div>
+          {children}
+          <Footer variant="docs" />
         </main>
 
         {showToc ? (
@@ -1247,90 +1238,96 @@ export function DocsLayout({ route, url, title, description, headings, children,
           </aside>
         ) : null}
       </div>
+    </BaseLayout>
+  )
+}
+
+export type DocsPageProps = Pick<LayoutProps, 'route' | 'url' | 'title' | 'description' | 'children' | 'prevNext'>
+
+export function DocsPage({ route, url, title, description, children, prevNext }: DocsPageProps) {
+  const fullWidth = route?.meta.fullWidth === true
+  const wide = route?.meta.wide === true
+  return (
+    <div className={cn(
+      'mx-auto w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10',
+      fullWidth ? 'max-w-[80rem]' : wide ? 'max-w-[64rem]' : 'max-w-(--novon-content-width)',
+    )}>
+      {route ? <PageHeading title={title} description={description} meta={route.meta} path={route.path} actions={!route.synthetic} className={fullWidth ? '' : 'mb-6'} /> : null}
+      {route && !route.synthetic ? <div className="mb-8 border-b border-border" /> : null}
+      <Prose>{children}</Prose>
+      {!route?.synthetic && !fullWidth ? <PageNav links={prevNext} current={url} meta={route?.meta} file={route?.file} /> : null}
     </div>
   )
 }
 
-export function BlogLayout({ route, url, title, description, children, config, site }: LayoutProps) {
-  const Header = useOverride('Header', DefaultHeader)
-  const Footer = useOverride('Footer', DefaultFooter)
+export function BlogLayout({ children }: { children: React.ReactNode }) {
+  const SharedHeader = useOverride('Header', DefaultHeader)
+  const Header = useOverride('BlogHeader', SharedHeader)
+  const SharedFooter = useOverride('Footer', DefaultFooter)
+  const Footer = useOverride('BlogFooter', SharedFooter)
+  return (
+    <BaseLayout>
+      <div className="mx-auto w-full max-w-(--novon-column-width) px-4 pt-14 pb-16 md:px-0">
+        <Header />
+        <main id="novon-content" tabIndex={-1} className="mt-12">{children}</main>
+        <Footer />
+      </div>
+    </BaseLayout>
+  )
+}
+
+export type BlogPageProps = Pick<LayoutProps, 'route' | 'title' | 'description' | 'children' | 'config' | 'site'>
+
+export function BlogPage({ route, title, description, children, config, site }: BlogPageProps) {
   const HomePage = useOverride('HomePage', DefaultHomePage)
   const PostListOverride = useOverride('PostListPage', PostListPage)
-  const isHome = url === '/'
-  const isPost = Boolean(route && !route.isIndex && !route.synthetic && !route.postList && !route.tag)
+  const isHome = route?.path === (site.activeLayer?.path ?? '/')
+  const isPost = Boolean(route && !isHome && !route.isIndex && !route.synthetic && !route.postList && !route.tag)
   const cover = typeof route?.meta.image === 'string' ? route.meta.image : undefined
   const date = formatDate(route?.meta.date, config.language)
   const author =
     typeof route?.meta.author === 'string' ? route.meta.author : (route?.meta.author?.name ?? config.author)
 
+  if (isHome && route?.synthetic) return <HomePage site={site} config={config} />
+  if (route?.postList) return <PostListOverride site={site} config={config} />
+  if (route?.tag) return <TagPage site={site} tag={route.tag} />
+
   return (
-    <div className="min-h-screen">
-      <a
-        href="#novon-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:border focus:border-border focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:no-underline focus:shadow-lg"
-      >
-        Skip to content
-      </a>
-      <ScrollProgress />
-      <div className="mx-auto w-full max-w-(--novon-column-width) px-4 pt-14 pb-16 md:px-0">
-        <Header />
+    <article>
+      {isPost && cover ? (
+        <figure className="mb-8">
+          <img src={withBase(config.base, cover)} alt="" className="w-full rounded-xl border border-border" />
+          {typeof route?.meta.caption === 'string' ? (
+            <figcaption className="mt-3 text-center text-sm text-muted-foreground">
+              {route.meta.caption}
+            </figcaption>
+          ) : null}
+        </figure>
+      ) : null}
 
-        <main id="novon-content" tabIndex={-1} className="mt-12">
-          {isHome && route?.synthetic ? (
-            <HomePage site={site} config={config} />
-          ) : route?.postList ? (
-            <PostListOverride site={site} config={config} />
-          ) : route?.tag ? (
-            <TagPage site={site} tag={route.tag} />
-          ) : isPost ? (
-            <article>
-              {cover ? (
-                <figure className="mb-8">
-                  <img src={withBase(config.base, cover)} alt="" className="w-full rounded-xl border border-border" />
-                  {typeof route?.meta.caption === 'string' ? (
-                    <figcaption className="mt-3 text-center text-sm text-muted-foreground">
-                      {route.meta.caption}
-                    </figcaption>
-                  ) : null}
-                </figure>
-              ) : null}
+      <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
+      {isPost && (date || author) ? (
+        <p className="mt-3 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+          {date ? <time dateTime={String(route?.meta.date)}>{date}</time> : null}
+          {date && author ? <span aria-hidden="true">·</span> : null}
+          {author ? <span>{author}</span> : null}
+        </p>
+      ) : null}
+      {description ? <p className="mt-4 text-lg text-muted-foreground">{description}</p> : null}
+      <div className="my-8 border-t border-border" />
+      <Prose>{children}</Prose>
 
-              <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
-              {date || author ? (
-                <p className="mt-3 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-                  {date ? <time dateTime={String(route?.meta.date)}>{date}</time> : null}
-                  {date && author ? <span aria-hidden="true">·</span> : null}
-                  {author ? <span>{author}</span> : null}
-                </p>
-              ) : null}
-              {description ? <p className="mt-4 text-lg text-muted-foreground">{description}</p> : null}
-
-              <div className="my-8 border-t border-border" />
-
-              <Prose>{children}</Prose>
-
-              <p className="mt-12 text-sm">
-                <a
-                  href={withBase(config.base, '/blog')}
-                  className="inline-flex items-center gap-1.5 text-muted-foreground no-underline transition-colors hover:text-foreground"
-                >
-                  <ChevronLeft aria-hidden="true" className="size-3.5" />
-                  All posts
-                </a>
-              </p>
-            </article>
-          ) : (
-            <article>
-              <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
-              {description ? <p className="mt-4 text-lg text-muted-foreground">{description}</p> : null}
-              <div className="my-8 border-t border-border" />
-              <Prose>{children}</Prose>
-            </article>
-          )}
-        </main>
-
-        <Footer />
-      </div>
-    </div>
+      {isPost ? (
+        <p className="mt-12 text-sm">
+          <a
+            href={withBase(config.base, blogIndexPath(site.activeLayer?.path ?? '/', config))}
+            className="inline-flex items-center gap-1.5 text-muted-foreground no-underline transition-colors hover:text-foreground"
+          >
+            <ChevronLeft aria-hidden="true" className="size-3.5" />
+            All posts
+          </a>
+        </p>
+      ) : null}
+    </article>
   )
 }

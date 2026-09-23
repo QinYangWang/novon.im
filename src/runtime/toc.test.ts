@@ -3,6 +3,7 @@ import {
   type ActiveHeadingInput,
   type HeadingOffset,
   TOC_READING_OFFSET,
+  closingReadingOffset,
   hashToId,
   resolveActiveHeading,
 } from './toc.ts'
@@ -12,8 +13,6 @@ const offsets = (...tops: [string, number][]): HeadingOffset[] =>
 
 const view = (over: Partial<ActiveHeadingInput> = {}): ActiveHeadingInput => ({
   scrollY: 0,
-  viewportHeight: 800,
-  scrollHeight: 4000,
   ...over,
 })
 
@@ -59,24 +58,39 @@ describe('resolveActiveHeading', () => {
     expect(resolveActiveHeading(landed, view({ scrollY: 0, readingOffset: 80 }))).toBe('b')
   })
 
-  test('keeps the first heading before any heading reaches the line', () => {
-    expect(resolveActiveHeading(headings, view({ scrollY: 0 }))).toBe('intro')
-  })
-
-  test('selects the last heading at the bottom of a scrollable document', () => {
-    // A short final section whose top is far below the reading line.
-    const short = offsets(['intro', 0], ['usage', 200], ['tiny', 3990])
-    expect(resolveActiveHeading(short, view({ scrollY: 3200, scrollHeight: 4000 }))).toBe('tiny')
-  })
-
-  test('does not jump to the last heading on a non-scrollable document', () => {
-    const short = offsets(['intro', 0], ['usage', 200], ['tiny', 500])
-    expect(
-      resolveActiveHeading(short, view({ scrollY: 0, viewportHeight: 800, scrollHeight: 780 })),
-    ).toBe('intro')
-  })
-
   test('falls back to the first heading for empty input', () => {
     expect(resolveActiveHeading([], view())).toBe('')
+  })
+})
+
+describe('closingReadingOffset', () => {
+  const page = { viewportHeight: 800, maxScroll: 2396, readingOffset: 80 }
+
+  test('does nothing while the last heading can reach the reading line', () => {
+    expect(closingReadingOffset({ ...page, lastTop: 1000, scrollY: 500 })).toBe(0)
+  })
+
+  test('leaves the reading line alone until the final viewport of scroll', () => {
+    const input = { ...page, lastTop: 2828 }
+    expect(closingReadingOffset({ ...input, scrollY: page.maxScroll - 800 })).toBe(0)
+    expect(closingReadingOffset({ ...input, scrollY: page.maxScroll - 400 })).toBeGreaterThan(0)
+  })
+
+  test('lifts the reading line exactly to the last heading at the bottom', () => {
+    const extra = closingReadingOffset({ ...page, lastTop: 2828, scrollY: page.maxScroll })
+    expect(page.maxScroll + page.readingOffset + extra).toBeCloseTo(2828, 5)
+  })
+
+  test('keeps every heading reachable when a short section closes the page', () => {
+    // The heading layout of a page whose last two sections cannot reach the line
+    // on their own. The outline must still visit all four, in order.
+    const headings = offsets(['a', 361], ['b', 1820], ['c', 2565], ['d', 2828])
+    const seen: string[] = []
+    for (let scrollY = 0; scrollY <= page.maxScroll; scrollY += 4) {
+      const extra = closingReadingOffset({ ...page, lastTop: 2828, scrollY })
+      const id = resolveActiveHeading(headings, { scrollY, readingOffset: page.readingOffset + extra })
+      if (id !== seen[seen.length - 1]) seen.push(id)
+    }
+    expect(seen).toEqual(['a', 'b', 'c', 'd'])
   })
 })

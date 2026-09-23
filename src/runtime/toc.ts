@@ -31,14 +31,10 @@ export function hashToId(hash: string): string {
 export interface ActiveHeadingInput {
   /** Document-space scroll position. */
   scrollY: number
-  /** Viewport height. */
-  viewportHeight: number
-  /** Full scrollable height of the document. */
-  scrollHeight: number
   /**
    * Distance below the viewport top treated as the reading line. Defaults to
    * `TOC_READING_OFFSET`; the component passes the measured `scroll-margin-top`
-   * so a themed header stays in sync.
+   * plus any `closingReadingOffset()` catch-up.
    */
   readingOffset?: number
 }
@@ -51,24 +47,48 @@ export interface ActiveHeadingInput {
 const READING_TOLERANCE = 1
 
 /**
+ * Extra reading offset that lets the outline reach a short closing section.
+ *
+ * The last heading can sit below the furthest the reading line normally reaches.
+ * Without a catch-up the outline jumps straight to it and skips the sections in
+ * between. This returns how far to lift the line at `scrollY`: it ramps in over
+ * the final viewport of scrolling and lands exactly on the last heading at the
+ * bottom, so every section still gets its turn, in order.
+ */
+export function closingReadingOffset(input: {
+  /** Document-space top of the last heading. */
+  lastTop: number
+  scrollY: number
+  viewportHeight: number
+  /** Furthest the document can scroll. */
+  maxScroll: number
+  /** The normal reading offset (the anchor landing position). */
+  readingOffset: number
+}): number {
+  const { lastTop, scrollY, viewportHeight, maxScroll, readingOffset } = input
+  const viewport = Math.max(1, viewportHeight)
+  // How far the last heading sits beyond the furthest the line can normally
+  // reach. Zero when the last section is long enough to reach it on its own.
+  const deficit = lastTop - (maxScroll + readingOffset)
+  if (deficit <= 0 || maxScroll <= 0) return 0
+  const progress = Math.min(1, Math.max(0, (scrollY - (maxScroll - viewport)) / viewport))
+  return deficit * progress
+}
+
+/**
  * Pick the active heading for the current scroll position.
  *
- * - The active heading is the last one whose top is at or above the reading
- *   line, so a section stays active until the next heading reaches it.
- * - At the bottom of a genuinely scrollable document the last heading wins,
- *   even when a short final section can never reach the reading line.
- * - A document that does not scroll keeps its first heading.
+ * The active heading is the last one whose top is at or above the reading line,
+ * so a section stays active until the next heading reaches it. A document that
+ * does not scroll keeps its first heading. Reaching the closing sections on a
+ * short page is the caller's job: it feeds `closingReadingOffset()` back in as
+ * `readingOffset`, which keeps this rule a single, monotonic comparison.
  */
 export function resolveActiveHeading(
   offsets: HeadingOffset[],
-  { scrollY, viewportHeight, scrollHeight, readingOffset = TOC_READING_OFFSET }: ActiveHeadingInput,
+  { scrollY, readingOffset = TOC_READING_OFFSET }: ActiveHeadingInput,
 ): string {
   if (offsets.length === 0) return ''
-
-  const scrollable = scrollHeight - viewportHeight > 1
-  if (scrollable && scrollY + viewportHeight >= scrollHeight - 1) {
-    return offsets[offsets.length - 1].id
-  }
 
   const readingLine = scrollY + readingOffset
   let active = offsets[0].id

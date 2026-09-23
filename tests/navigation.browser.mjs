@@ -122,32 +122,37 @@ try {
   assert.equal(await page.title(), 'Blog lists · novon')
   assert.equal(await sentinel(), 42)
 
-  // The table of contents highlights the section at the anchor landing
-  // position, so every heading a link jumps to reports itself as active — even
-  // when scroll rounding lands it a fraction below the reading line.
-  await injectClick('/guide/architecture')
-  await page.waitForURL('**/guide/architecture'); await settle()
+  // The table of contents must visit every section, in order, as the page
+  // scrolls. Near the bottom it used to jump straight to the last heading,
+  // skipping the short closing sections in between.
+  await injectClick('/guide/layouts')
+  await page.waitForURL('**/guide/layouts'); await settle()
   await page.waitForTimeout(100)
-  const tocIds = await page.$$eval('nav[aria-label="On this page"] a[data-toc-id]', els => els.map(el => el.dataset.tocId))
-  assert(tocIds.length > 3, 'the page has a table of contents')
   const activeToc = () => page.locator('[aria-current="location"]').first().getAttribute('data-toc-id')
-  for (const id of tocIds) {
-    await page.evaluate((id) => {
-      const heading = document.getElementById(id)
-      const margin = parseFloat(getComputedStyle(heading).scrollMarginTop)
-      window.scrollTo({ top: heading.getBoundingClientRect().top + window.scrollY - margin, behavior: 'instant' })
-    }, id)
-    await page.waitForTimeout(60)
-    assert.equal(await activeToc(), id, `#${id} is the active section`)
-  }
+  const sweep = await page.evaluate(async () => {
+    const ids = [...document.querySelectorAll('nav[aria-label="On this page"] a[data-toc-id]')].map((a) => a.dataset.tocId)
+    const max = document.documentElement.scrollHeight - innerHeight
+    const seq = []
+    for (let i = 0; i <= 200; i++) {
+      window.scrollTo({ top: (max * i) / 200, behavior: 'instant' })
+      await new Promise((done) => requestAnimationFrame(done))
+      await new Promise((done) => requestAnimationFrame(done))
+      const id = document.querySelector('[aria-current="location"]')?.dataset.tocId
+      if (id && id !== seq[seq.length - 1]) seq.push(id)
+    }
+    return { ids, seq }
+  })
+  assert(sweep.ids.length > 3, 'the page has a table of contents')
+  assert.deepEqual(sweep.seq, sweep.ids, `the outline visits every section in order: ${sweep.seq.join(' > ')}`)
   // A fast jump must not leave the previous section highlighted.
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
   await page.waitForTimeout(120)
-  assert.equal(await activeToc(), tocIds[0], 'a fast jump updates the highlight')
-  // Following a link keeps the highlight on the destination after it settles.
-  await page.locator('nav[aria-label="On this page"] a[data-toc-id]').last().click()
+  assert.equal(await activeToc(), sweep.ids[0], 'a fast jump updates the highlight')
+  // A heading that cannot reach the reading line (a short closing section) still
+  // becomes active when its link is followed.
+  await page.locator('nav[aria-label="On this page"] a[data-toc-id]').nth(sweep.ids.length - 2).click()
   await page.waitForTimeout(700)
-  assert.equal(await activeToc(), tocIds[tocIds.length - 1], 'a followed link stays highlighted')
+  assert.equal(await activeToc(), sweep.ids[sweep.ids.length - 2], 'a followed link stays highlighted')
 
   await page.setViewportSize({ width: 320, height: 760 })
   await page.getByRole('button', { name: 'Open navigation' }).click()

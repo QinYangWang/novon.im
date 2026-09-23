@@ -30,7 +30,7 @@ import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Dial
 import { Icon } from './icons.tsx'
 import { SvglIcon } from './svgl.tsx'
 import { copyText, isMarkdownDocument } from './actions.ts'
-import { TOC_READING_OFFSET, hashToId, resolveActiveHeading, type HeadingOffset } from './toc.ts'
+import { TOC_READING_OFFSET, closingReadingOffset, hashToId, resolveActiveHeading, type HeadingOffset } from './toc.ts'
 import { CopyUrlButton, PillNav, Reveal, ScrollProgress, Section, SocialPills, ThemeSwitch, ThemeToggle } from './kit.tsx'
 import type { NavNode, PageLink, SiteIndex } from './content.ts'
 
@@ -500,24 +500,31 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
         const element = document.getElementById(id)
         if (element) offsets.push({ id, top: element.getBoundingClientRect().top + scrollY })
       }
-      let next = resolveActiveHeading(offsets, { scrollY, viewportHeight, scrollHeight, readingOffset })
 
-      // A click or hash jump owns the highlight while it is still scrolling, so
-      // it cannot flicker through the sections it passes. It is released as soon
-      // as the scroll settles, or the reader takes over — never on a timer, which
-      // left the wrong section highlighted after a slow or interrupted jump.
+      // A short closing section may sit below the furthest the reading line can
+      // reach, which would otherwise skip it and jump straight to the last
+      // heading. Let the line catch up to it over the final viewport of scroll
+      // so the outline still visits every section in order.
+      const maxScroll = Math.max(0, scrollHeight - viewportHeight)
+      const lastTop = offsets[offsets.length - 1]?.top ?? scrollY
+      const offset = readingOffset + closingReadingOffset({ lastTop, scrollY, viewportHeight, maxScroll, readingOffset })
+      let next = resolveActiveHeading(offsets, { scrollY, readingOffset: offset })
+
+      // A click or hash jump owns the highlight until the reader takes over or
+      // the destination scrolls out of view, so it cannot flicker through the
+      // sections it passes and does not fall back on a timer.
       const pending = pendingRef.current
       if (pending) {
-        if (Math.abs(scrollY - lastScrollRef.current) < 1) settledRef.current += 1
-        else settledRef.current = 0
-        if (settledRef.current >= 2) {
+        settledRef.current = Math.abs(scrollY - lastScrollRef.current) < 1 ? settledRef.current + 1 : 0
+        const element = document.getElementById(pending)
+        const rect = element?.getBoundingClientRect()
+        const onScreen = Boolean(rect && rect.bottom > 0 && rect.top < viewportHeight)
+        if (settledRef.current >= 2 && !onScreen) {
           pendingRef.current = null
         } else {
           next = pending
-          // A jump can stop between two scroll events (or immediately, when the
-          // reader uses the scrollbar), so keep sampling until it settles rather
-          // than waiting for a scroll event that will never arrive.
-          schedule()
+          // Keep sampling until the jump settles, then the highlight just stays.
+          if (settledRef.current < 2) schedule()
         }
       }
       lastScrollRef.current = scrollY

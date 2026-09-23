@@ -23,7 +23,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import type { StyleXStyles } from '@stylexjs/stylex'
-import { colors, media, radii, space, type } from './design-system/tokens.stylex.ts'
+import { colors, elevation, media, radii, space, type } from './design-system/tokens.stylex.ts'
 import { typography } from './design-system/typography.ts'
 import type { ElementProps, StyleProps } from './design-system/props.ts'
 import { Icon, type IconProps } from './icons.tsx'
@@ -43,6 +43,9 @@ import { isExternal, withBase } from './lib.ts'
 import { copyText } from './actions.ts'
 import { useBase, useSite } from './site.tsx'
 import { Cluster, IconBadge, Stack } from './kit.tsx'
+import { LogoMarquee } from './logo-marquee.tsx'
+import { BlurUpImage } from './blur-up-image.tsx'
+import { TreeView } from './ui.tsx'
 import { Preview } from './preview.tsx'
 import { PostList as UIPostList, TagList as UITagList } from './shell.tsx'
 
@@ -57,10 +60,8 @@ const styles = stylex.create({
     gap: space.three,
     marginBlock: space.five,
     borderRadius: radii.large,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: colors.raised,
+    boxShadow: elevation.low,
     paddingInline: space.four,
     paddingBlock: space.three,
   },
@@ -135,16 +136,14 @@ const cardStyles = stylex.create({
   card: {
     display: 'flex',
     borderRadius: radii.large,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceSoft,
+    backgroundColor: colors.raised,
+    boxShadow: elevation.low,
     padding: space.four,
     textDecoration: 'none',
-    transitionProperty: 'color, background-color',
+    transitionProperty: 'color, background-color, box-shadow',
     transitionDuration: '150ms',
   },
-  cardLink: { backgroundColor: { default: colors.surfaceSoft, ':hover': colors.hoverFaint } },
+  cardLink: { backgroundColor: { default: colors.raised, ':hover': colors.raisedHover } },
   horizontal: { flexDirection: 'row', alignItems: 'flex-start', gap: space.three },
   vertical: { flexDirection: 'column' },
   iconTop: { marginTop: space.half },
@@ -305,10 +304,8 @@ const stepStyles = stylex.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.control,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.raised,
+    boxShadow: elevation.low,
     color: colors.mutedText,
     '::before': { content: 'counter(novon-step)' },
   },
@@ -487,10 +484,8 @@ const frameStyles = stylex.create({
   media: {
     overflow: 'hidden',
     borderRadius: radii.large,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.mutedSoft,
+    backgroundColor: colors.raised,
+    boxShadow: elevation.press,
   },
   caption: {
     marginTop: space.two,
@@ -597,10 +592,8 @@ const codeStyles = stylex.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.control,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceStrong,
+    backgroundColor: colors.popover,
+    boxShadow: elevation.low,
     color: colors.mutedText,
     cursor: 'pointer',
     opacity: {
@@ -681,6 +674,9 @@ export const mdxComponents = {
   Frame,
   Badge,
   Icon,
+  TreeView,
+  LogoMarquee,
+  BlurUpImage,
   SvglIcon,
   Term,
   Preview,

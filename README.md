@@ -1,7 +1,7 @@
 # novon
 
 A static blog and documentation generator built on **Bun**, **Vite**, **React** and
-**shadcn/ui (Base UI)**.
+**React Aria** (`react-aria-components`).
 
 Write MDX. Configure one file. Get a fast static site for Vercel, Cloudflare Pages
 or GitHub Pages.
@@ -183,8 +183,8 @@ The [component reference](https://qinyangwang.github.io/novon.im/components)
 focuses on writing: callouts, cards, steps, code groups, tabs, accordions, tables,
 media, badges, author avatars and blog lists. Theme primitives (`Button`, `Card`,
 `Badge`, `Avatar`, `Table`, `ScrollArea`, `Kbd`, `Tabs`, `Accordion`, `Dialog` and
-`DropdownMenu`) remain exported, with [Base UI](https://base-ui.com) handling
-composite interactions.
+`DropdownMenu`) remain exported, with [React Aria](https://react-spectrum.adobe.com/react-aria/)
+handling composite interactions.
 
 Unused application widgets (forms, toggles, toasts, loading indicators and the
 extra overlay/navigation families) have been removed, including their exports.

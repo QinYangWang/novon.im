@@ -1,0 +1,82 @@
+---
+title: Tree view
+description: A disclosure tree the arrow keys can walk.
+icon: List
+order: 6
+---
+
+A tree view shows nested folders, pages or entities where the hierarchy itself
+carries meaning. Use an [accordion](/components/accordion) for a short list of
+independent sections, and the docs sidebar for routed navigation.
+
+<Preview title="Files" description="Branches expand in place; rows keep their level.">
+
+<TreeView
+  label="Project files"
+  defaultExpanded={['src', 'design']}
+  nodes={[
+    {
+      id: 'src',
+      label: 'src',
+      meta: '4',
+      children: [
+        { id: 'app', label: 'app.tsx' },
+        { id: 'design', label: 'design-system', meta: '3', children: [
+          { id: 'tokens', label: 'tokens.stylex.ts' },
+          { id: 'type', label: 'typography.ts' },
+          { id: 'props', label: 'props.ts' },
+        ] },
+      ],
+    },
+    {
+      id: 'content',
+      label: 'content',
+      meta: '2',
+      children: [
+        { id: 'home', label: 'index.mdx' },
+        { id: 'guide', label: 'guide.mdx' },
+      ],
+    },
+    { id: 'config', label: 'novon.config.ts' },
+  ]}
+/>
+
+```mdx
+<TreeView
+  label="Project files"
+  defaultExpanded={['src']}
+  nodes={[
+    { id: 'src', label: 'src', children: [{ id: 'app', label: 'app.tsx' }] },
+    { id: 'config', label: 'novon.config.ts' },
+  ]}
+/>
+```
+
+</Preview>
+
+Rows follow the ARIA tree pattern. Arrow up and down move between visible rows;
+right expands a branch or steps into it; left collapses it or climbs to its
+parent. Home and End jump to the ends, and typing a letter moves to the next
+name starting with it. A screen reader receives the full keyboard legend.
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `nodes` | `TreeNode[]` — `{ id, label, meta?, children? }` | required |
+| `label` | `string` — accessible name | required |
+| `expanded` | `string[]` | uncontrolled |
+| `defaultExpanded` | `string[]` | `[]` |
+| `onExpandedChange` | `(expanded: string[]) => void` | — |
+| `selected` | `string \| null` | uncontrolled |
+| `defaultSelected` | `string \| null` | `null` |
+| `onSelectedChange` | `(selected: string) => void` | — |
+| `xstyle` | `StyleXStyles` | — |
+
+Every id must be unique across the whole tree. `meta` is a short mono readout,
+such as a count or a size; it never replaces the label.
+
+The state logic is exported as `useTreeView`, so a custom theme can render its
+own rows over the same selection, expansion and keyboard behavior. For routed
+navigation, the docs sidebar remains the right tool: it follows the site index
+rather than an in-page selection.

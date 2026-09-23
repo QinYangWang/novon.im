@@ -23,10 +23,11 @@ import * as React from 'react'
 import * as stylex from '@stylexjs/stylex'
 import { Check, Copy } from 'lucide-react'
 import type { StyleXStyles } from '@stylexjs/stylex'
-import { colors, radii, space, type } from './design-system/tokens.stylex.ts'
+import { colors, elevation, radii, space, type } from './design-system/tokens.stylex.ts'
 import { typography } from './design-system/typography.ts'
 import type { StyleProps } from './design-system/props.ts'
 import { copyText } from './actions.ts'
+import { surface } from './design-system/surfaces.ts'
 
 export interface PreviewProps extends StyleProps {
   /** Short name for the example. */
@@ -51,24 +52,35 @@ const styles = stylex.create({
   frame: {
     marginTop: space.three,
     overflow: 'hidden',
-    borderRadius: radii.large,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceSoft,
   },
   tablist: {
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     gap: space.one,
     borderBottomWidth: 1,
     borderBottomStyle: 'solid',
     borderBottomColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
     paddingInline: space.two,
     paddingBlock: space.oneHalf,
   },
+  tabIndicator: (left: number, width: number) => ({
+    position: 'absolute',
+    top: space.oneHalf,
+    bottom: space.oneHalf,
+    borderRadius: radii.control,
+    backgroundColor: colors.popover,
+    boxShadow: elevation.low,
+    transform: `translateX(${left}px)`,
+    width,
+  }),
+  tabIndicatorMotion: {
+    transitionProperty: 'transform, width, opacity',
+    transitionDuration: '220ms',
+    transitionTimingFunction: 'cubic-bezier(0.2, 0, 0, 1)',
+  },
   tab: {
+    position: 'relative',
     display: 'inline-flex',
     height: space.eight,
     alignItems: 'center',
@@ -84,10 +96,9 @@ const styles = stylex.create({
     borderStyle: 'none',
     transitionProperty: 'color, background-color',
     transitionDuration: '150ms',
-    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft },
+    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover },
     color: { default: colors.mutedText, ':hover': colors.text, '[data-selected]': colors.text },
   },
-  tabActive: { backgroundColor: colors.hover },
   canvas: {
     display: 'flex',
     width: '100%',
@@ -95,7 +106,6 @@ const styles = stylex.create({
     flexWrap: 'wrap',
     gap: space.three,
     padding: space.six,
-    backgroundColor: colors.canvasSunk,
   },
   canvasCenter: { alignItems: 'center', justifyContent: 'center' },
   canvasStart: { alignItems: 'flex-start', justifyContent: 'flex-start' },
@@ -119,10 +129,8 @@ const styles = stylex.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.control,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceStrong,
+    backgroundColor: colors.popover,
+    boxShadow: elevation.low,
     color: colors.mutedText,
     cursor: 'pointer',
     opacity: {
@@ -163,6 +171,22 @@ export function Preview({
   const [tab, setTab] = React.useState<'preview' | 'code'>(defaultTab)
   const id = React.useId()
   const tabRefs = { preview: React.useRef<HTMLButtonElement>(null), code: React.useRef<HTMLButtonElement>(null) }
+  // One indicator shared across the two tabs, measured like PillNav's.
+  const [indicator, setIndicator] = React.useState<{ left: number; width: number } | null>(null)
+  React.useEffect(() => {
+    const node = tabRefs[tab].current
+    if (!node) return
+    const measure = () =>
+      setIndicator((previous) =>
+        previous && previous.left === node.offsetLeft && previous.width === node.offsetWidth
+          ? previous
+          : { left: node.offsetLeft, width: node.offsetWidth },
+      )
+    measure()
+    const resize = new ResizeObserver(measure)
+    resize.observe(node.parentElement ?? node)
+    return () => resize.disconnect()
+  }, [tab])
 
   const onTabKeyDown = (event: React.KeyboardEvent) => {
     let next: 'preview' | 'code'
@@ -197,8 +221,11 @@ export function Preview({
       {title ? <p {...stylex.props(styles.title, typography.label)}>{title}</p> : null}
       {description ? <p {...stylex.props(styles.description, typography.labelRegular)}>{description}</p> : null}
 
-      <div {...stylex.props(styles.frame)}>
+      <div {...stylex.props(surface.raised, styles.frame)}>
         <div role="tablist" aria-label="Example view" {...stylex.props(styles.tablist)}>
+          {indicator ? (
+            <span aria-hidden="true" {...stylex.props(styles.tabIndicatorMotion, styles.tabIndicator(indicator.left, indicator.width))} />
+          ) : null}
           {(['preview', 'code'] as const).map((value) => (
             <button
               key={value}
@@ -211,7 +238,7 @@ export function Preview({
               tabIndex={tab === value ? 0 : -1}
               onClick={() => setTab(value)}
               onKeyDown={onTabKeyDown}
-              {...stylex.props(styles.tab, tab === value && styles.tabActive)}
+              {...stylex.props(styles.tab)}
             >
               {value}
             </button>
@@ -225,6 +252,7 @@ export function Preview({
             <div className="novon-not-prose">
               <div
                 {...stylex.props(
+                  surface.raisedInset,
                   styles.canvas,
                   align === 'center' ? styles.canvasCenter : styles.canvasStart,
                   previewXstyle,

@@ -22,9 +22,10 @@ instructions behind separate tabs; use [steps](/components/steps) instead.
 ```
 </Preview>
 
-`Tab` accepts a `title` and optional `icon`. Arrow keys move between tabs; focus
-and the active background identify the selected tab. For fenced code blocks,
-use [CodeGroup](/components/code) to derive labels from filenames.
+`Tab` accepts a `title` and optional `icon`. Arrow keys move between tabs. One
+indicator slides between the tabs to mark the selection, and focus stays visible
+on the row. For fenced code blocks, use [CodeGroup](/components/code) to derive
+labels from filenames.
 
 The MDX API needs no import. Custom React themes can import `Tabs`, `TabsList`,
 `TabsTrigger` and `TabsContent` from `novon` for explicit `value` control.

@@ -80,8 +80,8 @@ Never edit `docs/dist`, `docs/.novon`, generated example output or node_modules.
 ## Creating a component
 
 1. Check for an existing primitive first; near-duplicate components are debt.
-2. Pick semantic elements and behavior primitives: native or Base UI before any
-   custom focus management.
+2. Pick semantic elements and behavior primitives: native or
+   react-aria-components before any custom focus management.
 3. Props keep native attributes, ref, aria/data and events via `ElementProps<T>`
    (already minus `className`/`style`); expose `xstyle?: StyleXStyles`. Narrow
    overridable properties with `StyleXStyles<{...}>` when warranted.
@@ -138,8 +138,9 @@ disabled, forced colors and 320px.
 - Public API changes (props, DOM, semantics) must update
   `docs/content/components/*.mdx`, `docs/content/guide/*` and template examples,
   and be called out in the completion report.
-- Base UI data states (`data-active`, `data-highlighted`, `data-starting-style`,
-  …) are behavior contracts: styling may change, attribute semantics may not.
+- react-aria data states (`data-hovered`, `data-pressed`, `data-selected`,
+  `data-disabled`, …) are behavior contracts: styling may change, attribute
+  semantics may not.
 
 ## Visual and behavior checks
 

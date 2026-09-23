@@ -1,7 +1,7 @@
 {
   "name": "novon",
   "version": "0.1.0",
-  "description": "novon — a static blog & documentation generator powered by bun, vite, react and shadcn/ui (base-ui)",
+  "description": "novon \u2014 a static blog & documentation generator powered by bun, vite, react and react-aria-components",
   "type": "module",
   "license": "MIT",
   "bin": {
@@ -41,7 +41,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@base-ui-components/react": "^1.0.0-rc.0",
     "@mdx-js/react": "^3.1.1",
     "@mdx-js/rollup": "^3.1.1",
     "@resvg/resvg-js": "^2.6.2",
@@ -54,6 +53,7 @@
     "gray-matter": "^4.0.3",
     "lucide-react": "^1.47.0",
     "react": "^19.3.0",
+    "react-aria-components": "^1.21.1",
     "react-dom": "^19.3.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-pretty-code": "^0.14.5",

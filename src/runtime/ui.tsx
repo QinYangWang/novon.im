@@ -2,3 +2,4 @@
 export * from './ui/core.tsx'
 export * from './ui/disclosure.tsx'
 export * from './ui/overlays.tsx'
+export * from './ui/tree-view.tsx'

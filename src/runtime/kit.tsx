@@ -10,11 +10,12 @@
  */
 import * as React from 'react'
 import * as stylex from '@stylexjs/stylex'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, Check } from 'lucide-react'
 import type { StyleXStyles } from '@stylexjs/stylex'
-import { colors, radii, space, theme, type as fontType } from './design-system/tokens.stylex.ts'
+import { colors, elevation, radii, space, theme, type as fontType } from './design-system/tokens.stylex.ts'
 import { typography } from './design-system/typography.ts'
 import type { ElementProps, StyleProps } from './design-system/props.ts'
+import { surface } from './design-system/surfaces.ts'
 import { isExternal, withBase } from './lib.ts'
 import { copyText } from './actions.ts'
 import { useBase, useConfig, useSite } from './site.tsx'
@@ -141,7 +142,8 @@ const progressStyles = stylex.create({
     height: space.half,
     overflow: 'hidden',
     borderRadius: radii.pill,
-    backgroundColor: colors.border,
+    backgroundColor: colors.raised,
+    boxShadow: elevation.press,
   },
   topTrack: {
     position: 'fixed',
@@ -151,6 +153,7 @@ const progressStyles = stylex.create({
     height: space.half,
     backgroundColor: 'transparent',
   },
+  hiddenIcon: { width: space.three, height: space.three, flexShrink: 0 },
   bar: {
     width: '100%',
     height: '100%',
@@ -200,16 +203,111 @@ function useScrollProgress(barRef: React.RefObject<HTMLElement | null>) {
   }, [barRef])
 }
 
+const readoutStyles = stylex.create({
+  row: { display: 'flex', alignItems: 'center', gap: space.three },
+  grid: {
+    display: 'grid',
+    justifyContent: 'end',
+    flexShrink: 0,
+    fontVariantNumeric: 'tabular-nums',
+    color: colors.mutedText,
+    whiteSpace: 'nowrap',
+  },
+  cell: { gridColumnStart: 1, gridRowStart: 1, display: 'flex', alignItems: 'center', gap: space.one },
+  ghost: { visibility: 'hidden' },
+  done: { color: colors.text },
+  swap: { transitionProperty: 'opacity', transitionDuration: '150ms' },
+  shown: { opacity: 1 },
+  hidden: { opacity: 0 },
+})
+
+/** Quantized scroll state for the readout: re-renders per step, not per frame. */
+function useReadingReadout(words: number, wordsPerMinute: number, steps = 24) {
+  const [step, setStep] = React.useState(0)
+
+  React.useEffect(() => {
+    if (words <= 0) return
+    let frame = 0
+    const read = () => {
+      frame = 0
+      const travel = document.documentElement.scrollHeight - window.innerHeight
+      const ratio = travel <= 1 ? 1 : Math.min(1, Math.max(0, window.scrollY / travel))
+      const next = Math.round(ratio * steps)
+      setStep((previous) => (previous === next ? previous : next))
+    }
+    const schedule = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(read)
+    }
+    read()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
+  }, [words, steps])
+
+  const progress = step / steps
+  const totalMinutes = words > 0 ? Math.max(1, Math.ceil(words / wordsPerMinute)) : 0
+  const minutesLeft = words > 0 ? Math.ceil(((1 - progress) * words) / wordsPerMinute) : 0
+  return { step, steps, totalMinutes, minutesLeft, complete: step >= steps }
+}
+
 /**
- * Reading progress as an inline bar, for embedding in the "On this page" panel
- * so the outline itself carries the progress instead of a separate top strip.
+ * Reading progress as an inline bar. Inside the "On this page" panel the bar
+ * alone carries the progress; passing `words` adds the time-remaining readout
+ * ("3 min left", then "End · 12 min") with progressbar semantics.
  */
-export function ReadingProgress({ xstyle }: StyleProps) {
+export function ReadingProgress({
+  xstyle,
+  words = 0,
+  wordsPerMinute = 220,
+  label = 'Reading progress',
+  doneLabel = 'End',
+}: StyleProps & { words?: number; wordsPerMinute?: number; label?: string; doneLabel?: string }) {
   const barRef = React.useRef<HTMLDivElement>(null)
   useScrollProgress(barRef)
+  const { step, steps, totalMinutes, minutesLeft, complete } = useReadingReadout(words, wordsPerMinute)
+
+  const bar = <div ref={barRef} {...stylex.props(progressStyles.bar)} style={{ transform: 'scaleX(0)' }} />
+  if (words <= 0) {
+    return (
+      <div aria-hidden="true" data-novon-progress="inline" {...stylex.props(progressStyles.track, xstyle)}>
+        {bar}
+      </div>
+    )
+  }
+
   return (
-    <div aria-hidden="true" data-novon-progress="inline" {...stylex.props(progressStyles.track, xstyle)}>
-      <div ref={barRef} {...stylex.props(progressStyles.bar)} style={{ transform: 'scaleX(0)' }} />
+    <div {...stylex.props(readoutStyles.row, xstyle)}>
+      <div
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={steps}
+        aria-valuenow={step}
+        aria-valuetext={`${Math.round((step / steps) * 100)}% read${complete ? '' : `, ${minutesLeft} min left`}`}
+        data-novon-progress="inline"
+        {...stylex.props(progressStyles.track)}
+      >
+        {bar}
+      </div>
+      <div data-done={complete ? '' : undefined} {...stylex.props(readoutStyles.grid, typography.code)}>
+        {/* The end state anchors the width, so the switch never shifts the bar. */}
+        <span aria-hidden="true" {...stylex.props(readoutStyles.cell, readoutStyles.ghost)}>
+          <span {...stylex.props(progressStyles.hiddenIcon)} />
+          {doneLabel} · {totalMinutes} min
+        </span>
+        <span aria-hidden="true" {...stylex.props(readoutStyles.cell, readoutStyles.swap, complete ? readoutStyles.hidden : readoutStyles.shown)}>
+          {minutesLeft} min left
+        </span>
+        <span aria-hidden="true" {...stylex.props(readoutStyles.cell, readoutStyles.done, readoutStyles.swap, complete ? readoutStyles.shown : readoutStyles.hidden)}>
+          <Check aria-hidden="true" size={12} />
+          {doneLabel} · {totalMinutes} min
+        </span>
+      </div>
     </div>
   )
 }
@@ -262,20 +360,17 @@ const pillStyles = stylex.create({
     alignItems: 'center',
     gap: space.half,
     borderRadius: radii.surface,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
     padding: space.one,
-    backdropFilter: 'blur(8px)',
   },
   list: { position: 'relative', display: 'flex', alignItems: 'center', gap: space.half },
+  // The selected pill lifts white off the gray track.
   indicator: (left: number, width: number) => ({
     position: 'absolute',
     top: space.one,
     bottom: space.one,
     borderRadius: radii.control,
-    backgroundColor: colors.hover,
+    backgroundColor: colors.popover,
+    boxShadow: elevation.low,
     transform: `translateX(${left}px)`,
     width,
   }),
@@ -335,7 +430,7 @@ export function PillNav({ items, xstyle }: { items: PillNavItem[]; xstyle?: Styl
   }, [activeIndex, items])
 
   return (
-    <div {...stylex.props(pillStyles.nav, xstyle)}>
+    <div {...stylex.props(surface.raised, pillStyles.nav, xstyle)}>
       {indicator ? (
         <span
           aria-hidden="true"
@@ -365,12 +460,6 @@ const badgeStyles = stylex.create({
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.surface,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    color: colors.text,
   },
   sm: { width: space.six, height: space.six },
   md: { width: space.eight, height: space.eight },
@@ -388,7 +477,7 @@ export function IconBadge({
   xstyle?: StyleXStyles
 }) {
   return (
-    <span {...stylex.props(badgeStyles.box, badgeStyles[size], xstyle)}>
+    <span {...stylex.props(surface.raised, badgeStyles.box, badgeStyles[size], xstyle)}>
       <Icon icon={icon} size={size === 'lg' ? 20 : 16} />
     </span>
   )
@@ -453,7 +542,8 @@ const pillLinkStyles = stylex.create({
     alignItems: 'center',
     gap: space.oneHalf,
     borderRadius: radii.control,
-    backgroundColor: { default: colors.subtle, ':hover': colors.hover },
+    backgroundColor: { default: colors.raised, ':hover': colors.raisedHover, ':active': colors.raisedStrong },
+    boxShadow: { default: elevation.low, ':active': elevation.press },
     color: colors.text,
     paddingInline: space.twoHalf,
     paddingBlock: space.one,
@@ -601,10 +691,6 @@ const switchStyles = stylex.create({
     alignItems: 'center',
     gap: space.half,
     borderRadius: radii.surface,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
     padding: space.half,
   },
   choice: {
@@ -617,12 +703,12 @@ const switchStyles = stylex.create({
     transitionProperty: 'color, background-color',
     transitionDuration: '150ms',
     color: { default: colors.mutedText, ':hover': colors.text },
-    backgroundColor: 'transparent',
+    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover },
     cursor: 'pointer',
     borderWidth: 0,
     borderStyle: 'none',
   },
-  choiceActive: { backgroundColor: colors.hover, color: colors.text },
+  choiceActive: { backgroundColor: colors.popover, color: colors.text, boxShadow: elevation.low },
   toggle: {
     display: 'inline-flex',
     width: space.eight,
@@ -661,7 +747,7 @@ export function ThemeSwitch({ xstyle }: StyleProps) {
   }
 
   return (
-    <div role="radiogroup" aria-label="Color theme" {...stylex.props(switchStyles.group, xstyle)}>
+    <div role="radiogroup" aria-label="Color theme" {...stylex.props(surface.raised, switchStyles.group, xstyle)}>
       {THEME_CHOICES.map(({ value, label, path }) => (
         <button
           key={value}

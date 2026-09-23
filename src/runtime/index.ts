@@ -56,6 +56,25 @@ export { Preview, type PreviewProps } from './preview.tsx'
 /* Deterministic monochrome avatars. */
 export { Blobatar, type BlobatarProps } from './blobatar.tsx'
 
+/* A scrolling row of marks that stops when the reader looks at it. */
+export {
+  LogoMarquee,
+  useLogoMarquee,
+  type LogoMarqueeItem,
+  type LogoMarqueeProps,
+  type MarqueeDirection,
+  type UseLogoMarqueeOptions,
+} from './logo-marquee.tsx'
+
+/* A placeholder resolves into the photo. */
+export {
+  BlurUpImage,
+  useBlurUpImage,
+  type BlurUpImageProps,
+  type BlurUpStatus,
+  type UseBlurUpImageOptions,
+} from './blur-up-image.tsx'
+
 /* Icons, shared by the theme and MDX components. */
 export { Icon, icons, type IconProps } from './icons.tsx'
 

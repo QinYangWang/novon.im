@@ -44,6 +44,9 @@ export const colors = stylex.defineConsts({
   onDanger: 'var(--destructive-foreground)',
   dangerSurface: 'var(--novon-danger-surface)',
   dangerText: 'var(--novon-danger-text)',
+  raised: 'var(--novon-raised)',
+  raisedHover: 'var(--novon-raised-hover)',
+  raisedStrong: 'var(--novon-raised-strong)',
 })
 
 // The theme is switched by `data-theme` on <html>, which no element can select
@@ -75,6 +78,17 @@ export const space = stylex.defineConsts({
   twelve: '3rem',
   fourteen: '3.5rem',
   sixteen: '4rem',
+})
+
+/**
+ * Depth. Raised surfaces lift through layered shadows plus a top highlight;
+ * borders stay reserved for structure and state. The press token collapses the
+ * shadow into the surface.
+ */
+export const elevation = stylex.defineConsts({
+  low: 'var(--novon-elevation-low)',
+  lift: 'var(--novon-elevation-lift)',
+  press: 'var(--novon-elevation-press)',
 })
 
 export const radii = stylex.defineConsts({

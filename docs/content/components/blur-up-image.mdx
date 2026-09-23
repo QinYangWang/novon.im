@@ -1,0 +1,69 @@
+---
+title: Blur-up image
+description: A placeholder resolves into the photo.
+icon: Sparkles
+order: 13
+---
+
+A blur-up image shows a tiny blurred stand-in while the real asset loads, then
+develops into the photo. A slow network sees a soft surface, never an empty
+box, and a failed request lands on a clear broken-image state.
+
+<Preview title="Placeholder" description="The stand-in resolves into the image.">
+
+<BlurUpImage
+  src="/screenshot.svg"
+  alt="The documentation template rendered by novon"
+  width={1200}
+  height={630}
+  placeholder="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='13'%3E%3Crect width='24' height='13' fill='%23d4d4d4'/%3E%3C/svg%3E"
+/>
+
+```mdx
+<BlurUpImage
+  src="/cover.jpg"
+  alt="A surveyor's folding rule on a workbench"
+  width={1200}
+  height={630}
+  placeholder="data:image/svg+xml,…" 
+/>
+```
+
+</Preview>
+
+<Preview title="Waiting surface" description="Without a placeholder, the surface carries the wait.">
+
+<BlurUpImage
+  src="/screenshot.svg"
+  alt="The same image, loading over a plain surface"
+  width={1200}
+  height={630}
+/>
+
+```mdx
+<BlurUpImage src="/cover.jpg" alt="A folding rule" width={1200} height={630} />
+```
+
+</Preview>
+
+The real image is decoded before it fades in, so the transition happens once,
+not per scan. Reduced motion swaps states instantly. The wrapper reports
+`aria-busy` while loading and keeps the box's aspect ratio at every width.
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `src` | `string` | required in practice |
+| `alt` | `string` | required |
+| `width` / `height` | `number` — intrinsic size, locks the aspect ratio | required |
+| `placeholder` | `string` — tiny image or data URI | — |
+| `color` | `string` — waiting surface | `muted` token |
+| `blur` | `number` — placeholder blur in pixels | `14` |
+| `srcSet` / `sizes` / `loading` / `fetchPriority` | native `<img>` | `loading="lazy"` |
+| `onReady` / `onError` | `() => void` | — |
+| `xstyle` | `StyleXStyles` | — |
+
+A generated or hand-made thumbnail makes the best placeholder: keep it tiny and
+let `blur` do the work. Alt text describes what the image means, exactly as it
+would for a plain `<img>`.

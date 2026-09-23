@@ -5,10 +5,11 @@
 import * as React from 'react'
 import * as stylex from '@stylexjs/stylex'
 import { Search as SearchIcon } from 'lucide-react'
-import { colors, media, radii, space, type } from './design-system/tokens.stylex.ts'
+import { colors, elevation, media, radii, space, type } from './design-system/tokens.stylex.ts'
 import { typography } from './design-system/typography.ts'
 import type { StyleXStyles } from '@stylexjs/stylex'
 import { behavior } from './design-system/behaviors.ts'
+import { surface } from './design-system/surfaces.ts'
 import { withBase } from './lib.ts'
 import { useBase, useConfig } from './site.tsx'
 import { Dialog, DialogContent, Kbd } from './ui.tsx'
@@ -51,16 +52,12 @@ const styles = stylex.create({
     alignItems: 'center',
     gap: space.two,
     borderRadius: radii.control,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
     paddingInline: space.three,
     color: colors.mutedText,
     cursor: 'pointer',
-    transitionProperty: 'color, background-color',
+    transitionProperty: 'color, background-color, box-shadow',
     transitionDuration: '150ms',
-    ':hover': { backgroundColor: colors.hover, color: colors.text },
+    ':hover': { backgroundColor: colors.raisedHover, color: colors.text },
   },
   triggerLabel: {
     flex: 1,
@@ -77,24 +74,24 @@ const styles = stylex.create({
   },
   triggerCompactLabel: { display: 'none' },
   dialog: { padding: 0 },
-  inputRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: space.two,
-    borderBottomWidth: 1,
-    borderBottomStyle: 'solid',
-    borderBottomColor: colors.border,
-    paddingInline: space.four,
-  },
   input: {
-    height: space.twelve,
-    width: '100%',
-    backgroundColor: 'transparent',
+    height: space.ten,
+    flex: 1,
+    borderRadius: radii.control,
+    paddingInline: space.three,
+    boxShadow: elevation.press,
+    backgroundColor: colors.raised,
     fontSize: type.label,
     lineHeight: type.compactLeading,
     borderWidth: 0,
     borderStyle: 'none',
     color: colors.text,
+  },
+  inputRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space.two,
+    padding: space.two,
   },
   results: {
     maxHeight: '22rem',
@@ -121,7 +118,7 @@ const styles = stylex.create({
     color: colors.text,
     backgroundColor: 'transparent',
   },
-  resultActive: { backgroundColor: colors.hover },
+  resultActive: { backgroundColor: colors.raisedHover },
   resultTitle: { display: 'block', fontWeight: type.medium },
   resultSnippet: {
     display: 'block',
@@ -248,7 +245,7 @@ export function SearchTrigger({ xstyle, compact = false }: { xstyle?: StyleXStyl
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search"
-        {...stylex.props(styles.trigger, compact && styles.triggerCompact, xstyle)}
+        {...stylex.props(surface.raised, styles.trigger, compact && styles.triggerCompact, xstyle)}
       >
         <SearchIcon aria-hidden="true" size={16} />
         <span {...stylex.props(styles.triggerLabel, compact && styles.triggerCompactLabel)}>Search</span>

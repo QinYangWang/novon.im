@@ -1,12 +1,12 @@
 /** Small content/theme primitives, not a general-purpose application UI kit. */
+import * as React from 'react'
 import * as stylex from '@stylexjs/stylex'
-import { Avatar as BaseAvatar } from '@base-ui-components/react/avatar'
-import { ScrollArea as BaseScrollArea } from '@base-ui-components/react/scroll-area'
 import type { StyleXStyles } from '@stylexjs/stylex'
-import { colors, radii, space, type } from '../design-system/tokens.stylex.ts'
+import { behavior } from '../design-system/behaviors.ts'
+import { colors, elevation, radii, space, type } from '../design-system/tokens.stylex.ts'
 import { typography } from '../design-system/typography.ts'
 import type { ElementProps, StyleProps } from '../design-system/props.ts'
-import type { BaseProps } from './props.ts'
+import { surface } from '../design-system/surfaces.ts'
 
 const styles = stylex.create({
   buttonBase: {
@@ -20,7 +20,7 @@ const styles = stylex.create({
     fontSize: type.label,
     fontWeight: type.medium,
     lineHeight: type.compactLeading,
-    transitionProperty: 'color, background-color, border-color, opacity, scale',
+    transitionProperty: 'color, background-color, border-color, opacity, scale, box-shadow',
     transitionDuration: '150ms',
     transitionTimingFunction: 'cubic-bezier(0.2, 0, 0, 1)',
     pointerEvents: { default: 'auto', ':disabled': 'none' },
@@ -30,25 +30,28 @@ const styles = stylex.create({
   default: {
     backgroundColor: { default: colors.strong, ':hover': colors.strongHover },
     color: colors.onStrong,
+    boxShadow: { default: elevation.low, ':active': elevation.press },
   },
   secondary: {
-    backgroundColor: { default: colors.subtle, ':hover': colors.hover },
-    color: colors.subtleText,
+    backgroundColor: { default: colors.raised, ':hover': colors.raisedHover, ':active': colors.raisedStrong },
+    color: colors.text,
+    boxShadow: { default: elevation.low, ':active': elevation.press },
   },
   outline: {
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: colors.border,
-    backgroundColor: { default: colors.surfaceRaised, ':hover': colors.hover },
+    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover },
     color: colors.text,
   },
   ghost: {
-    backgroundColor: { default: 'transparent', ':hover': colors.hover },
+    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover },
     color: colors.text,
   },
   destructive: {
     backgroundColor: { default: colors.danger, ':hover': colors.dangerHover },
     color: colors.onDanger,
+    boxShadow: { default: elevation.low, ':active': elevation.press },
   },
   link: {
     color: colors.text,
@@ -74,15 +77,9 @@ const styles = stylex.create({
   buttonIcon: { width: space.nine, height: space.nine, padding: 0 },
   buttonIconSm: { width: space.eight, height: space.eight, padding: 0 },
 
-  card: {
-    borderRadius: radii.large,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    color: colors.surfaceText,
-  },
+  card: { color: colors.surfaceText },
   cardHeader: { display: 'flex', flexDirection: 'column', gap: space.oneHalf, padding: space.five },
+  cardDescription: { color: colors.mutedText },
   cardContent: { padding: space.five, paddingBlockStart: 0 },
   cardFooter: {
     display: 'flex',
@@ -92,7 +89,6 @@ const styles = stylex.create({
     paddingBlockStart: 0,
   },
   cardAction: { marginInlineStart: 'auto', flexShrink: 0 },
-  cardDescription: { color: colors.mutedText },
 
   tableWrap: {
     position: 'relative',
@@ -148,30 +144,20 @@ const styles = stylex.create({
     borderStyle: 'solid',
     borderColor: colors.border,
   },
-  avatarImage: { width: '100%', height: '100%', objectFit: 'cover' },
   avatarSized: (size: number) => ({ width: size, height: size }),
+  avatarImage: { width: '100%', height: '100%', objectFit: 'cover' },
   avatarFallback: {
     display: 'flex',
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.subtle,
+    backgroundColor: colors.raised,
     color: colors.mutedText,
   },
+  avatarHidden: { display: 'none' },
 
-  scrollRoot: { overflow: 'hidden' },
-  scrollViewport: { width: '100%', height: '100%' },
-  scrollBar: {
-    display: 'flex',
-    width: 6,
-    touchAction: 'none',
-    userSelect: 'none',
-    opacity: { default: 0, '[data-hovering]': 1, '[data-scrolling]': 1 },
-    transitionProperty: 'opacity',
-    transitionDuration: '150ms',
-  },
-  scrollThumb: { width: '100%', borderRadius: radii.pill, backgroundColor: colors.border },
+  scrollArea: { overflow: 'auto' },
 })
 
 export type ButtonVariant = 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link'
@@ -212,7 +198,7 @@ export { Badge, type BadgeProps, type BadgeVariant } from './badge.tsx'
 export { Kbd, type KbdProps } from './kbd.tsx'
 
 export function Card({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
-  return <div {...props} {...stylex.props(styles.card, xstyle)} />
+  return <div {...props} {...stylex.props(surface.raised, styles.card, xstyle)} />
 }
 export function CardHeader({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
   return <div {...props} {...stylex.props(styles.cardHeader, xstyle)} />
@@ -264,30 +250,62 @@ export function TableCaption({ xstyle, ...props }: ElementProps<'caption'> & Sty
   return <caption {...props} {...stylex.props(styles.tableCaption, typography.labelRegular, xstyle)} />
 }
 
-export function Avatar({ xstyle, size, ...props }: BaseProps<typeof BaseAvatar.Root> & { size?: number }) {
+/* -------------------------------------------------------------------------- */
+/* Avatar                                                                     */
+/*                                                                            */
+/* Load tracking is three lines of state; the ARIA for an avatar is its alt.   */
+/* -------------------------------------------------------------------------- */
+
+type AvatarState = { loaded: boolean; setLoaded: (loaded: boolean) => void }
+const AvatarContext = React.createContext<AvatarState | null>(null)
+
+export type AvatarProps = ElementProps<'span'> & StyleProps & { size?: number }
+
+export function Avatar({ xstyle, size, children, ...props }: AvatarProps) {
+  const [loaded, setLoaded] = React.useState(false)
   return (
-    <BaseAvatar.Root
+    <AvatarContext.Provider value={React.useMemo(() => ({ loaded, setLoaded }), [loaded])}>
+      <span {...props} {...stylex.props(styles.avatar, size != null && styles.avatarSized(size), xstyle)}>
+        {children}
+      </span>
+    </AvatarContext.Provider>
+  )
+}
+
+export function AvatarImage({ xstyle, onLoad, onError, ...props }: ElementProps<'img'> & StyleProps) {
+  const state = React.useContext(AvatarContext)
+  return (
+    <img
       {...props}
-      {...stylex.props(styles.avatar, size != null && styles.avatarSized(size), xstyle)}
+      onLoad={(event) => {
+        state?.setLoaded(true)
+        onLoad?.(event)
+      }}
+      onError={(event) => {
+        state?.setLoaded(false)
+        onError?.(event)
+      }}
+      {...stylex.props(styles.avatarImage, !state?.loaded && styles.avatarHidden, xstyle)}
     />
   )
 }
-export function AvatarImage({ xstyle, ...props }: BaseProps<typeof BaseAvatar.Image>) {
-  return <BaseAvatar.Image {...props} {...stylex.props(styles.avatarImage, xstyle)} />
-}
-export function AvatarFallback({ xstyle, ...props }: BaseProps<typeof BaseAvatar.Fallback>) {
-  return <BaseAvatar.Fallback {...props} {...stylex.props(styles.avatarFallback, typography.caption, xstyle)} />
-}
 
-export type ScrollAreaProps = BaseProps<typeof BaseScrollArea.Root> & { viewportXstyle?: StyleXStyles }
-
-export function ScrollArea({ viewportXstyle, xstyle, children, ...props }: ScrollAreaProps) {
+export function AvatarFallback({ xstyle, ...props }: ElementProps<'span'> & StyleProps) {
+  const state = React.useContext(AvatarContext)
   return (
-    <BaseScrollArea.Root {...props} {...stylex.props(styles.scrollRoot, xstyle)}>
-      <BaseScrollArea.Viewport {...stylex.props(styles.scrollViewport, viewportXstyle)}>{children}</BaseScrollArea.Viewport>
-      <BaseScrollArea.Scrollbar {...stylex.props(styles.scrollBar)}>
-        <BaseScrollArea.Thumb {...stylex.props(styles.scrollThumb)} />
-      </BaseScrollArea.Scrollbar>
-    </BaseScrollArea.Root>
+    <span
+      {...props}
+      {...stylex.props(styles.avatarFallback, typography.caption, state?.loaded && styles.avatarHidden, xstyle)}
+    />
   )
+}
+
+export type ScrollAreaProps = ElementProps<'div'> & StyleProps & { viewportXstyle?: StyleXStyles }
+
+/**
+ * A scrolling box with the theme's thin scrollbars. The platform scrollbar is
+ * the control; there is no custom thumb to maintain or hover-reveal.
+ */
+export function ScrollArea({ xstyle, viewportXstyle, ...props }: ScrollAreaProps) {
+  return <div {...props} {...stylex.props(styles.scrollArea, behavior.scroll, xstyle, viewportXstyle)} />
 }

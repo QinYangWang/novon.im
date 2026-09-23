@@ -8,7 +8,7 @@
 - Components are styled with StyleX and expose typed `xstyle` composition only.
   There is no utility-class layer; do not reintroduce Tailwind or `className`/
   `style` styling props.
-- Keep public component exports, MDX integration, Base UI behavior and site theme
+- Keep public component exports, MDX integration, React Aria behavior and site theme
   overrides compatible unless the task explicitly requests an API change.
 - All documentation is written in concise English.
 - Do not edit generated `dist/`, `.novon/` or documentation example build output.

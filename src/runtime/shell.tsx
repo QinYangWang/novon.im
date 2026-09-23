@@ -27,7 +27,7 @@ import { formatDate, isExternal, tagSlug, withBase } from './lib.ts'
 import { markdownPath } from '../paths.ts'
 import { blogIndexPath, blogTagsPath } from '../layers.ts'
 import { behavior } from './design-system/behaviors.ts'
-import { colors, layout, media, radii, space, theme, type } from './design-system/tokens.stylex.ts'
+import { colors, elevation, layout, media, radii, space, theme, type } from './design-system/tokens.stylex.ts'
 import { typography } from './design-system/typography.ts'
 import type { StyleProps } from './design-system/props.ts'
 import { useBase, useConfig, useSite } from './site.tsx'
@@ -137,14 +137,15 @@ const styles = stylex.create({
     textDecoration: 'none',
     transitionProperty: 'color, background-color',
     transitionDuration: '150ms',
-    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft },
+    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover },
     color: { default: colors.mutedText, ':hover': colors.text },
   },
   navItemActive: {
-    backgroundColor: colors.hover,
+    backgroundColor: colors.raised,
+    boxShadow: elevation.low,
     fontWeight: type.medium,
     color: colors.text,
-    ':hover': { backgroundColor: colors.hover, color: colors.text },
+    ':hover': { backgroundColor: colors.raisedHover, color: colors.text },
   },
   navItemRoot: { paddingInlineStart: space.twoHalf },
   navItemNested: { paddingInlineStart: space.six },
@@ -169,13 +170,13 @@ const styles = stylex.create({
     fontSize: type.label,
     fontWeight: type.regular,
     color: { default: colors.mutedText, ':hover': colors.text },
-    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft, ':focus-visible': colors.hoverSoft },
+    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover, ':focus-visible': colors.raisedHover },
   },
   navGroupLabel: { display: 'flex', minWidth: 0, alignItems: 'center', gap: space.two },
   navGroupPanel: { paddingBlockEnd: 0 },
   navGroupInner: { paddingInlineStart: space.one },
 
-  sidebar: { display: 'flex', height: '100%', flexDirection: 'column', backgroundColor: colors.surfaceSoft },
+  sidebar: { display: 'flex', height: '100%', flexDirection: 'column' },
   sidebarHead: {
     display: 'flex',
     height: layout.header,
@@ -220,7 +221,7 @@ const styles = stylex.create({
     borderStyle: 'none',
     transitionProperty: 'color, background-color',
     transitionDuration: '150ms',
-    ':hover': { backgroundColor: colors.hover, color: colors.text },
+    ':hover': { backgroundColor: colors.raisedHover, color: colors.text },
   },
   iconButtonSmall: { width: space.seven, height: space.seven },
   pushEnd: { marginInlineStart: 'auto' },
@@ -257,7 +258,7 @@ const styles = stylex.create({
     textDecoration: 'none',
     transitionProperty: 'color, background-color',
     transitionDuration: '150ms',
-    ':hover': { backgroundColor: colors.hover, color: colors.text },
+    ':hover': { backgroundColor: colors.raisedHover, color: colors.text },
   },
   mobileControls: { marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: space.one },
   mobileSearch: {
@@ -322,10 +323,8 @@ const styles = stylex.create({
     width: '100%',
     resize: 'vertical',
     borderRadius: radii.control,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: colors.raised,
+    boxShadow: elevation.press,
     padding: space.two,
     fontFamily: type.mono,
     fontSize: type.caption,
@@ -340,19 +339,16 @@ const styles = stylex.create({
     gap: space.two,
     whiteSpace: 'nowrap',
     borderRadius: radii.control,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceRaised,
+    backgroundColor: { default: colors.raised, ':hover': colors.raisedHover },
+    boxShadow: { default: elevation.low, ':active': elevation.press },
     paddingInline: space.three,
     fontSize: type.label,
     fontWeight: type.medium,
     lineHeight: type.compactLeading,
     color: colors.text,
     cursor: 'pointer',
-    transitionProperty: 'color, background-color, opacity',
+    transitionProperty: 'color, background-color, opacity, box-shadow',
     transitionDuration: '150ms',
-    ':hover': { backgroundColor: colors.hover },
     pointerEvents: { default: 'auto', ':disabled': 'none' },
     opacity: { default: 1, ':disabled': 0.6 },
   },
@@ -391,14 +387,12 @@ const styles = stylex.create({
     flexDirection: 'column',
     gap: space.one,
     borderRadius: radii.large,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
     padding: space.four,
     textDecoration: 'none',
-    transitionProperty: 'color, background-color',
+    transitionProperty: 'color, background-color, box-shadow',
     transitionDuration: '150ms',
-    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft },
+    backgroundColor: { default: colors.raised, ':hover': colors.raisedHover },
+    boxShadow: elevation.low,
   },
   pageLinkNext: { alignItems: 'flex-end', textAlign: 'end' },
   pageLinkLabel: { display: 'flex', alignItems: 'center', gap: space.one, fontSize: type.caption, lineHeight: type.compactLeading, color: colors.mutedText },
@@ -429,7 +423,7 @@ const styles = stylex.create({
     textDecoration: 'none',
     transitionProperty: 'color, background-color',
     transitionDuration: '150ms',
-    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft, ':focus-visible': colors.hoverSoft },
+    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover, ':focus-visible': colors.raisedHover },
   },
   postTitle: { fontWeight: type.medium, color: colors.text },
   postDescription: { marginTop: space.half, color: colors.mutedText },
@@ -447,14 +441,12 @@ const styles = stylex.create({
     flexDirection: 'column',
     gap: space.one,
     borderRadius: radii.large,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
     padding: space.four,
     textDecoration: 'none',
-    transitionProperty: 'color, background-color',
+    transitionProperty: 'color, background-color, box-shadow',
     transitionDuration: '150ms',
-    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft },
+    backgroundColor: { default: colors.raised, ':hover': colors.raisedHover },
+    boxShadow: elevation.low,
   },
   tagList: { marginBlock: space.eight, display: 'flex', flexWrap: 'wrap', gap: space.two },
   tagLink: { textDecoration: 'none' },
@@ -494,17 +486,15 @@ const styles = stylex.create({
     alignItems: 'center',
     gap: space.oneHalf,
     borderRadius: radii.control,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: colors.border,
+    backgroundColor: { default: colors.raised, ':hover': colors.raisedHover },
+    boxShadow: { default: elevation.low, ':active': elevation.press },
     paddingInline: space.threeHalf,
     paddingBlock: space.oneHalf,
     fontSize: type.label,
     lineHeight: type.compactLeading,
     textDecoration: 'none',
-    transitionProperty: 'color, background-color',
+    transitionProperty: 'color, background-color, box-shadow',
     transitionDuration: '150ms',
-    ':hover': { backgroundColor: colors.hover },
   },
 
   /* Layouts */
@@ -527,7 +517,6 @@ const styles = stylex.create({
     height: '100%',
     flexDirection: 'column',
     alignItems: 'center',
-    backgroundColor: colors.surfaceSoft,
   },
   collapsedHead: { display: 'flex', height: layout.header, alignItems: 'center' },
   collapsedFoot: { marginTop: 'auto', display: 'flex', height: space.twelve, alignItems: 'center' },
@@ -1381,19 +1370,19 @@ export function PageActions({ path }: { path: string }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" xstyle={styles.openMenu}>
             <DropdownMenuLabel>Raw source</DropdownMenuLabel>
-            <DropdownMenuItem render={<a href={url} target="_blank" rel="noreferrer" />}>
+            <DropdownMenuItem href={url}>
               <SvglIcon name="markdown" />
               <span {...stylex.props(styles.menuIconSlot)}>View Markdown</span>
               <ArrowUpRight aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Ask an AI</DropdownMenuLabel>
-            <DropdownMenuItem render={<a href={chatgpt} target="_blank" rel="noreferrer" />}>
+            <DropdownMenuItem href={chatgpt}>
               <SvglIcon name="openai" />
               <span {...stylex.props(styles.menuIconSlot)}>Open in ChatGPT</span>
               <ArrowUpRight aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
             </DropdownMenuItem>
-            <DropdownMenuItem render={<a href={claude} target="_blank" rel="noreferrer" />}>
+            <DropdownMenuItem href={claude}>
               <SvglIcon name="claude" />
               <span {...stylex.props(styles.menuIconSlot)}>Open in Claude</span>
               <ArrowUpRight aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />

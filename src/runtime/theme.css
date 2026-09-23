@@ -65,6 +65,18 @@
     --novon-light-only: block;
     --novon-dark-only: none;
     --novon-theme-invert: 0;
+
+    /* Raised surfaces: soft gray blocks that lift off the canvas through a
+       top highlight and layered shadows, not borders. */
+    --novon-raised: oklch(0.95 0 0);
+    --novon-raised-hover: oklch(0.925 0 0);
+    --novon-raised-strong: oklch(0.905 0 0);
+    --novon-raised-highlight: oklch(1 0 0 / 0.9);
+    --novon-elevation-low: inset 0 1px 0 var(--novon-raised-highlight),
+      0 1px 2px oklch(0 0 0 / 0.05), 0 1px 1px -1px oklch(0 0 0 / 0.04);
+    --novon-elevation-lift: inset 0 1px 0 var(--novon-raised-highlight),
+      0 1px 2px oklch(0 0 0 / 0.06), 0 10px 28px -14px oklch(0 0 0 / 0.22);
+    --novon-elevation-press: inset 0 1px 3px oklch(0 0 0 / 0.1);
     --novon-reveal-opacity: 1;
     --novon-reveal-y: 0px;
     --novon-progress-dim: 1;
@@ -110,6 +122,18 @@
     --novon-light-only: none;
     --novon-dark-only: block;
     --novon-theme-invert: 1;
+
+    /* In the dark theme "raised" is brighter than the canvas, and the white
+       top highlight carries the depth that black shadows cannot. */
+    --novon-raised: oklch(1 0 0 / 0.06);
+    --novon-raised-hover: oklch(1 0 0 / 0.09);
+    --novon-raised-strong: oklch(1 0 0 / 0.13);
+    --novon-raised-highlight: oklch(1 0 0 / 0.1);
+    --novon-elevation-low: inset 0 1px 0 var(--novon-raised-highlight),
+      0 1px 2px oklch(0 0 0 / 0.4);
+    --novon-elevation-lift: inset 0 1px 0 var(--novon-raised-highlight),
+      0 1px 2px oklch(0 0 0 / 0.45), 0 10px 28px -14px oklch(0 0 0 / 0.7);
+    --novon-elevation-press: inset 0 1px 3px oklch(0 0 0 / 0.45);
   }
 }
 

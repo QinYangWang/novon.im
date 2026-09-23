@@ -82,6 +82,12 @@ semantic component props (`size`, `numeric`, `fill`) over styling from markup.
   and keys only.
 - **Spacing** uses one scale: 2–64px in the `space` tokens. Containers own the
   gap; children add none. Section turns take 48–64px.
+- **Surfaces** are three roles: the page `canvas`, the gray **`raised`** block
+  (panels, cards, inputs, tool strips) and `overlay` popovers. A raised block
+  lifts through a top highlight and layered elevation shadows
+  (`--novon-elevation-low` / `-lift`), never a depth-only border; borders stay
+  for structure and state. Pressing a control collapses the shadow into the
+  surface. Gradients, glows and decorative shadows are still out.
 - **Color** is monochrome by default and encodes state only. Status surfaces use
   opaque token pairs (`--novon-success-*`, `--novon-warning-*`,
   `--novon-danger-*`); gradients, glows and ornamental shadows are out.

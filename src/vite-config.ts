@@ -274,10 +274,7 @@ export function createNovonViteConfig(options: CreateViteConfigOptions): UserCon
   // That makes optimization deterministic and keeps CJS transitives (e.g.
   // use-sync-external-store) bundled instead of served as raw ESM.
   const bundledDeps = [
-    '@stylexjs/stylex', 'lucide-react',
-    '@base-ui-components/react/accordion', '@base-ui-components/react/avatar',
-    '@base-ui-components/react/dialog', '@base-ui-components/react/menu',
-    '@base-ui-components/react/scroll-area', '@base-ui-components/react/tabs',
+    '@stylexjs/stylex', 'lucide-react', 'react-aria-components',
   ]
   const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 

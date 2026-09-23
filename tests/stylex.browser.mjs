@@ -98,12 +98,15 @@ try {
   // and CSS updates, not just production extraction. Use a non-root base too.
   const port = server.address().port
   await new Promise(done => server.close(done)); server = undefined
-  dev = spawn(bun, [cli, 'dev', '--port', String(port)], { cwd: site, env: { ...process.env, NOVON_HOST: '127.0.0.1' }, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] })
+  // A separate port: the browser keeps keep-alive sockets to the static
+  // server, and reusing the port would let a dev request ride a dead one.
+  const devOrigin = `http://127.0.0.1:${port + 1}`
+  dev = spawn(bun, [cli, 'dev', '--port', String(port + 1)], { cwd: site, env: { ...process.env, NOVON_HOST: '127.0.0.1' }, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] })
   dev.stdout.on('data', data => { devLog += data })
   dev.stderr.on('data', data => { devLog += data })
   let ready = false
   for (let i = 0; i < 150; i++) {
-    try { if ((await fetch(origin + '/design/', { signal: AbortSignal.timeout(1000) })).ok) { ready = true; break } } catch {}
+    try { if ((await fetch(devOrigin + '/design/', { signal: AbortSignal.timeout(1000) })).ok) { ready = true; break } } catch {}
     await new Promise(done => setTimeout(done, 100))
   }
   assert(ready, devLog)
@@ -112,7 +115,7 @@ try {
   page.on('request', request => pending.add(request.url()))
   page.on('requestfinished', request => pending.delete(request.url()))
   page.on('requestfailed', request => pending.delete(request.url()))
-  await page.goto(origin + '/design/', { waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(error => {
+  await page.goto(devOrigin + '/design/', { waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(error => {
     console.error(devLog, errors, 'Pending requests:', [...pending])
     throw error
   })
@@ -123,7 +126,7 @@ try {
       probe: [...document.querySelectorAll('[data-testid]')].map(el => `${el.dataset.testid}:${getComputedStyle(el).paddingLeft}`),
       links: [...document.querySelectorAll('link')].map(el => `${el.rel}:${el.href}`),
     }))
-    const response = await page.request.get(origin + '/design/virtual:stylex.css').catch(() => null)
+    const response = await page.request.get(devOrigin + '/design/virtual:stylex.css').catch(() => null)
     const depsDir = join(site, '.novon', 'vite', 'deps')
     const depFiles = await readdir(depsDir).catch(() => [])
     const metadata = await readFile(join(depsDir, '_metadata.json'), 'utf8').catch(() => 'no metadata')

@@ -9,5 +9,9 @@ export interface StyleProps {
   xstyle?: StyleXStyles
 }
 
-/** Native element props without the string-based styling escape hatches. */
+/**
+ * Native element props without the string-based styling escape hatches. Works
+ * for intrinsic elements and for react-aria-components, whose `className`/
+ * `style` slots novon components never expose.
+ */
 export type ElementProps<T extends React.ElementType> = Omit<React.ComponentProps<T>, 'className' | 'style'>

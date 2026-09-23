@@ -1,0 +1,64 @@
+---
+title: Logo marquee
+description: A scrolling row of marks that stops when the reader looks at it.
+icon: Sparkles
+order: 12
+---
+
+A logo marquee shows a repeated row of partner or product marks. It is the one
+moving surface in the kit: it pauses on hover, focus and touch, animates only
+near the viewport, and falls back to a static scrollable row under reduced
+motion. Never put content a reader must catch inside it.
+
+<Preview title="Marks" description="Marks pause when the pointer or focus arrives.">
+
+<LogoMarquee
+  label="Built with"
+  gap={40}
+  items={[
+    { id: 'markdown', label: 'Markdown', href: 'https://commonmark.org', mark: <SvglIcon name="markdown" /> },
+    { id: 'openai', label: 'OpenAI', href: 'https://openai.com', mark: <SvglIcon name="openai" /> },
+    { id: 'claude', label: 'Claude', href: 'https://claude.ai', mark: <SvglIcon name="claude" /> },
+    { id: 'bun', label: 'Bun' },
+    { id: 'vite', label: 'Vite' },
+    { id: 'react', label: 'React' },
+  ]}
+/>
+
+```mdx
+<LogoMarquee
+  label="Built with"
+  items={[
+    { id: 'markdown', label: 'Markdown', href: 'https://commonmark.org', mark: <SvglIcon name="markdown" /> },
+    { id: 'bun', label: 'Bun' },
+    { id: 'vite', label: 'Vite' },
+  ]}
+/>
+```
+
+</Preview>
+
+Items without `href` render as plain text. Items with `href` or an `onSelect`
+handler become links or buttons: focus pauses the row and scrolls the focused
+mark into view. Copies of the row are `aria-hidden`, so a screen reader hears
+each mark once.
+
+## API
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `items` | `LogoMarqueeItem[]` — `{ id, label, href?, mark? }` | required |
+| `label` | `string` — accessible name | `Logos` |
+| `speed` | `number` — pixels per second | `44` |
+| `direction` | `left` `right` | `left` |
+| `gap` | `number` | `40` |
+| `paused` | `boolean` | `false` |
+| `onSelect` | `(item) => void` | — |
+| `xstyle` | `StyleXStyles` | — |
+
+`mark` replaces the visible label; the label is then kept as hidden text, so
+every mark still announces its name. Keep marks visually sized alike.
+
+The motion loop is plain `requestAnimationFrame` over one transform and needs
+no animation library. `useLogoMarquee` is exported for custom themes that want
+the same measurement, ramping and pause behavior over their own markup.

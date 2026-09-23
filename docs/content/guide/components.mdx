@@ -188,8 +188,9 @@ The [component reference](/components) is organized around writing, not building
 an application. Prefer the MDX components above for articles.
 
 For custom themes, novon exports `Button`, `Card`, `Badge`, `Avatar`, `Blobatar`,
-`Table`, `ScrollArea`, `Kbd`, `Tabs`, `Accordion`, `Dialog` and `DropdownMenu`, plus
-their retained compound parts. Composite interactions use [Base UI](https://base-ui.com).
+`Table`, `ScrollArea`, `Kbd`, `Tabs`, `Accordion`, `TreeView`, `LogoMarquee`,
+`BlurUpImage`, `Dialog` and `DropdownMenu`, plus their compound parts and the
+headless `useTreeView` / `useLogoMarquee` / `useBlurUpImage` hooks. Composite interactions use [React Aria](https://react-spectrum.adobe.com/react-aria/).
 Every component takes `xstyle` instead of `className`: the styles you pass are
 composed after the component's base and variant styles, per property.
 

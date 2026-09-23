@@ -20,11 +20,15 @@
  * A `code` string is the fallback when no fenced block is present.
  */
 import * as React from 'react'
+import * as stylex from '@stylexjs/stylex'
 import { Check, Copy } from 'lucide-react'
-import { cn } from './lib.ts'
+import type { StyleXStyles } from '@stylexjs/stylex'
+import { colors, radii, space, type } from './design-system/tokens.stylex.ts'
+import { typography } from './design-system/typography.ts'
+import type { StyleProps } from './design-system/props.ts'
 import { copyText } from './actions.ts'
 
-export interface PreviewProps {
+export interface PreviewProps extends StyleProps {
   /** Short name for the example. */
   title?: React.ReactNode
   /** One line on when to use it. */
@@ -35,11 +39,103 @@ export interface PreviewProps {
   defaultTab?: 'preview' | 'code'
   /** Align the example inside the canvas. */
   align?: 'center' | 'start'
-  /** Extra classes for the canvas. */
-  previewClassName?: string
-  className?: string
+  /** Extra styles for the canvas. */
+  previewXstyle?: StyleXStyles
   children?: React.ReactNode
 }
+
+const styles = stylex.create({
+  block: { marginBlock: space.six },
+  title: { color: colors.text },
+  description: { color: colors.mutedText, marginTop: space.half },
+  frame: {
+    marginTop: space.three,
+    overflow: 'hidden',
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSoft,
+  },
+  tablist: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space.one,
+    borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surfaceRaised,
+    paddingInline: space.two,
+    paddingBlock: space.oneHalf,
+  },
+  tab: {
+    display: 'inline-flex',
+    height: space.eight,
+    alignItems: 'center',
+    borderRadius: radii.control,
+    paddingInline: space.three,
+    fontSize: type.caption,
+    fontWeight: type.medium,
+    lineHeight: type.compactLeading,
+    textTransform: 'capitalize',
+    outline: 'none',
+    cursor: 'pointer',
+    borderWidth: 0,
+    borderStyle: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft },
+    color: { default: colors.mutedText, ':hover': colors.text, '[data-selected]': colors.text },
+  },
+  tabActive: { backgroundColor: colors.hover },
+  canvas: {
+    display: 'flex',
+    width: '100%',
+    minHeight: '11rem',
+    flexWrap: 'wrap',
+    gap: space.three,
+    padding: space.six,
+    backgroundColor: colors.canvasSunk,
+  },
+  canvasCenter: { alignItems: 'center', justifyContent: 'center' },
+  canvasStart: { alignItems: 'flex-start', justifyContent: 'flex-start' },
+  codePanel: { minWidth: 0, backgroundColor: colors.surfaceSoft },
+  fallback: { position: 'relative', backgroundColor: colors.surfaceSoft },
+  fallbackPre: {
+    overflowX: 'auto',
+    padding: space.four,
+    fontFamily: type.mono,
+    fontSize: type.micro,
+    lineHeight: 1.7,
+    whiteSpace: 'pre-wrap',
+  },
+  copy: {
+    position: 'absolute',
+    top: space.two,
+    insetInlineEnd: space.two,
+    display: 'inline-flex',
+    width: space.eight,
+    height: space.eight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.control,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceStrong,
+    color: colors.mutedText,
+    cursor: 'pointer',
+    opacity: {
+      default: 0,
+      ':where([data-copy-host] :focus-visible)': 1,
+      ':where([data-copy-host]:hover *)': 1,
+      '@media (hover: none)': 1,
+    },
+    transitionProperty: 'opacity, color',
+    transitionDuration: '150ms',
+    ':hover': { color: colors.text },
+  },
+})
 
 const CODE_FIGURE = 'data-rehype-pretty-code-figure'
 
@@ -60,8 +156,8 @@ export function Preview({
   code,
   defaultTab = 'preview',
   align = 'center',
-  previewClassName,
-  className,
+  previewXstyle,
+  xstyle,
   children,
 }: PreviewProps) {
   const [tab, setTab] = React.useState<'preview' | 'code'>(defaultTab)
@@ -97,16 +193,12 @@ export function Preview({
   const preview = nodes.filter((node) => node !== codeNode && !isBlank(node))
 
   return (
-    <div className={cn('my-6', className)}>
-      {title ? <p className="text-sm font-semibold text-foreground">{title}</p> : null}
-      {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
+    <div {...stylex.props(styles.block, xstyle)}>
+      {title ? <p {...stylex.props(styles.title, typography.label)}>{title}</p> : null}
+      {description ? <p {...stylex.props(styles.description, typography.labelRegular)}>{description}</p> : null}
 
-      <div className="mt-3 overflow-hidden rounded-xl border border-border bg-card/40">
-        <div
-          role="tablist"
-          aria-label="Example view"
-          className="flex items-center gap-1 border-b border-border bg-card/60 px-2 py-1.5"
-        >
+      <div {...stylex.props(styles.frame)}>
+        <div role="tablist" aria-label="Example view" {...stylex.props(styles.tablist)}>
           {(['preview', 'code'] as const).map((value) => (
             <button
               key={value}
@@ -119,12 +211,7 @@ export function Preview({
               tabIndex={tab === value ? 0 : -1}
               onClick={() => setTab(value)}
               onKeyDown={onTabKeyDown}
-              className={cn(
-                'inline-flex h-8 items-center rounded-md px-3 text-xs font-medium capitalize transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                tab === value
-                  ? 'bg-accent text-foreground'
-                  : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
-              )}
+              {...stylex.props(styles.tab, tab === value && styles.tabActive)}
             >
               {value}
             </button>
@@ -133,17 +220,23 @@ export function Preview({
 
         <div role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab}-tab`} tabIndex={0}>
           {tab === 'preview' ? (
-            <div
-              className={cn(
-                'novon-not-prose novon-preview-canvas flex min-h-44 w-full flex-wrap gap-3 p-6',
-                align === 'center' ? 'items-center justify-center' : 'items-start justify-start',
-                previewClassName,
-              )}
-            >
-              {preview}
+            // The marker is a zero-declaration content boundary around the
+            // live example; the canvas below owns every compiled style.
+            <div className="novon-not-prose">
+              <div
+                {...stylex.props(
+                  styles.canvas,
+                  align === 'center' ? styles.canvasCenter : styles.canvasStart,
+                  previewXstyle,
+                )}
+              >
+                {preview}
+              </div>
             </div>
           ) : codeNode ? (
-            <div className="min-w-0 bg-card/40 [&_figure]:m-0 [&_figure]:rounded-none [&_figure]:border-0">{codeNode}</div>
+            <div data-preview-code="" {...stylex.props(styles.codePanel)}>
+              {codeNode}
+            </div>
           ) : (
             <CodeFallback code={code} />
           )}
@@ -162,8 +255,8 @@ function CodeFallback({ code }: { code?: string }) {
     window.setTimeout(() => setCopied(false), 2000)
   }
   return (
-    <div className="group/code relative bg-card/40">
-      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed">
+    <div data-copy-host="" {...stylex.props(styles.fallback)}>
+      <pre {...stylex.props(styles.fallbackPre)}>
         <code>{code ?? 'No code provided.'}</code>
       </pre>
       {code ? (
@@ -171,9 +264,9 @@ function CodeFallback({ code }: { code?: string }) {
           type="button"
           onClick={copy}
           aria-label={copied ? 'Copied' : 'Copy code'}
-          className="novon-code-copy absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
+          {...stylex.props(styles.copy)}
         >
-          {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+          {copied ? <Check size={16} /> : <Copy size={16} />}
         </button>
       ) : null}
     </div>

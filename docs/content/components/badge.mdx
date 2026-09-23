@@ -9,22 +9,22 @@ wide: true
 import { Check, Clock } from 'lucide-react'
 import { Badge } from 'novon'
 
-A badge is a short, non-interactive label. It sits inline with text, in a card
-header or beside a title. Reach for it when the value is a word or a count, not
-when it needs a control.
+A badge is a short, non-interactive status label. Use it when the status needs
+to stand apart from surrounding text, not as a container for ordinary metadata.
+Always include a text label; color alone must not carry the meaning.
 
 ## Usage
 
 <Preview title="Variants" description="Match the tone to what the label means.">
 
-<div className="flex flex-wrap items-center gap-2">
+<Cluster gap={8} align="center">
   <Badge>Default</Badge>
   <Badge variant="secondary">Secondary</Badge>
   <Badge variant="outline">Outline</Badge>
   <Badge variant="success">Stable</Badge>
   <Badge variant="warning">Deprecated</Badge>
   <Badge variant="danger">Broken</Badge>
-</div>
+</Cluster>
 
 ```mdx
 <Badge>Default</Badge>
@@ -39,11 +39,11 @@ when it needs a control.
 
 <Preview title="With an icon" description="A leading icon adds a second, non-color cue.">
 
-<div className="flex flex-wrap items-center gap-2">
+<Cluster gap={8} align="center">
   <Badge variant="success"><Check /> Passed</Badge>
   <Badge variant="warning"><Clock /> Queued</Badge>
   <Badge variant="outline">v2.0.0</Badge>
-</div>
+</Cluster>
 
 ```mdx
 import { Check, Clock } from 'lucide-react'
@@ -60,7 +60,11 @@ import { Check, Clock } from 'lucide-react'
 | Prop | Type | Default |
 | --- | --- | --- |
 | `variant` | `default` `secondary` `outline` `success` `warning` `danger` | `default` |
-| `className` | `string` | — |
+| `xstyle` | `StyleXStyles` | — |
 
-`badgeVariants` is exported for building your own, and `className` accepts any
-utility, so a one-off tone is a single class away.
+All six variants and existing imports work. Prefer a semantic variant for status
+and `xstyle` for typed composition in TSX: it is composed after the base and
+variant styles, per property. Native span props, including `ref`, `aria-*` and
+`data-*`, are forwarded; `className` and inline `style` are not accepted.
+
+See [StyleX and the design system](/guide/design-system) for a TSX example.

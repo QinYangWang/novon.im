@@ -1,0 +1,121 @@
+---
+title: novon StyleX and the design system
+description: Semantic tokens, typed styles and how components are built.
+icon: Palette
+order: 7
+---
+
+novon's design system pairs Geist typography with a monochrome canvas, shared
+spacing and semantic colors. It follows Vercel's emphasis on clear content and
+restrained surfaces while keeping novon's identity and theme configuration.
+
+Every component is styled with **StyleX**, compiled to atomic CSS at build time.
+There is no utility-class layer: components expose typed `xstyle` composition
+instead of `className`.
+
+## Compose styles in TSX
+
+Write styles in a TSX component, never through StyleX APIs in MDX. novon compiles
+the component for the browser and for static prerendering.
+
+```tsx title="components/BuildStatus.tsx"
+import * as stylex from '@stylexjs/stylex'
+import { Badge, Cluster, Kbd } from 'novon'
+import { space } from 'novon/runtime/design-system/tokens.stylex.ts'
+
+const styles = stylex.create({
+  status: { paddingInline: space.three },
+})
+
+export default function BuildStatus() {
+  return (
+    <Cluster gap={8} align="center">
+      <Badge variant="success" xstyle={styles.status}>Build passed</Badge>
+      <span>Open commands with <Kbd>⌘K</Kbd></span>
+    </Cluster>
+  )
+}
+```
+
+Register it in `novon.config.ts` and use `<BuildStatus />` in MDX:
+
+```ts
+components: { BuildStatus: './components/BuildStatus.tsx' }
+```
+
+Keep status text visible; never rely on color alone to carry meaning.
+
+## Keep one theme
+
+The [theme CSS variables](/guide/theming) are the public theming API. StyleX
+tokens reference those variables instead of duplicating light and dark values, so
+`theme.radius`, `theme.css` and `data-theme` all keep working.
+
+Import tokens from `novon/runtime/design-system/tokens.stylex.ts` and type roles
+from `novon/runtime/design-system/typography.ts`. Use `colors`, `space`, `radii`
+and `typography` rather than one-off values.
+
+## How composition works
+
+Components accept `xstyle`, typed as `StyleXStyles`. Per element the order is
+base styles, variant styles, then `xstyle`: the last style setting a property
+wins. Callers can compose arrays:
+
+```tsx
+<Badge variant="success" xstyle={[styles.card, styles.highlight]} />
+```
+
+novon components accept neither `className` nor inline `style`; all native props
+(`ref`, `aria-*`, `data-*`, events) pass through. MDX content still uses plain
+HTML elements with their native attributes: the content markers `novon-prose`
+and `novon-not-prose`, and your own site CSS classes, work there. Site
+stylesheets loaded through `theme.css` stay unlayered and override components.
+
+In MDX, `Stack`, `Cluster`, `CardGroup` and `Columns` handle grouping. Prefer
+semantic component props (`size`, `numeric`, `fill`) over styling from markup.
+
+## Design language
+
+- **Type roles** descend by level: `pageTitle` 30/600, `title` 24/500,
+  `heading` 18/500, `lede` 18/400, `body` 16, `label` 14, `caption` 12, plus
+  `micro` 13 and mono `code` for identifiers. Mono is for code, commands, paths
+  and keys only.
+- **Spacing** uses one scale: 2–64px in the `space` tokens. Containers own the
+  gap; children add none. Section turns take 48–64px.
+- **Color** is monochrome by default and encodes state only. Status surfaces use
+  opaque token pairs (`--novon-success-*`, `--novon-warning-*`,
+  `--novon-danger-*`); gradients, glows and ornamental shadows are out.
+- **Motion** is still by default. Reduced-motion removes animation, never
+  content; state changes keep a non-motion cue.
+
+## Build invariants
+
+- StyleX lives in its own CSS layer: `theme → base → components → novon`, with
+  `theme.css` declaring the order. Site CSS is unlayered and wins last.
+- Tokens live in `.stylex.ts` files and are imported directly (never re-exported
+  through a barrel). Pseudo-classes and media queries nest inside property
+  values with a `default` key; top-level condition objects fail to compile.
+- Conditional DOM states use selector keys: `'[data-active]'`,
+  `':not(:last-child)'`, `':where([data-panel-open] *)'`.
+- Theme-conditional non-color styles (image swap, inversion) consume the theme
+  mechanism variables (`--novon-light-only`, `--novon-dark-only`,
+  `--novon-theme-invert`).
+- `vite-config.ts` keeps dep pre-bundling deterministic: `optimizeDeps.exclude:
+  ['novon']`, `noDiscovery: true` with an explicit aliased `include`, and
+  `createRequire` resolution for hoisted installs. Do not remove these without
+  running both test modes below.
+
+## Verification
+
+`bun run test:stylex` checks compiled styles, theme overrides, no-JS output,
+`xstyle` composition and dev hot updates in an isolated site. Run it against an
+installed package too:
+
+```sh
+NOVON_CLI=/installed/novon/bin/novon.js bun run test:stylex
+```
+
+Both modes cover a non-root base path, client/SSR parity, theme nesting,
+contrast, 320–1280px reflow, forced colors and reduced motion. Add typechecking,
+`bun test` and `bun run test:browser` for full coverage. The agent-facing
+workflow lives in `.agents/skills/novon-design-system/SKILL.md`.

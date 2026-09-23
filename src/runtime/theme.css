@@ -1,9 +1,6 @@
-@import 'tailwindcss';
-
-/* The theme lives outside the site root, so Tailwind has to be pointed at it. */
-@source './';
-
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+/* Layers are declared first so order survives any load sequence, including
+   StyleX's dev stylesheet. StyleX emits `novon.priority*` inside `novon`. */
+@layer theme, base, components, novon;
 
 /* -------------------------------------------------------------------------- */
 /* Tokens                                                                     */
@@ -12,117 +9,165 @@
 /* design system. Values follow the Vercel/Geist monochrome scale: a black     */
 /* primary in light, a white primary in dark, alpha borders, and a blue focus  */
 /* ring. The shadcn/ui token names are kept so custom CSS still works.         */
+/*                                                                            */
+/* Components read these through design-system/tokens.stylex.ts; this block    */
+/* is the single source of truth for themeable values.                         */
 /* -------------------------------------------------------------------------- */
 
-:root {
-  --radius: 0.5rem;
+@layer theme {
+  :root {
+    --radius: 0.5rem;
+    --radius-sm: max(0px, calc(var(--radius) - 4px));
+    --radius-md: max(0px, calc(var(--radius) - 2px));
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.205 0 0);
-  --card: oklch(0.984 0 0);
-  --card-foreground: oklch(0.205 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.205 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.961 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.961 0 0);
-  --muted-foreground: oklch(0.42 0 0);
-  --accent: oklch(0.961 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.6256 0.2524 23.03);
-  --border: oklch(0 0 0 / 0.1);
-  --input: oklch(0 0 0 / 0.08);
-  --ring: oklch(0.5761 0.2508 258.23);
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.205 0 0);
+    --card: oklch(0.984 0 0);
+    --card-foreground: oklch(0.205 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.205 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.961 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.961 0 0);
+    --muted-foreground: oklch(0.42 0 0);
+    --accent: oklch(0.961 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.6256 0.2524 23.03);
+    --destructive-foreground: oklch(0.985 0 0);
+    --border: oklch(0 0 0 / 0.1);
+    --input: oklch(0 0 0 / 0.08);
+    --ring: oklch(0.5761 0.2508 258.23);
 
-  /* Layout */
-  --novon-sidebar-width: 16.75rem;
-  --novon-toc-width: 14.5rem;
-  --novon-content-width: 56rem;
-  --novon-column-width: 38rem;
-  --novon-header-height: 3.5rem;
-}
+    /* Status pairs: opaque surfaces make contrast independent of the canvas. */
+    --novon-success-surface: oklch(0.979 0.021 166.113);
+    --novon-success-text: oklch(0.432 0.095 166.913);
+    --novon-warning-surface: oklch(0.987 0.022 95.277);
+    --novon-warning-text: oklch(0.473 0.137 46.201);
+    --novon-danger-surface: oklch(0.971 0.013 17.38);
+    --novon-danger-text: oklch(0.444 0.177 26.899);
 
-[data-theme='dark'] {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.946 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.946 0 0);
-  --popover: oklch(0.225 0 0);
-  --popover-foreground: oklch(0.946 0 0);
-  --primary: oklch(0.946 0 0);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.274 0 0);
-  --secondary-foreground: oklch(0.946 0 0);
-  --muted: oklch(0.274 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.274 0 0);
-  --accent-foreground: oklch(0.946 0 0);
-  --destructive: oklch(0.6256 0.2234 23.03);
-  --border: oklch(1 0 0 / 0.14);
-  --input: oklch(1 0 0 / 0.16);
-  --ring: oklch(0.717 0.1648 250.794);
-}
+    /* Layout */
+    --novon-sidebar-width: 16.75rem;
+    --novon-toc-width: 14.5rem;
+    --novon-content-width: 56rem;
+    --novon-column-width: 38rem;
+    --novon-header-height: 3.5rem;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+    /* Theme mechanism. The theme is switched by `data-theme` on <html>, which
+       no element can select against from its own StyleX style; these variables
+       carry theme-conditional display, filters and motion into StyleX. */
+    --novon-light-only: block;
+    --novon-dark-only: none;
+    --novon-theme-invert: 0;
+    --novon-reveal-opacity: 1;
+    --novon-reveal-y: 0px;
+    --novon-progress-dim: 1;
+  }
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Content is revealed only once JS is known to be running, so the page stays
+     fully readable without it. */
+  [data-js='true'] {
+    --novon-reveal-opacity: 0;
+    --novon-reveal-y: 14px;
+  }
 
-  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  [data-navigating='true'] {
+    --novon-progress-dim: 0.5;
+  }
 
-  --container-content: var(--novon-content-width);
-  --container-column: var(--novon-column-width);
+  [data-theme='dark'] {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.946 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.946 0 0);
+    --popover: oklch(0.225 0 0);
+    --popover-foreground: oklch(0.946 0 0);
+    --primary: oklch(0.946 0 0);
+    --primary-foreground: oklch(0.145 0 0);
+    --secondary: oklch(0.274 0 0);
+    --secondary-foreground: oklch(0.946 0 0);
+    --muted: oklch(0.274 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.274 0 0);
+    --accent-foreground: oklch(0.946 0 0);
+    --destructive: oklch(0.6256 0.2234 23.03);
+    --border: oklch(1 0 0 / 0.14);
+    --input: oklch(1 0 0 / 0.16);
+    --ring: oklch(0.717 0.1648 250.794);
+    --novon-success-surface: oklch(0.262 0.051 172.552);
+    --novon-success-text: oklch(0.845 0.143 164.978);
+    --novon-warning-surface: oklch(0.279 0.077 45.635);
+    --novon-warning-text: oklch(0.879 0.169 91.605);
+    --novon-danger-surface: oklch(0.258 0.092 26.042);
+    --novon-danger-text: oklch(0.808 0.114 19.571);
+
+    --novon-light-only: none;
+    --novon-dark-only: block;
+    --novon-theme-invert: 1;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
 /* Base                                                                       */
+/*                                                                            */
+/* A compact reset (the platform default is rebuilt explicitly, the way       */
+/* Preflight did) plus document-level behavior that belongs to no component.   */
 /* -------------------------------------------------------------------------- */
 
 @layer base {
   *,
   ::after,
-  ::before {
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
     border-color: var(--border);
   }
 
   html {
+    line-height: 1.5;
+    tab-size: 4;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    font-family: var(--font-sans);
   }
 
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  :where(h1, h2, h3, h4, h5, h6) {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: inherit;
+    font-weight: inherit;
     scroll-margin-top: calc(var(--novon-header-height) + 1.5rem);
     text-wrap: balance;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  b,
+  strong {
+    font-weight: 600;
   }
 
   code,
@@ -130,130 +175,110 @@
   pre,
   samp {
     font-family: var(--font-mono);
+    font-size: 1em;
+  }
+
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    display: block;
+    vertical-align: middle;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Icons and media keep their box in flex rows instead of compressing. */
+  svg {
+    flex-shrink: 0;
+  }
+
+  button,
+  input,
+  select,
+  optgroup,
+  textarea {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    background: transparent;
+    border-radius: 0;
+    text-transform: none;
+  }
+
+  ::placeholder {
+    color: var(--muted-foreground);
+    opacity: 1;
+  }
+
+  ul,
+  ol {
+    list-style: none;
+  }
+
+  table {
+    border-color: inherit;
+    border-collapse: collapse;
+    text-indent: 0;
+  }
+
+  fieldset,
+  legend {
+    padding: 0;
+  }
+
+  textarea {
+    resize: vertical;
   }
 
   ::selection {
     background-color: color-mix(in oklab, var(--primary) 30%, transparent);
   }
 
-  /* A visible, consistent focus ring everywhere that does not opt into its own
-     (utilities still win, so component rings are unaffected). */
+  /* A visible, consistent focus ring everywhere that does not opt into its
+     own. StyleX component rings override this by layer order. */
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 
-  /* Disclosure rows opt out of scale so their text stays anchored. */
-  :where(button, .novon-press):active:not(:disabled):not([aria-disabled='true']) {
+  /* Press feedback is document behavior, like the focus ring: every button
+     answers, disclosure rows and tabs opt out of the scale so text stays
+     anchored. `data-static` is a component's own opt-out. */
+  button:active:not(:disabled):not([aria-disabled='true']) {
     filter: brightness(0.94);
+    transition-property: color, background-color, border-color, opacity, scale;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    :where(button, .novon-press):active:not(:disabled):not([aria-disabled='true']):not([data-static]):not([aria-controls]):not([role='tab']) {
+    button:active:not(:disabled):not([aria-disabled='true']):not([data-static]):not([aria-controls]):not([role='tab']) {
       scale: 0.96;
     }
   }
 
-  [data-navigating='true'] { cursor: progress; }
-  [data-navigating='true'] .novon-progress { opacity: 0.5; }
-
-  .novon-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  .novon-scroll::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-  .novon-scroll::-webkit-scrollbar-thumb {
-    border-radius: 5px;
-    background: var(--border);
-  }
-  .novon-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Kit                                                                        */
-/* -------------------------------------------------------------------------- */
-
-@layer components {
-  /* Scroll-reveal. Only hidden once JS is known to be running, so the page is
-     fully readable without it. */
-  [data-js='true'] .novon-reveal {
-    opacity: 0;
-    transform: translateY(14px);
-    transition:
-      opacity 550ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 550ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  [data-js='true'] .novon-reveal[data-visible='true'] {
-    opacity: 1;
-    transform: none;
-  }
-
-  /* The pill indicator slides between nav items. */
-  .novon-pill-indicator {
-    transition:
-      transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
-      width 320ms cubic-bezier(0.16, 1, 0.3, 1),
-      opacity 200ms ease;
-  }
-
-  .novon-progress {
-    transform-origin: 0 50%;
-    transition: transform 120ms linear;
-  }
-
-  /* The canvas behind a component example. A flat, slightly raised surface marks
-     it as a preview, distinct from the page. */
-  .novon-preview-canvas {
-    background-color: color-mix(in oklab, var(--foreground) 4%, var(--background));
-  }
-}
-
-/* Keep press scaling interruptible even on controls with transition-colors. */
-:where(button, .novon-press) {
-  transition-property: color, background-color, border-color, opacity, scale;
-  transition-duration: 150ms;
-  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
-}
-
-@media (hover: none) {
-  .novon-code-copy { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0s !important;
-  }
-
-  .novon-reveal,
-  [data-js='true'] .novon-reveal {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
-
-  .novon-pill-indicator {
-    transition: none !important;
-  }
-
-  .novon-progress {
-    transition: none !important;
-  }
-
-  html {
-    scroll-behavior: auto;
+  /* The router marks navigation on <html>; a scroll-driven bar reads the
+     resulting variable, and the pointer reports the wait. */
+  [data-navigating='true'] {
+    cursor: progress;
   }
 }
 
 /* -------------------------------------------------------------------------- */
 /* Page content                                                               */
+/*                                                                            */
+/* Content CSS for rendered Markdown: `.novon-prose` is the styling boundary,  */
+/* `.novon-not-prose` opts live examples out of it. These are element-level    */
+/* content rules, not component styles; components are StyleX in `novon`.     */
 /* -------------------------------------------------------------------------- */
 
 @layer components {
@@ -427,6 +452,7 @@
   /* Also style unhighlighted/unknown-language fences. Long lines scroll inside
      the code block, never behind a clipped figure or outside the article. */
   .novon-prose .novon-code-wrap {
+    position: relative;
     min-width: 0;
     max-width: 100%;
     border-radius: var(--radius-xl);
@@ -508,6 +534,18 @@
   .novon-prose code[data-line-numbers-max-digits='4'] { --novon-line-number-width: 4ch; }
   .novon-prose code[data-line-numbers-max-digits='5'] { --novon-line-number-width: 5ch; }
 
+  /* A code figure opening a tab panel starts flush with the tab bar. */
+  [role='tabpanel'] > figure[data-rehype-pretty-code-figure]:first-child {
+    margin-top: 0;
+  }
+
+  /* The preview's code tab flattens the figure chrome around the source. */
+  [data-preview-code] figure[data-rehype-pretty-code-figure] {
+    margin: 0;
+    border-width: 0;
+    border-radius: 0;
+  }
+
   /* shiki dual theme */
   .novon-prose code[data-theme*=' '] span {
     color: var(--shiki-light, inherit);
@@ -521,5 +559,29 @@
     font-style: var(--shiki-dark-font-style, inherit);
     font-weight: var(--shiki-dark-font-weight, inherit);
     text-decoration: var(--shiki-dark-text-decoration, inherit);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Motion safety                                                              */
+/* -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+  }
+
+  /* Reveals stay visible: motion is removed, not content. */
+  :root {
+    --novon-reveal-opacity: 1 !important;
+    --novon-reveal-y: 0px !important;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }

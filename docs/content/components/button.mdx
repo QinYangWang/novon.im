@@ -26,14 +26,14 @@ important the action is, and a size that matches the density of the surface.
 
 <Preview title="Variants" description="Lower-emphasis styles for secondary or supporting actions.">
 
-<div className="flex flex-wrap items-center gap-3">
+<Cluster gap={12} align="center">
   <Button>Default</Button>
   <Button variant="secondary">Secondary</Button>
   <Button variant="outline">Outline</Button>
   <Button variant="ghost">Ghost</Button>
   <Button variant="destructive">Destructive</Button>
   <Button variant="link">Link</Button>
-</div>
+</Cluster>
 
 ```mdx
 <Button>Default</Button>
@@ -48,12 +48,12 @@ important the action is, and a size that matches the density of the surface.
 
 <Preview title="Sizes" description="Size is tuned to the density of the surrounding interface.">
 
-<div className="flex flex-wrap items-center gap-3">
+<Cluster gap={12} align="center">
   <Button size="sm">Small</Button>
   <Button>Default</Button>
   <Button size="lg">Large</Button>
   <Button size="icon" aria-label="Add"><Plus /></Button>
-</div>
+</Cluster>
 
 ```mdx
 <Button size="sm">Small</Button>
@@ -66,10 +66,10 @@ important the action is, and a size that matches the density of the surface.
 
 <Preview title="Disabled and loading" description="Disable while a request is in flight, and keep the label stable.">
 
-<div className="flex flex-wrap items-center gap-3">
+<Cluster gap={12} align="center">
   <Button disabled>Disabled</Button>
   <Button variant="outline" disabled>Disabled</Button>
-</div>
+</Cluster>
 
 ```mdx
 <Button disabled>Disabled</Button>
@@ -86,14 +86,15 @@ important the action is, and a size that matches the density of the surface.
 | `size` | `sm` `default` `lg` `icon` `icon-sm` | `default` |
 | `disabled` | `boolean` | `false` |
 | `static` | `boolean` — disable press scaling | `false` |
-| `className` | `string` | — |
+| `xstyle` | `StyleXStyles` — composed last | — |
 
 Buttons use a 150 ms color/press transition with a restrained `0.96` scale.
 Reduced-motion preferences disable scaling; disclosure and tab controls keep
 text stationary. Disabled controls do not animate. The default `type` is `button`.
 
-Every native button attribute is forwarded. `buttonVariants` is exported so a
-link or another element can wear the same styles.
+Every native button attribute except `className` and `style` is forwarded.
+Compose one-off treatments with `xstyle`; it is applied after the variant styles
+so a specific property override always wins.
 
 <Note>
   Reach for `variant="link"` only for a tertiary action inside a paragraph. For

@@ -20,12 +20,12 @@ the mark follows the theme the way the rest of the page does.
 
 <Preview title="Default" description="Any string works. The name decides the shape.">
 
-<div className="flex flex-wrap items-center gap-6">
+<Cluster gap={24} align="center">
   <Blobatar name="novon" size={72} />
   <Blobatar name="ada" size={72} />
   <Blobatar name="grace" size={72} />
   <Blobatar name="linus" size={72} />
-</div>
+</Cluster>
 
 ```mdx
 <Blobatar name="novon" size={72} />
@@ -36,12 +36,12 @@ the mark follows the theme the way the rest of the page does.
 
 <Preview title="Sizes" description="A number sets the box; omit it and CSS decides.">
 
-<div className="flex flex-wrap items-center gap-4">
+<Cluster gap={16} align="center">
   <Blobatar name="small" size={24} />
   <Blobatar name="medium" size={36} />
   <Blobatar name="large" size={56} />
   <Blobatar name="huge" size={88} />
-</div>
+</Cluster>
 
 ```mdx
 <Blobatar name="small" size={24} />
@@ -53,11 +53,11 @@ the mark follows the theme the way the rest of the page does.
 
 <Preview title="Colour" description="`monochrome={false}` takes a palette instead.">
 
-<div className="flex flex-wrap items-center gap-4">
+<Cluster gap={16} align="center">
   <Blobatar name="ada" size={56} monochrome={false} palette={{ head: '#4f46e5', eye: '#ffffff' }} />
   <Blobatar name="grace" size={56} monochrome={false} palette={{ head: '#0d9488', eye: '#ffffff' }} />
   <Blobatar name="linus" size={56} monochrome={false} palette={{ head: '#d97706', eye: '#ffffff' }} />
-</div>
+</Cluster>
 
 ```mdx
 <Blobatar
@@ -72,27 +72,29 @@ the mark follows the theme the way the rest of the page does.
 
 <Preview title="In a row" description="A list of people reads as people, not placeholders.">
 
-<ul className="flex w-full max-w-sm flex-col gap-2">
+<Stack gap={8}>
   {[
     { name: 'Ada Lovelace', handle: 'ada' },
     { name: 'Grace Hopper', handle: 'grace' },
     { name: 'Alan Turing', handle: 'alan' },
   ].map((person) => (
-    <li key={person.handle} className="flex items-center gap-3 rounded-md border border-border px-3 py-2">
-      <Blobatar name={person.handle} size={32} />
-      <span className="flex flex-col">
-        <span className="text-sm font-medium">{person.name}</span>
-        <span className="text-sm text-muted-foreground">@{person.handle}</span>
-      </span>
+    <li key={person.handle}>
+      <Cluster gap={12} align="center">
+        <Blobatar name={person.handle} size={32} />
+        <Stack gap={2}>
+          <strong>{person.name}</strong>
+          <span style={{ color: 'var(--muted-foreground)' }}>@{person.handle}</span>
+        </Stack>
+      </Cluster>
     </li>
   ))}
-</ul>
+</Stack>
 
 ```mdx
-<li className="flex items-center gap-3">
+<Cluster gap={12} align="center">
   <Blobatar name={person.handle} size={32} />
   <span>{person.name}</span>
-</li>
+</Cluster>
 ```
 
 </Preview>
@@ -103,10 +105,11 @@ the mark follows the theme the way the rest of the page does.
 | --- | --- | --- |
 | `name` | `string` | required |
 | `size` | `number` | CSS |
+| `fill` | `boolean` — fill the containing box | `false` |
 | `monochrome` | `boolean` | `true` |
 | `palette` | `{ head?: string; eye?: string; bg?: string }` | — |
 | `alt` | `string` | `name` |
-| `className` | `string` | — |
+| `xstyle` | `StyleXStyles` | — |
 
 The component renders an `<img>`, so a list of hundreds stays a list of images
 rather than a few thousand DOM nodes. Use `alt=""` when the name is already next

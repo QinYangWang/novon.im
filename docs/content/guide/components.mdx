@@ -190,12 +190,12 @@ an application. Prefer the MDX components above for articles.
 For custom themes, novon exports `Button`, `Card`, `Badge`, `Avatar`, `Blobatar`,
 `Table`, `ScrollArea`, `Kbd`, `Tabs`, `Accordion`, `Dialog` and `DropdownMenu`, plus
 their retained compound parts. Composite interactions use [Base UI](https://base-ui.com).
-The variant helpers are `buttonVariants` and `badgeVariants`.
+Every component takes `xstyle` instead of `className`: the styles you pass are
+composed after the component's base and variant styles, per property.
 
-Unused forms, toasts, loading widgets and extra overlay/navigation families have
-been removed from the public exports. See the [migration list](/components#what-was-removed)
-if an existing page or theme imports them. Add a page-specific React component
-when a real interactive example needs more than the writing toolkit.
+Unused forms, toasts, loading widgets and extra overlay/navigation families are
+not part of the public exports. Add a page-specific React component when a real
+interactive example needs more than the writing toolkit.
 
 ```mdx
 import { Button, Card, CardContent } from 'novon'
@@ -220,17 +220,27 @@ import { Button, Card, CardContent } from 'novon'
 | `useSite()` | Config, base path, route table and the current URL. |
 | `useBase()` | The configured base path. |
 | `useOverride()` | Looks up a theme override by name. |
-| `cn()` | `clsx` + `tailwind-merge`. |
 | `withBase()` | Joins the base path with a site-relative path. |
 | `formatDate()` | Locale-aware dates for feeds and lists. |
 
 ```tsx
-import { cn, useConfig, withBase } from 'novon'
+import * as stylex from '@stylexjs/stylex'
+import { useConfig, withBase } from 'novon'
+import { colors } from 'novon/runtime/design-system/tokens.stylex.ts'
+import { typography } from 'novon/runtime/design-system/typography.ts'
+
+const styles = stylex.create({
+  link: {
+    color: colors.text,
+    textDecorationLine: 'underline',
+    textUnderlineOffset: 3,
+  },
+})
 
 export default function Version() {
   const config = useConfig()
   return (
-    <a href={withBase(config.base, '/guide/cli')} className={cn('underline', 'text-sm')}>
+    <a href={withBase(config.base, '/guide/cli')} {...stylex.props(typography.label, styles.link)}>
       {config.title}
     </a>
   )

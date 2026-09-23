@@ -304,7 +304,7 @@ export default definePlugin({
 (safe to delete, self-ignoring), load your config and content, and run Vite under
 Bun:
 
-1. **Client bundle** — React + the theme, with the Tailwind stylesheet.
+1. **Client bundle** — React + the theme, with StyleX compiled to extracted CSS.
 2. **Server bundle** — the same theme, used only for prerendering.
 3. **Prerender** — one HTML file per route from the content index.
 4. **Plugins** — `sitemap`, `rss`, `search-index.json`, `llms.txt`, `.nojekyll`.
@@ -331,6 +331,22 @@ hosting, history, fragments, mobile and reduced motion):
 (cd docs && bun ../bin/novon.js build)
 bunx playwright-core install chromium
 bun run test:browser
+```
+
+### Design system and component work
+
+Components are styled with StyleX against novon's semantic tokens and Geist type
+roles; Tailwind is not part of the stack. Public theme CSS variables and
+component imports remain the theming API, and every component composes caller
+styles through `xstyle`.
+
+Read the [design system guide](docs/content/guide/design-system.mdx) and the
+[novon agent skill](.agents/skills/novon-design-system/SKILL.md) before creating
+or modifying components. The skill covers token ownership, composition,
+accessibility and verification.
+
+```bash
+bun run test:stylex # builds an isolated site; tests SSG, themes, composition and dev/HMR
 ```
 
 ## Deliberate limits

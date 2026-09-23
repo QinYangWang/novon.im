@@ -3,10 +3,12 @@
  *
  * Only the marks novon links to are included, nothing is fetched at runtime and
  * no third-party SVG markup is injected into the DOM. Each mark has a light and
- * a dark asset where SVGL provides one, so it stays legible in both themes.
+ * a dark asset where SVGL provides one, so it stays legible in both themes: the
+ * theme mechanism variables in theme.css pick the right one.
  */
-import * as React from 'react'
-import { cn } from './lib.ts'
+import * as stylex from '@stylexjs/stylex'
+import { space, theme } from './design-system/tokens.stylex.ts'
+import type { ElementProps, StyleProps } from './design-system/props.ts'
 import openai from './assets/svgl/openai.svg'
 import openaiDark from './assets/svgl/openai_dark.svg'
 import markdown from './assets/svgl/markdown-light.svg'
@@ -30,14 +32,28 @@ const BRANDS: Record<SvglIconName, BrandAsset> = {
 /** The curated names accepted by `SvglIcon`. */
 export const svglIcons = Object.keys(BRANDS) as SvglIconName[]
 
-export interface SvglIconProps extends Omit<React.ComponentProps<'span'>, 'children'> {
+const styles = stylex.create({
+  slot: {
+    display: 'inline-flex',
+    width: space.four,
+    height: space.four,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  img: { width: '100%', height: '100%', objectFit: 'contain' },
+  lightOnly: { display: theme.lightOnly },
+  darkOnly: { display: theme.darkOnly },
+})
+
+export type SvglIconProps = Omit<ElementProps<'span'>, 'children'> & StyleProps & {
   name: SvglIconName
   /** Accessible label. When omitted the mark is decorative. */
   label?: string
 }
 
 /** A single brand mark, sized with the surrounding text. */
-export function SvglIcon({ name, label, className, ...props }: SvglIconProps) {
+export function SvglIcon({ name, label, xstyle, ...props }: SvglIconProps) {
   const brand = BRANDS[name]
   if (!brand) return null
   const decorative = !label
@@ -48,7 +64,7 @@ export function SvglIcon({ name, label, className, ...props }: SvglIconProps) {
       role={decorative ? undefined : 'img'}
       aria-label={label}
       aria-hidden={decorative ? true : undefined}
-      className={cn('inline-flex size-4 shrink-0 items-center justify-center', className)}
+      {...stylex.props(styles.slot, xstyle)}
     >
       <img
         src={brand.light}
@@ -56,7 +72,7 @@ export function SvglIcon({ name, label, className, ...props }: SvglIconProps) {
         aria-hidden="true"
         width={16}
         height={16}
-        className={cn('size-full object-contain', brand.dark && 'dark:hidden')}
+        {...stylex.props(styles.img, brand.dark ? styles.lightOnly : null)}
       />
       {brand.dark ? (
         <img
@@ -65,7 +81,7 @@ export function SvglIcon({ name, label, className, ...props }: SvglIconProps) {
           aria-hidden="true"
           width={16}
           height={16}
-          className="hidden size-full object-contain dark:block"
+          {...stylex.props(styles.img, styles.darkOnly)}
         />
       ) : null}
     </span>

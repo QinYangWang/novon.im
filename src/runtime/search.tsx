@@ -3,8 +3,13 @@
  * The index is fetched the first time the palette opens.
  */
 import * as React from 'react'
+import * as stylex from '@stylexjs/stylex'
 import { Search as SearchIcon } from 'lucide-react'
-import { cn, withBase } from './lib.ts'
+import { colors, media, radii, space, type } from './design-system/tokens.stylex.ts'
+import { typography } from './design-system/typography.ts'
+import type { StyleXStyles } from '@stylexjs/stylex'
+import { behavior } from './design-system/behaviors.ts'
+import { withBase } from './lib.ts'
 import { useBase, useConfig } from './site.tsx'
 import { Dialog, DialogContent, Kbd } from './ui.tsx'
 import { pageFrontmatter, routePathOf } from './content.ts'
@@ -39,7 +44,108 @@ function scoreEntry(entry: SearchEntry, needle: string): Scored | undefined {
   return undefined
 }
 
-export function SearchTrigger({ className }: { className?: string }) {
+const styles = stylex.create({
+  trigger: {
+    display: 'inline-flex',
+    height: space.eight,
+    alignItems: 'center',
+    gap: space.two,
+    borderRadius: radii.control,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceRaised,
+    paddingInline: space.three,
+    color: colors.mutedText,
+    cursor: 'pointer',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    ':hover': { backgroundColor: colors.hover, color: colors.text },
+  },
+  triggerLabel: {
+    flex: 1,
+    textAlign: 'start',
+    fontSize: type.label,
+    lineHeight: type.compactLeading,
+    display: { default: 'none', [media.small]: 'block' },
+  },
+  triggerKey: { display: { default: 'none', [media.small]: 'inline-flex' } },
+  triggerCompact: {
+    width: space.eight,
+    padding: 0,
+    justifyContent: 'center',
+  },
+  triggerCompactLabel: { display: 'none' },
+  dialog: { padding: 0 },
+  inputRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space.two,
+    borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
+    borderBottomColor: colors.border,
+    paddingInline: space.four,
+  },
+  input: {
+    height: space.twelve,
+    width: '100%',
+    backgroundColor: 'transparent',
+    fontSize: type.label,
+    lineHeight: type.compactLeading,
+    borderWidth: 0,
+    borderStyle: 'none',
+    color: colors.text,
+  },
+  results: {
+    maxHeight: '22rem',
+    overflowY: 'auto',
+    padding: space.two,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space.half,
+    listStyle: 'none',
+    margin: 0,
+  },
+  status: {
+    paddingInline: space.three,
+    paddingBlock: space.six,
+    textAlign: 'center',
+    color: colors.mutedText,
+  },
+  result: {
+    display: 'block',
+    borderRadius: radii.control,
+    paddingInline: space.three,
+    paddingBlock: space.two,
+    textDecoration: 'none',
+    color: colors.text,
+    backgroundColor: 'transparent',
+  },
+  resultActive: { backgroundColor: colors.hover },
+  resultTitle: { display: 'block', fontWeight: type.medium },
+  resultSnippet: {
+    display: 'block',
+    marginTop: space.half,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: colors.mutedText,
+  },
+  hints: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopStyle: 'solid',
+    borderTopColor: colors.border,
+    paddingInline: space.four,
+    paddingBlock: space.two,
+    color: colors.mutedText,
+  },
+  hint: { display: 'flex', alignItems: 'center', gap: space.one },
+})
+
+export function SearchTrigger({ xstyle, compact = false }: { xstyle?: StyleXStyles; compact?: boolean }) {
   const config = useConfig()
   const base = useBase()
   const [open, setOpen] = React.useState(false)
@@ -142,20 +248,17 @@ export function SearchTrigger({ className }: { className?: string }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search"
-        className={cn(
-          'inline-flex h-8 items-center gap-2 rounded-md border border-border bg-card/60 px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground',
-          className,
-        )}
+        {...stylex.props(styles.trigger, compact && styles.triggerCompact, xstyle)}
       >
-        <SearchIcon aria-hidden="true" className="size-4" />
-        <span className="hidden flex-1 text-left sm:inline">Search</span>
-        <Kbd className="hidden sm:inline-flex">⌘K</Kbd>
+        <SearchIcon aria-hidden="true" size={16} />
+        <span {...stylex.props(styles.triggerLabel, compact && styles.triggerCompactLabel)}>Search</span>
+        <Kbd xstyle={styles.triggerKey}>⌘K</Kbd>
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent aria-label="Search" className="p-0">
-          <div className="flex items-center gap-2 border-b border-border px-4">
-            <SearchIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+        <DialogContent aria-label="Search" xstyle={styles.dialog}>
+          <div {...stylex.props(styles.inputRow)}>
+            <SearchIcon aria-hidden="true" size={16} />
             <input
               ref={inputRef}
               value={query}
@@ -166,49 +269,44 @@ export function SearchTrigger({ className }: { className?: string }) {
               onKeyDown={onKeyDown}
               placeholder={`Search ${config.title}…`}
               aria-label="Search documentation"
-              className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              {...stylex.props(styles.input)}
             />
           </div>
 
-          <div className="max-h-[22rem] overflow-y-auto p-2">
+          <ul {...stylex.props(styles.results, behavior.scroll)}>
             {entries === null ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">Loading…</p>
+              <li {...stylex.props(styles.status, typography.labelRegular)}>Loading…</li>
             ) : results.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+              <li {...stylex.props(styles.status, typography.labelRegular)}>
                 No results for “{query}”
-              </p>
+              </li>
             ) : (
-              <ul className="space-y-0.5">
-                {results.map((entry, index) => (
-                  <li key={`${entry.path}-${index}`}>
-                    <a
-                      href={withBase(base, entry.path)}
-                      onMouseEnter={() => setActive(index)}
-                      onClick={() => setOpen(false)}
-                      className={cn(
-                        'block rounded-md px-3 py-2 text-sm no-underline',
-                        index === active ? 'bg-accent text-accent-foreground' : 'text-foreground',
-                      )}
-                    >
-                      <span className="block font-medium">{entry.title}</span>
-                      {entry.snippet || entry.description ? (
-                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                          {entry.snippet ?? entry.description}
-                        </span>
-                      ) : null}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              results.map((entry, index) => (
+                <li key={`${entry.path}-${index}`}>
+                  <a
+                    href={withBase(base, entry.path)}
+                    onMouseEnter={() => setActive(index)}
+                    onClick={() => setOpen(false)}
+                    {...stylex.props(styles.result, index === active && styles.resultActive)}
+                  >
+                    <span {...stylex.props(styles.resultTitle, typography.label)}>{entry.title}</span>
+                    {entry.snippet || entry.description ? (
+                      <span {...stylex.props(styles.resultSnippet, typography.captionRegular)}>
+                        {entry.snippet ?? entry.description}
+                      </span>
+                    ) : null}
+                  </a>
+                </li>
+              ))
             )}
-          </div>
+          </ul>
 
-          <div className="flex items-center justify-between border-t border-border px-4 py-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
+          <div {...stylex.props(styles.hints, typography.captionRegular)}>
+            <span {...stylex.props(styles.hint)}>
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd> to navigate
             </span>
-            <span className="flex items-center gap-1">
+            <span {...stylex.props(styles.hint)}>
               <Kbd>↵</Kbd> to select
             </span>
           </div>

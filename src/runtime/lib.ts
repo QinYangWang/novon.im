@@ -1,12 +1,6 @@
 /**
  * Small browser-safe helpers shared by the theme.
  */
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
-
-export function cn(...inputs: ClassValue[]): string {
-  return twMerge(clsx(inputs))
-}
 
 /** Join a config `base` with a site-relative path. Absolute URLs pass through. */
 export function withBase(base: string, path: string): string {

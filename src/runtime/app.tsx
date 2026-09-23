@@ -3,9 +3,12 @@
  * hydrated in the browser.
  */
 import * as React from 'react'
+import * as stylex from '@stylexjs/stylex'
 import { MDXProvider } from '@mdx-js/react'
 import type { RuntimeConfig, ThemeOverrides } from '../types.ts'
 import type { PageModule, SiteIndex } from './content.ts'
+import { behavior } from './design-system/behaviors.ts'
+import { media, space } from './design-system/tokens.stylex.ts'
 import { mdxComponents } from './mdx.tsx'
 import { SiteProvider } from './site.tsx'
 import { BlogLayout, BlogPage, DefaultNotFound, DocsLayout, DocsPage, OverrideProvider, useOverride } from './shell.tsx'
@@ -21,6 +24,15 @@ export interface AppProps {
   overrides?: ThemeOverrides
 }
 
+const styles = stylex.create({
+  notFound: {
+    marginInline: 'auto',
+    maxWidth: '48rem',
+    paddingInline: { default: space.four, [media.wide]: space.six },
+    paddingBlock: space.sixteen,
+  },
+})
+
 function AppBody({ config, url, site, page }: AppProps) {
   const NotFound = useOverride('NotFound', DefaultNotFound)
   const route = site.byPath.get(url)
@@ -35,7 +47,7 @@ function AppBody({ config, url, site, page }: AppProps) {
 
   if (!route) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 lg:px-6">
+      <div {...stylex.props(styles.notFound)}>
         <NotFound url={url} />
       </div>
     )
@@ -72,7 +84,9 @@ export function App(props: AppProps) {
     <OverrideProvider value={{ ...themeOverrides, ...props.overrides }}>
       <SiteProvider value={{ config, base: config.base, site, url }}>
         <AppBody {...props} site={site} />
-        <span className="sr-only" role="status" aria-live="polite">{site.byPath.has(url) ? titleOf(site.byPath.get(url)!) : 'Page not found'}</span>
+        <span role="status" aria-live="polite" {...stylex.props(behavior.visuallyHidden)}>
+          {site.byPath.has(url) ? titleOf(site.byPath.get(url)!) : 'Page not found'}
+        </span>
       </SiteProvider>
     </OverrideProvider>
   )

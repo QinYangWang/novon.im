@@ -112,5 +112,5 @@ export {
 } from './kit.tsx'
 export { createSiteIndex, flattenNav, loadPage, siteForRoute } from './content.ts'
 export type { LayerIndex, NavGroup, NavNode, NavPage, PageModule, SiteIndex } from './content.ts'
-export { cn, formatDate, humanize, withBase } from './lib.ts'
+export { formatDate, humanize, withBase } from './lib.ts'
 export { layerForPath, layoutLayers } from '../layers.ts'

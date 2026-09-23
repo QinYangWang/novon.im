@@ -9,10 +9,11 @@
  * - `@mdx-js/react` is injected into every compiled page by MDX itself
  */
 import { existsSync, statSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
-import tailwindcss from '@tailwindcss/vite'
+import stylex from '@stylexjs/unplugin'
 import type { Plugin, UserConfig } from 'vite'
 import { novonAliases } from './load.ts'
 import { contentPlugin } from './content-plugin.ts'
@@ -200,11 +201,21 @@ function devServer({ config, packageRoot, configFile }: CreateViteConfigOptions)
 
   return {
     name: 'novon:dev',
+    enforce: 'pre',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use(async (request, response, next) => {
         const url = request.url ?? '/'
-        const path = url.split('?')[0]
+        const pathname = url.split('?')[0]
+        // Our middleware runs before Vite strips base. Never return the HTML
+        // shell for /docs/@vite/client or /docs/@id/virtual:stylex:css-only.
+        const path = pathname.startsWith(config.base) ? '/' + pathname.slice(config.base.length) : pathname
+        // StyleX's middleware also runs before Vite's base middleware and only
+        // recognizes the root-relative endpoint (including HMR cache queries).
+        if (path === '/virtual:stylex.css') {
+          request.url = path + url.slice(pathname.length)
+          return next()
+        }
         if (path.startsWith('/@') || path.startsWith('/node_modules/') || /\.[a-z0-9]{1,6}$/i.test(path)) {
           return next()
         }
@@ -213,8 +224,8 @@ function devServer({ config, packageRoot, configFile }: CreateViteConfigOptions)
         const publicFile = lookupPublicFile(path)
         if (publicFile) {
           if (publicFile.directory) {
-            const query = url.length > path.length ? url.slice(path.length) : ''
-            request.url = `${path.replace(/\/*$/, '/')}index.html${query}`
+            const query = url.length > pathname.length ? url.slice(pathname.length) : ''
+            request.url = `${pathname.replace(/\/*$/, '/')}index.html${query}`
           }
           return next()
         }
@@ -224,7 +235,9 @@ function devServer({ config, packageRoot, configFile }: CreateViteConfigOptions)
             title: runtime.title,
             description: runtime.description,
             body: '',
-            devScripts: `<script type="module" src="/@vite/client"></script>\n    <script type="module" src="${entry}"></script>`,
+            // transformIndexHtml adds config.base to these root-relative URLs.
+            styles: '<link rel="stylesheet" href="/virtual:stylex.css" />',
+            devScripts: `<script type="module" src="/@vite/client"></script>\n    <script type="module" src="/@id/virtual:stylex:css-only"></script>\n    <script type="module" src="${entry}"></script>`,
           })
           response.setHeader('content-type', 'text/html')
           response.end(await server.transformIndexHtml(url, html))
@@ -249,8 +262,24 @@ export function createNovonViteConfig(options: CreateViteConfigOptions): UserCon
   const target = process.env.NOVON_TARGET ?? 'client'
   const runtimeDir = join(packageRoot, 'src', 'runtime')
   const cacheDir = join(siteRoot, '.novon')
-  const modules = join(packageRoot, 'node_modules')
+  // Package managers may hoist dependencies next to novon rather than nest
+  // them inside it. Resolve from the installed package, not a guessed directory.
+  const require = createRequire(join(packageRoot, 'package.json'))
+  const dependency = (specifier: string) => toPosix(require.resolve(specifier))
   const isServer = target === 'server'
+
+  // Bare deps from novon's own dependency tree. A site has no node_modules, and
+  // the optimizer resolves `include` entries from the site root, so each entry
+  // is also aliased to its real file (react is handled the same way below).
+  // That makes optimization deterministic and keeps CJS transitives (e.g.
+  // use-sync-external-store) bundled instead of served as raw ESM.
+  const bundledDeps = [
+    '@stylexjs/stylex', 'lucide-react',
+    '@base-ui-components/react/accordion', '@base-ui-components/react/avatar',
+    '@base-ui-components/react/dialog', '@base-ui-components/react/menu',
+    '@base-ui-components/react/scroll-area', '@base-ui-components/react/tabs',
+  ]
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
   const mdxPlugin = mdx(mdxOptions(config.mdx, config.base)) as Plugin
   mdxPlugin.enforce = 'pre'
@@ -266,18 +295,37 @@ export function createNovonViteConfig(options: CreateViteConfigOptions): UserCon
           find: entry.find,
           replacement: toPosix(entry.replacement),
         })),
-        { find: /^react$/, replacement: toPosix(join(modules, 'react')) },
-        { find: /^react-dom$/, replacement: toPosix(join(modules, 'react-dom')) },
-        { find: /^react\/jsx-runtime$/, replacement: toPosix(join(modules, 'react', 'jsx-runtime.js')) },
-        { find: /^react\/jsx-dev-runtime$/, replacement: toPosix(join(modules, 'react', 'jsx-dev-runtime.js')) },
-        { find: /^react-dom\/server$/, replacement: toPosix(join(modules, 'react-dom', 'server.node.js')) },
-        { find: /^react-dom\/client$/, replacement: toPosix(join(modules, 'react-dom', 'client.js')) },
-        { find: /^@mdx-js\/react$/, replacement: toPosix(join(modules, '@mdx-js', 'react')) },
+        { find: /^react$/, replacement: dependency('react') },
+        { find: /^react-dom$/, replacement: dependency('react-dom') },
+        { find: /^react\/jsx-runtime$/, replacement: dependency('react/jsx-runtime') },
+        { find: /^react\/jsx-dev-runtime$/, replacement: dependency('react/jsx-dev-runtime') },
+        { find: /^react-dom\/server$/, replacement: dependency('react-dom/server.node') },
+        { find: /^react-dom\/client$/, replacement: dependency('react-dom/client') },
+        { find: /^@mdx-js\/react$/, replacement: dependency('@mdx-js/react') },
+        ...bundledDeps.map((specifier) => ({
+          find: new RegExp(`^${escapeRegExp(specifier)}$`),
+          replacement: dependency(specifier),
+        })),
       ],
       dedupe: ['react', 'react-dom', '@mdx-js/react'],
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime', '@mdx-js/react'],
+      // The dep set is closed and known; `noDiscovery` keeps optimization a
+      // single startup pass. Vite's discovery path can otherwise hold served
+      // dep chunks behind a re-optimization that itself waits for request idle,
+      // which deadlocks a cold dev start under load. Unlisted imports still
+      // work; they load as unbundled ESM in dev.
+      include: [
+        'react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime',
+        '@mdx-js/react', ...bundledDeps,
+      ],
+      noDiscovery: true,
+      // novon ships StyleX calls that must pass through the compiler. Excluding
+      // the package keeps `novon` and `novon/runtime/*` specifiers as source
+      // modules (Vite matches this entry by prefix), so no uncompiled dep chunk
+      // can execute stylex.defineConsts/create at runtime. The unplugin's own
+      // discovery cannot see this from a node_modules-less site root.
+      exclude: ['novon'],
     },
     server: {
       fs: { allow: [siteRoot, packageRoot] },
@@ -315,9 +363,20 @@ export function createNovonViteConfig(options: CreateViteConfigOptions): UserCon
       virtualModules(options),
       devServer(options),
       fallbackResolve(packageRoot, siteRoot),
+      // The same compiler/options must run for client, SSR and installed-package
+      // sources. StyleX lives in its own `novon` layer: theme/base/components
+      // stay overridable at the element level and unlayered site CSS wins last.
+      stylex.vite({
+        useCSSLayers: { prefix: 'novon', before: ['theme', 'base', 'components'] },
+        unstable_moduleResolution: { type: 'commonJS', rootDir: packageRoot },
+        aliases: { 'novon/runtime/*': [toPosix(join(runtimeDir, '*'))] },
+        runtimeInjection: false,
+        // The full dev runtime fetches a root-relative CSS URL in 0.19.1.
+        // css-only refreshes our base-aware link in novon's custom HTML shell.
+        devMode: 'css-only',
+      }),
       react(),
       mdxPlugin,
-      tailwindcss(),
     ],
   }
 }

@@ -11,6 +11,7 @@
  * always wins over the defaults.
  */
 import * as React from 'react'
+import * as stylex from '@stylexjs/stylex'
 import {
   AlertTriangle,
   ArrowRight,
@@ -21,6 +22,10 @@ import {
   Lightbulb,
   XCircle,
 } from 'lucide-react'
+import type { StyleXStyles } from '@stylexjs/stylex'
+import { colors, media, radii, space, type } from './design-system/tokens.stylex.ts'
+import { typography } from './design-system/typography.ts'
+import type { ElementProps, StyleProps } from './design-system/props.ts'
 import { Icon, type IconProps } from './icons.tsx'
 import { SvglIcon } from './svgl.tsx'
 import {
@@ -34,10 +39,10 @@ import {
   TabsList,
   TabsTrigger,
 } from './ui.tsx'
-import { cn, isExternal, withBase } from './lib.ts'
+import { isExternal, withBase } from './lib.ts'
 import { copyText } from './actions.ts'
 import { useBase, useSite } from './site.tsx'
-import { IconBadge } from './kit.tsx'
+import { Cluster, IconBadge, Stack } from './kit.tsx'
 import { Preview } from './preview.tsx'
 import { PostList as UIPostList, TagList as UITagList } from './shell.tsx'
 
@@ -45,38 +50,59 @@ import { PostList as UIPostList, TagList as UITagList } from './shell.tsx'
 /* Callouts                                                                   */
 /* -------------------------------------------------------------------------- */
 
-const CALLOUT_STYLES = {
-  note: { icon: InfoIcon, tone: 'text-sky-600 dark:text-sky-400' },
-  info: { icon: InfoIcon, tone: 'text-sky-600 dark:text-sky-400' },
-  tip: { icon: Lightbulb, tone: 'text-emerald-600 dark:text-emerald-400' },
-  success: { icon: CheckCircle2, tone: 'text-emerald-600 dark:text-emerald-400' },
-  warning: { icon: AlertTriangle, tone: 'text-amber-600 dark:text-amber-400' },
-  caution: { icon: AlertTriangle, tone: 'text-amber-600 dark:text-amber-400' },
-  danger: { icon: XCircle, tone: 'text-red-600 dark:text-red-400' },
+const styles = stylex.create({
+  callout: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: space.three,
+    marginBlock: space.five,
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSoft,
+    paddingInline: space.four,
+    paddingBlock: space.three,
+  },
+  calloutIcon: { marginTop: space.half, display: 'inline-flex', flexShrink: 0 },
+  toneInfo: { color: colors.focus },
+  toneSuccess: { color: colors.successText },
+  toneWarning: { color: colors.warningText },
+  toneDanger: { color: colors.dangerText },
+  calloutBody: { minWidth: 0, flex: 1, color: colors.textSoft },
+  calloutTitle: { color: colors.text, marginBlockEnd: space.one },
+})
+
+const CALLOUTS = {
+  note: { icon: InfoIcon, tone: styles.toneInfo },
+  info: { icon: InfoIcon, tone: styles.toneInfo },
+  tip: { icon: Lightbulb, tone: styles.toneSuccess },
+  success: { icon: CheckCircle2, tone: styles.toneSuccess },
+  warning: { icon: AlertTriangle, tone: styles.toneWarning },
+  caution: { icon: AlertTriangle, tone: styles.toneWarning },
+  danger: { icon: XCircle, tone: styles.toneDanger },
 } as const
 
-export type CalloutType = keyof typeof CALLOUT_STYLES
+export type CalloutType = keyof typeof CALLOUTS
 
-export interface CalloutProps extends Omit<React.ComponentProps<'div'>, 'title'> {
-  type?: CalloutType
-  title?: React.ReactNode
-  icon?: IconProps['icon']
-}
+export type CalloutProps = Omit<ElementProps<'div'>, 'title'> &
+  StyleProps & {
+    type?: CalloutType
+    title?: React.ReactNode
+    icon?: IconProps['icon']
+  }
 
-export function Callout({ type = 'note', title, icon, className, children, ...props }: CalloutProps) {
-  const style = CALLOUT_STYLES[type] ?? CALLOUT_STYLES.note
-  const IconComponent = style.icon
+export function Callout({ type = 'note', title, icon, xstyle, children, ...props }: CalloutProps) {
+  const callout = CALLOUTS[type] ?? CALLOUTS.note
+  const IconComponent = callout.icon
   return (
-    <div
-      className={cn('my-5 flex items-start gap-3 rounded-xl border border-border bg-card/40 px-4 py-3 text-sm', className)}
-      {...props}
-    >
-      <span className={cn('mt-0.5 inline-flex shrink-0', style.tone)}>
-        {icon ? <Icon icon={icon} /> : <IconComponent aria-hidden="true" className="size-4" />}
+    <div {...props} {...stylex.props(styles.callout, typography.labelRegular, xstyle)}>
+      <span {...stylex.props(styles.calloutIcon, callout.tone)}>
+        {icon ? <Icon icon={icon} /> : <IconComponent aria-hidden="true" size={16} />}
       </span>
-      <div className="min-w-0 flex-1 text-foreground/90 [&>p:first-child]:mt-0 [&>p:last-child]:mb-0">
-        {title ? <p className="mb-1 font-medium text-foreground">{title}</p> : null}
-        {children}
+      <div {...stylex.props(styles.calloutBody)}>
+        {title ? <p {...stylex.props(styles.calloutTitle, typography.label)}>{title}</p> : null}
+        <Stack gap={12}>{children}</Stack>
       </div>
     </div>
   )
@@ -93,39 +119,61 @@ export const Danger = (props: Omit<CalloutProps, 'type'>) => <Callout type="dang
 /* Cards                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export interface MdxCardProps extends Omit<React.ComponentProps<'div'>, 'title'> {
-  title?: React.ReactNode
-  icon?: IconProps['icon']
-  href?: string
-  /** Lay the icon and text out horizontally. */
-  horizontal?: boolean
-  arrow?: boolean
-}
+export type MdxCardProps = Omit<ElementProps<'div'>, 'title'> &
+  StyleProps & {
+    title?: React.ReactNode
+    icon?: IconProps['icon']
+    href?: string
+    /** Lay the icon and text out horizontally. */
+    horizontal?: boolean
+    arrow?: boolean
+  }
 
-function CardArrow({ className }: { className?: string }) {
-  return (
-    <ArrowRight
-      aria-hidden="true"
-      data-card-arrow=""
-      className={cn(
-        'size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none',
-        className,
-      )}
-    />
-  )
+const cardStyles = stylex.create({
+  // The marker wrapper opts the card out of prose element styles; the visuals
+  // live on this box.
+  card: {
+    display: 'flex',
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSoft,
+    padding: space.four,
+    textDecoration: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+  },
+  cardLink: { backgroundColor: { default: colors.surfaceSoft, ':hover': colors.hoverFaint } },
+  horizontal: { flexDirection: 'row', alignItems: 'flex-start', gap: space.three },
+  vertical: { flexDirection: 'column' },
+  iconTop: { marginTop: space.half },
+  iconCenter: { alignSelf: 'center' },
+  iconEnd: { marginInlineStart: 'auto' },
+  headerRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: space.three,
+    marginBlockEnd: space.three,
+  },
+  content: { minWidth: 0, flex: 1 },
+  title: { fontWeight: type.medium, color: colors.text },
+  description: { color: colors.mutedText, marginTop: space.one },
+  descriptionFlush: { marginTop: 0 },
+  arrow: { color: colors.mutedText },
+})
+
+function CardArrow({ xstyle }: StyleProps) {
+  return <ArrowRight aria-hidden="true" size={16} {...stylex.props(cardStyles.arrow, xstyle)} />
 }
 
 function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps) {
   const content = (
-    <div className="min-w-0 flex-1">
-      {title ? <div className="font-medium text-foreground">{title}</div> : null}
+    <div {...stylex.props(cardStyles.content)}>
+      {title ? <div {...stylex.props(cardStyles.title)}>{title}</div> : null}
       {children ? (
-        <div
-          className={cn(
-            'text-sm text-muted-foreground [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2',
-            title ? 'mt-1' : '',
-          )}
-        >
+        <div {...stylex.props(cardStyles.description, !title && cardStyles.descriptionFlush, typography.labelRegular)}>
           {children}
         </div>
       ) : null}
@@ -135,9 +183,9 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
   if (horizontal) {
     return (
       <>
-        {icon ? <IconBadge icon={icon} className="mt-0.5" /> : null}
+        {icon ? <IconBadge icon={icon} xstyle={cardStyles.iconTop} /> : null}
         {content}
-        {arrow ? <CardArrow className="self-center" /> : null}
+        {arrow ? <CardArrow xstyle={cardStyles.iconCenter} /> : null}
       </>
     )
   }
@@ -147,9 +195,9 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
   return (
     <>
       {icon || arrow ? (
-        <div className="mb-3 flex items-start justify-between gap-3">
+        <div {...stylex.props(cardStyles.headerRow)}>
           {icon ? <IconBadge icon={icon} /> : null}
-          {arrow ? <CardArrow className="ml-auto" /> : null}
+          {arrow ? <CardArrow xstyle={cardStyles.iconEnd} /> : null}
         </div>
       ) : null}
       {content}
@@ -157,69 +205,129 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
   )
 }
 
-export function MdxCard({ title, icon, href, horizontal, arrow = Boolean(href), className, children, ...props }: MdxCardProps) {
+export function MdxCard({ title, icon, href, horizontal, arrow = Boolean(href), xstyle, children, ...props }: MdxCardProps) {
   const base = useBase()
-  const classes = cn(
-    'novon-not-prose group flex rounded-xl border border-border bg-card/40 p-4 no-underline transition-colors',
-    horizontal ? 'flex-row items-start gap-3' : 'flex-col',
-    href && 'hover:bg-accent/40',
-    className,
+  const inner = (
+    <div
+      {...stylex.props(
+        cardStyles.card,
+        Boolean(href) && cardStyles.cardLink,
+        horizontal ? cardStyles.horizontal : cardStyles.vertical,
+        xstyle,
+      )}
+    >
+      <MdxCardInner title={title} icon={icon} horizontal={horizontal} arrow={arrow}>{children}</MdxCardInner>
+    </div>
   )
-  const inner = <MdxCardInner title={title} icon={icon} horizontal={horizontal} arrow={arrow}>{children}</MdxCardInner>
 
   if (href) {
     return (
-      <a href={isExternal(href) ? href : withBase(base, href)} className={classes} {...(props as React.ComponentProps<'a'>)}>
+      <a
+        className="novon-not-prose"
+        href={isExternal(href) ? href : withBase(base, href)}
+        {...(props as ElementProps<'a'>)}
+      >
         {inner}
       </a>
     )
   }
+  // The marker is a zero-declaration content boundary; the box below carries
+  // every compiled style.
   return (
-    <div className={classes} {...props}>
+    <div className="novon-not-prose" {...props}>
       {inner}
     </div>
   )
 }
 
-export function CardGroup({ cols = 2, className, ...props }: React.ComponentProps<'div'> & { cols?: 1 | 2 | 3 }) {
+const groupStyles = stylex.create({
+  group: {
+    display: 'grid',
+    gap: space.three,
+    marginBlock: space.five,
+    gridTemplateColumns: { default: '1fr', [media.small]: 'repeat(2, minmax(0, 1fr))' },
+  },
+  groupThree: { gridTemplateColumns: { default: '1fr', [media.small]: 'repeat(3, minmax(0, 1fr))' } },
+  groupOne: { gridTemplateColumns: '1fr' },
+  columns: {
+    display: 'grid',
+    gap: space.five,
+    marginBlock: space.five,
+    gridTemplateColumns: { default: '1fr', [media.small]: 'repeat(2, minmax(0, 1fr))' },
+  },
+  columnsThree: { gridTemplateColumns: { default: '1fr', [media.small]: 'repeat(3, minmax(0, 1fr))' } },
+  columnsOne: { gridTemplateColumns: '1fr' },
+})
+
+export function CardGroup({ cols = 2, xstyle, ...props }: ElementProps<'div'> & StyleProps & { cols?: 1 | 2 | 3 }) {
   return (
     <div
-      className={cn(
-        'my-5 grid gap-3',
-        cols === 1 ? 'grid-cols-1' : cols === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
-        className,
-      )}
       {...props}
+      {...stylex.props(groupStyles.group, cols === 1 ? groupStyles.groupOne : cols === 3 ? groupStyles.groupThree : null, xstyle)}
     />
   )
 }
 
-export function Columns({ cols = 2, className, ...props }: React.ComponentProps<'div'> & { cols?: 1 | 2 | 3 }) {
-  return <div className={cn('my-5 grid gap-5', cols === 1 ? '' : cols === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2', className)} {...props} />
+export function Columns({ cols = 2, xstyle, ...props }: ElementProps<'div'> & StyleProps & { cols?: 1 | 2 | 3 }) {
+  return (
+    <div
+      {...props}
+      {...stylex.props(groupStyles.columns, cols === 1 ? groupStyles.columnsOne : cols === 3 ? groupStyles.columnsThree : null, xstyle)}
+    />
+  )
 }
 
 /* -------------------------------------------------------------------------- */
 /* Steps                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export function Steps({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      className={cn(
-        'my-6 space-y-0 border-l border-border pl-6 [counter-reset:novon-step]',
-        className,
-      )}
-      {...props}
-    />
-  )
+const stepStyles = stylex.create({
+  steps: {
+    marginBlock: space.six,
+    borderInlineStartWidth: 1,
+    borderInlineStartStyle: 'solid',
+    borderInlineStartColor: colors.border,
+    paddingInlineStart: space.six,
+    counterReset: 'novon-step',
+  },
+  step: {
+    position: 'relative',
+    counterIncrement: 'novon-step',
+    paddingBlockEnd: { default: space.six, ':last-child': 0 },
+  },
+  marker: {
+    position: 'absolute',
+    insetInlineStart: 'calc(-1.5rem - 0.75rem)',
+    top: 0,
+    display: 'flex',
+    width: space.six,
+    height: space.six,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.control,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    color: colors.mutedText,
+    '::before': { content: 'counter(novon-step)' },
+  },
+  title: { fontWeight: type.medium, color: colors.text, marginBlockEnd: space.one },
+  body: { color: colors.mutedText },
+})
+
+export function Steps({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
+  return <div {...props} {...stylex.props(stepStyles.steps, xstyle)} />
 }
 
-export function Step({ title, className, children, ...props }: React.ComponentProps<'div'> & { title?: React.ReactNode }) {
+export function Step({ title, xstyle, children, ...props }: ElementProps<'div'> & StyleProps & { title?: React.ReactNode }) {
   return (
-    <div className={cn('relative pb-6 last:pb-0 [counter-increment:novon-step]', className)} {...props}>
-      <span className="absolute -left-[calc(1.5rem+0.75rem)] top-0 flex size-6 items-center justify-center rounded-md border border-border bg-card text-xs font-medium text-muted-foreground before:content-[counter(novon-step)]" />
-      {title ? <p className="mb-1 font-medium text-foreground">{title}</p> : null}
-      <div className="text-sm text-muted-foreground [&>p:first-child]:mt-0">{children}</div>
+    <div {...props} {...stylex.props(stepStyles.step, xstyle)}>
+      <span {...stylex.props(stepStyles.marker, typography.caption)} />
+      {title ? <p {...stylex.props(stepStyles.title)}>{title}</p> : null}
+      <div {...stylex.props(stepStyles.body, typography.labelRegular)}>
+        <Stack gap={12}>{children}</Stack>
+      </div>
     </div>
   )
 }
@@ -250,16 +358,20 @@ export function Tab({ children }: TabLikeProps) {
   return <>{children}</>
 }
 
-export function Tabs({ children, className, ...props }: React.ComponentProps<'div'>) {
+const tabStyles = stylex.create({
+  label: { display: 'inline-flex', alignItems: 'center', gap: space.oneHalf },
+})
+
+export function Tabs({ children, xstyle, ...props }: ElementProps<'div'> & StyleProps) {
   const panels = asPanels(children)
   if (panels.length === 0) return null
   return (
-    <UITabs defaultValue={panels[0].key} className={cn('my-6', className)} {...(props as object)}>
+    <UITabs defaultValue={panels[0].key} {...(props as object)} xstyle={xstyle}>
       <TabsList>
         {panels.map((panel) => (
           <TabsTrigger key={panel.key} value={panel.key}>
-            <span className="inline-flex items-center gap-1.5">
-              {panel.icon ? <Icon icon={panel.icon} className="size-3.5" /> : null}
+            <span {...stylex.props(tabStyles.label)}>
+              {panel.icon ? <Icon icon={panel.icon} size={14} /> : null}
               {panel.title}
             </span>
           </TabsTrigger>
@@ -274,21 +386,32 @@ export function Tabs({ children, className, ...props }: React.ComponentProps<'di
   )
 }
 
-export function AccordionGroup({ className, ...props }: React.ComponentProps<typeof UIAccordion>) {
-  return <UIAccordion className={cn('my-6 rounded-xl border border-border bg-card px-4', className)} {...props} />
+const accordionStyles = stylex.create({
+  group: { backgroundColor: colors.surface, paddingInline: space.four },
+  itemLabel: { display: 'inline-flex', alignItems: 'center', gap: space.two },
+  panelBody: {
+    paddingInlineStart: space.ten,
+    paddingInlineEnd: space.four,
+    paddingBlockEnd: space.four,
+    color: colors.mutedText,
+  },
+})
+
+export function AccordionGroup({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
+  return <UIAccordion {...(props as object)} xstyle={xstyle ? [accordionStyles.group, xstyle] : accordionStyles.group} />
 }
 
-export function Accordion({ title, icon, children, ...props }: TabLikeProps & { className?: string }) {
+export function Accordion({ title, icon, children, xstyle }: TabLikeProps & StyleProps) {
   return (
-    <AccordionItem {...(props as object)}>
+    <AccordionItem xstyle={xstyle}>
       <AccordionTrigger>
-        <span className="inline-flex items-center gap-2">
-          {icon ? <Icon icon={icon} className="size-4 text-muted-foreground" /> : null}
+        <span {...stylex.props(accordionStyles.itemLabel)}>
+          {icon ? <Icon icon={icon} /> : null}
           {title}
         </span>
       </AccordionTrigger>
-      <AccordionPanel className="pb-4">
-        <div className="pl-10 pr-4 text-sm text-muted-foreground [&>p:first-child]:mt-0">{children}</div>
+      <AccordionPanel xstyle={accordionStyles.panelBody}>
+        <Stack gap={12}>{children}</Stack>
       </AccordionPanel>
     </AccordionItem>
   )
@@ -324,8 +447,12 @@ function flattenText(node: React.ReactNode): string {
   return ''
 }
 
+const codeGroupStyles = stylex.create({
+  panel: { paddingBlockStart: 0 },
+})
+
 /** Tabbed code blocks. Labels come from each block's `title="…"` meta. */
-export function CodeGroup({ children, className }: { children?: React.ReactNode; className?: string }) {
+export function CodeGroup({ children, xstyle }: { children?: React.ReactNode; xstyle?: StyleXStyles }) {
   const blocks = React.Children.toArray(children).filter((child) => React.isValidElement(child))
   const panels = blocks.map((block, index) => ({
     key: String(index),
@@ -334,7 +461,7 @@ export function CodeGroup({ children, className }: { children?: React.ReactNode;
   }))
   if (panels.length === 0) return null
   return (
-    <UITabs defaultValue={panels[0].key} className={cn('my-6', className)}>
+    <UITabs defaultValue={panels[0].key} xstyle={xstyle}>
       <TabsList>
         {panels.map((panel) => (
           <TabsTrigger key={panel.key} value={panel.key}>
@@ -343,7 +470,7 @@ export function CodeGroup({ children, className }: { children?: React.ReactNode;
         ))}
       </TabsList>
       {panels.map((panel) => (
-        <TabsContent key={panel.key} value={panel.key} className="pt-0 [&>figure]:mt-0">
+        <TabsContent key={panel.key} value={panel.key} xstyle={codeGroupStyles.panel}>
           {panel.content}
         </TabsContent>
       ))}
@@ -355,17 +482,34 @@ export function CodeGroup({ children, className }: { children?: React.ReactNode;
 /* Media and inline bits                                                      */
 /* -------------------------------------------------------------------------- */
 
+const frameStyles = stylex.create({
+  figure: { marginBlock: space.six },
+  media: {
+    overflow: 'hidden',
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.mutedSoft,
+  },
+  caption: {
+    marginTop: space.two,
+    textAlign: 'center',
+    color: colors.mutedText,
+  },
+})
+
 export function Frame({
   caption,
-  className,
+  xstyle,
   children,
   ...props
-}: React.ComponentProps<'figure'> & { caption?: React.ReactNode }) {
+}: ElementProps<'figure'> & StyleProps & { caption?: React.ReactNode }) {
   return (
-    <figure className={cn('my-6', className)} {...props}>
-      <div className="overflow-hidden rounded-xl border border-border bg-muted/40">{children}</div>
+    <figure {...props} {...stylex.props(frameStyles.figure, xstyle)}>
+      <div {...stylex.props(frameStyles.media)}>{children}</div>
       {caption ? (
-        <figcaption className="mt-2 text-center text-sm text-muted-foreground">{caption}</figcaption>
+        <figcaption {...stylex.props(frameStyles.caption, typography.labelRegular)}>{caption}</figcaption>
       ) : null}
     </figure>
   )
@@ -375,31 +519,52 @@ export function Badge(props: React.ComponentProps<typeof UIBadge>) {
   return <UIBadge {...props} />
 }
 
+const termStyles = stylex.create({
+  term: {
+    cursor: 'help',
+    borderBottomWidth: 1,
+    borderBottomStyle: 'dashed',
+    borderBottomColor: colors.borderSoft,
+    color: colors.text,
+    fontWeight: type.medium,
+  },
+})
+
 /** Inline term with a hover card. */
-export function Term({ tip, children, className }: { tip: React.ReactNode; children: React.ReactNode; className?: string }) {
+export function Term({ tip, children, xstyle }: { tip: React.ReactNode; children: React.ReactNode; xstyle?: StyleXStyles }) {
   return (
     <span
-      className={cn(
-        'cursor-help border-b border-dashed border-muted-foreground/60 font-medium text-foreground',
-        className,
-      )}
       title={typeof tip === 'string' ? tip : undefined}
+      {...stylex.props(termStyles.term, xstyle)}
     >
       {children}
     </span>
   )
 }
 
+const videoStyles = stylex.create({
+  frame: {
+    marginBlock: space.six,
+    aspectRatio: '16 / 9',
+    overflow: 'hidden',
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+  },
+  video: { width: '100%', height: '100%' },
+})
+
 /** Embed a YouTube video. */
-export function YouTube({ id, title = 'YouTube video', className }: { id: string; title?: string; className?: string }) {
+export function YouTube({ id, title = 'YouTube video', xstyle }: { id: string; title?: string; xstyle?: StyleXStyles }) {
   return (
-    <div className={cn('my-6 aspect-video overflow-hidden rounded-xl border border-border', className)}>
+    <div {...stylex.props(videoStyles.frame, xstyle)}>
       <iframe
         src={`https://www.youtube.com/embed/${id}`}
         title={title}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
-        className="size-full"
+        {...stylex.props(videoStyles.video)}
       />
     </div>
   )
@@ -421,11 +586,40 @@ export function MdxTagList() {
 /* Code blocks                                                                */
 /* -------------------------------------------------------------------------- */
 
+const codeStyles = stylex.create({
+  copy: {
+    position: 'absolute',
+    top: space.two,
+    insetInlineEnd: space.two,
+    display: 'inline-flex',
+    width: space.eight,
+    height: space.eight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.control,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceStrong,
+    color: colors.mutedText,
+    cursor: 'pointer',
+    opacity: {
+      default: 0,
+      ':where([data-copy-host] :focus-visible)': 1,
+      ':where([data-copy-host]:hover *)': 1,
+      '@media (hover: none)': 1,
+    },
+    transitionProperty: 'opacity, color',
+    transitionDuration: '150ms',
+    ':hover': { color: colors.text },
+  },
+})
+
 /**
  * Overrides `<pre>` inside MDX so every code block gets a copy button.
  * The text is read from the DOM on click, so highlighted spans copy correctly.
  */
-export function CodeBlock({ children, className, ...props }: React.ComponentProps<'pre'>) {
+export function CodeBlock({ children, ...props }: ElementProps<'pre'>) {
   const ref = React.useRef<HTMLPreElement>(null)
   const [copied, setCopied] = React.useState(false)
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -441,17 +635,19 @@ export function CodeBlock({ children, className, ...props }: React.ComponentProp
   }
 
   return (
-    <div className="novon-code-wrap group/code relative">
-      <pre ref={ref} tabIndex={0} className={className} {...props}>
+    // `novon-code-wrap` is a content class styled by theme.css (surface and
+    // `position: relative`); the copy control below is StyleX.
+    <div className="novon-code-wrap" data-copy-host="">
+      <pre {...props} ref={ref} tabIndex={0}>
         {children}
       </pre>
       <button
         type="button"
         onClick={copy}
         aria-label={copied ? 'Copied' : 'Copy code'}
-        className="novon-code-copy absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/code:opacity-100"
+        {...stylex.props(codeStyles.copy)}
       >
-        {copied ? <Check aria-hidden="true" className="size-3.5" /> : <Copy aria-hidden="true" className="size-3.5" />}
+        {copied ? <Check aria-hidden="true" size={16} /> : <Copy aria-hidden="true" size={16} />}
       </button>
     </div>
   )
@@ -473,6 +669,8 @@ export const mdxComponents = {
   Card: MdxCard,
   CardGroup,
   Columns,
+  Stack,
+  Cluster,
   Steps,
   Step,
   Tabs,
@@ -492,12 +690,12 @@ export const mdxComponents = {
   pre: CodeBlock,
   // Markdown tables keep the prose width; the wrapper scrolls horizontally so
   // a wide table never compresses its columns to fit.
-  table: (props: React.ComponentProps<'table'>) => (
+  table: (props: ElementProps<'table'>) => (
     <div className="novon-table">
       <table {...props} />
     </div>
   ),
-  a: ({ href = '', ...props }: React.ComponentProps<'a'>) => {
+  a: ({ href = '', ...props }: ElementProps<'a'>) => {
     const base = useBase()
     const external = isExternal(href) || href.startsWith('#')
     return (

@@ -11,6 +11,8 @@
     "bin",
     "src",
     "templates",
+    ".agents/skills",
+    "AGENTS.md",
     "README.md"
   ],
   "exports": {
@@ -35,6 +37,7 @@
     "lint": "oxlint",
     "test": "bun test",
     "test:browser": "node tests/navigation.browser.mjs",
+    "test:stylex": "node tests/stylex.browser.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -42,11 +45,10 @@
     "@mdx-js/react": "^3.1.1",
     "@mdx-js/rollup": "^3.1.1",
     "@resvg/resvg-js": "^2.6.2",
-    "@tailwindcss/vite": "^4.3.3",
+    "@stylexjs/stylex": "^0.19.1",
+    "@stylexjs/unplugin": "^0.19.1",
     "@vitejs/plugin-react": "^6.1.1",
     "blobatar": "^2.7.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "estree-util-value-to-estree": "^3.5.0",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
@@ -61,8 +63,6 @@
     "remark-mdx-frontmatter": "^5.2.0",
     "satori": "^0.33.4",
     "shiki": "^4.4.3",
-    "tailwind-merge": "^3.7.0",
-    "tailwindcss": "^4.3.3",
     "unist-util-mdx-define": "^1.1.2",
     "vite": "^8.3.0",
     "yaml": "^2.9.1"

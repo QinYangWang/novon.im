@@ -69,7 +69,7 @@ why a new page appears in the sidebar without a restart.
 
 `novon build` runs four steps:
 
-1. **Client bundle** — React, the theme and the Tailwind stylesheet, with a
+1. **Client bundle** — React, the theme and extracted StyleX CSS, with a
    manifest so the prerenderer knows the hashed asset names.
 2. **Server bundle** — the same theme, built for Node. Everything is bundled
    (`ssr.noExternal`), which keeps the prerender free of CJS/ESM interop issues.

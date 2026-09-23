@@ -1,31 +1,153 @@
 /** Overlays used by search, mobile navigation and page actions. */
-import * as React from 'react'
+import * as stylex from '@stylexjs/stylex'
 import { X } from 'lucide-react'
 import { Dialog as BaseDialog } from '@base-ui-components/react/dialog'
 import { Menu as BaseMenu } from '@base-ui-components/react/menu'
-import { cn } from '../lib.ts'
+import { colors, media, radii, space } from '../design-system/tokens.stylex.ts'
+import { typography } from '../design-system/typography.ts'
+import type { ElementProps, StyleProps } from '../design-system/props.ts'
 import type { BaseProps } from './props.ts'
 
-const transition = 'transition-[opacity,transform] duration-150 ease-out data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 motion-reduce:transition-none motion-reduce:transform-none'
+const styles = stylex.create({
+  // Base UI marks mount/unmount with data attributes; the popup fades and
+  // settles from 98% so a short move never becomes a flourish.
+  popup: {
+    opacity: { default: 1, '[data-starting-style]': 0, '[data-ending-style]': 0 },
+    scale: { default: 1, '[data-starting-style]': 0.98, '[data-ending-style]': 0.98 },
+    transitionProperty: 'opacity, transform, scale',
+    transitionDuration: '150ms',
+    transitionTimingFunction: 'ease-out',
+  },
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 50,
+    backgroundColor: colors.scrim,
+    opacity: { default: 1, '[data-starting-style]': 0, '[data-ending-style]': 0 },
+    transitionProperty: 'opacity',
+    transitionDuration: '150ms',
+  },
+  viewport: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 50,
+    display: 'flex',
+    alignItems: { default: 'flex-start', [media.small]: 'center' },
+    justifyContent: 'center',
+    overflowY: 'auto',
+    overscrollBehavior: 'contain',
+    padding: space.four,
+  },
+  dialog: {
+    position: 'relative',
+    width: '100%',
+    maxWidth: '32rem',
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.popover,
+    color: colors.popoverText,
+    padding: space.six,
+    boxShadow: '0 25px 50px -12px color-mix(in oklab, #000 25%, transparent)',
+  },
+  close: {
+    position: 'absolute',
+    top: space.four,
+    insetInlineEnd: space.four,
+    display: 'inline-flex',
+    width: space.seven,
+    height: space.seven,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.control,
+    color: colors.mutedText,
+    backgroundColor: { default: 'transparent', ':hover': colors.hover },
+    cursor: 'pointer',
+    borderWidth: 0,
+    borderStyle: 'none',
+  },
+  dialogHeader: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space.oneHalf,
+    paddingInlineEnd: space.eight,
+  },
+  dialogFooter: {
+    marginBlockStart: space.six,
+    display: 'flex',
+    flexDirection: { default: 'column-reverse', [media.small]: 'row' },
+    justifyContent: { default: 'flex-start', [media.small]: 'flex-end' },
+    gap: space.two,
+  },
+  dialogDescription: { color: colors.mutedText },
+
+  menuPositioner: { zIndex: 50 },
+  menu: {
+    zIndex: 50,
+    minWidth: '11rem',
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.popover,
+    color: colors.popoverText,
+    padding: space.one,
+    outline: 'none',
+    boxShadow: '0 10px 15px -3px color-mix(in oklab, #000 10%, transparent), 0 4px 6px -4px color-mix(in oklab, #000 10%, transparent)',
+  },
+  menuItem: {
+    display: 'flex',
+    cursor: 'default',
+    alignItems: 'center',
+    gap: space.two,
+    borderRadius: radii.surface,
+    paddingInline: space.twoHalf,
+    paddingBlock: space.oneHalf,
+    outline: 'none',
+    userSelect: 'none',
+    color: colors.text,
+    backgroundColor: { default: 'transparent', '[data-highlighted]': colors.hover },
+    pointerEvents: { default: 'auto', '[data-disabled]': 'none' },
+    opacity: { default: 1, '[data-disabled]': 0.5 },
+  },
+  menuLabel: {
+    paddingInline: space.twoHalf,
+    paddingBlock: space.oneHalf,
+    color: colors.mutedText,
+  },
+  menuSeparator: {
+    marginInline: '-0.25rem',
+    marginBlock: space.one,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+})
 
 export const Dialog = BaseDialog.Root
 export const DialogTrigger = BaseDialog.Trigger
-export const DialogClose = BaseDialog.Close
 export const DialogPortal = BaseDialog.Portal
 
-export function DialogOverlay({ className, ...props }: BaseProps<typeof BaseDialog.Backdrop>) {
-  return <BaseDialog.Backdrop className={cn('fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] transition-opacity duration-150 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 motion-reduce:transition-none', className)} {...props} />
+export function DialogClose({ xstyle, ...props }: BaseProps<typeof BaseDialog.Close>) {
+  return <BaseDialog.Close {...props} {...stylex.props(xstyle)} />
 }
-export function DialogContent({ className, children, showClose = true, ...props }: BaseProps<typeof BaseDialog.Popup> & { showClose?: boolean }) {
+
+export function DialogOverlay({ xstyle, ...props }: BaseProps<typeof BaseDialog.Backdrop>) {
+  return <BaseDialog.Backdrop {...props} {...stylex.props(styles.overlay, xstyle)} />
+}
+
+export type DialogContentProps = BaseProps<typeof BaseDialog.Popup> & { showClose?: boolean }
+
+export function DialogContent({ xstyle, children, showClose = true, ...props }: DialogContentProps) {
   return (
     <BaseDialog.Portal>
       <DialogOverlay />
-      <BaseDialog.Viewport className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain p-4 sm:items-center">
-        <BaseDialog.Popup className={cn('relative w-full max-w-lg rounded-xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl', transition, className)} {...props}>
+      <BaseDialog.Viewport {...stylex.props(styles.viewport)}>
+        <BaseDialog.Popup {...props} {...stylex.props(styles.popup, styles.dialog, xstyle)}>
           {children}
           {showClose ? (
-            <BaseDialog.Close aria-label="Close" className="absolute right-4 top-4 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground">
-              <X aria-hidden="true" className="size-4" />
+            <BaseDialog.Close aria-label="Close" {...stylex.props(styles.close)}>
+              <X aria-hidden="true" size={16} />
             </BaseDialog.Close>
           ) : null}
         </BaseDialog.Popup>
@@ -33,39 +155,54 @@ export function DialogContent({ className, children, showClose = true, ...props 
     </BaseDialog.Portal>
   )
 }
-export function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div className={cn('flex flex-col gap-1.5 pr-8', className)} {...props} />
+
+export function DialogHeader({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
+  return <div {...props} {...stylex.props(styles.dialogHeader, xstyle)} />
 }
-export function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div className={cn('mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)} {...props} />
+export function DialogFooter({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
+  return <div {...props} {...stylex.props(styles.dialogFooter, xstyle)} />
 }
-export function DialogTitle({ className, ...props }: BaseProps<typeof BaseDialog.Title>) {
-  return <BaseDialog.Title className={cn('text-base font-semibold', className)} {...props} />
+export function DialogTitle({ xstyle, ...props }: BaseProps<typeof BaseDialog.Title>) {
+  return <BaseDialog.Title {...props} {...stylex.props(typography.bodyStrong, xstyle)} />
 }
-export function DialogDescription({ className, ...props }: BaseProps<typeof BaseDialog.Description>) {
-  return <BaseDialog.Description className={cn('text-sm text-muted-foreground', className)} {...props} />
+export function DialogDescription({ xstyle, ...props }: BaseProps<typeof BaseDialog.Description>) {
+  return <BaseDialog.Description {...props} {...stylex.props(typography.labelRegular, styles.dialogDescription, xstyle)} />
 }
 
 export const DropdownMenu = BaseMenu.Root
-export const DropdownMenuTrigger = BaseMenu.Trigger
 export const DropdownMenuGroup = BaseMenu.Group
-export function DropdownMenuContent({ className, children, align = 'start', side = 'bottom', sideOffset = 6, ...props }: BaseProps<typeof BaseMenu.Popup> & Pick<BaseProps<typeof BaseMenu.Positioner>, 'align' | 'side'> & { sideOffset?: number }) {
+
+export function DropdownMenuTrigger({ xstyle, ...props }: BaseProps<typeof BaseMenu.Trigger>) {
+  return <BaseMenu.Trigger {...props} {...stylex.props(xstyle)} />
+}
+
+export type DropdownMenuContentProps = BaseProps<typeof BaseMenu.Popup> &
+  Pick<BaseProps<typeof BaseMenu.Positioner>, 'align' | 'side'> & { sideOffset?: number }
+
+export function DropdownMenuContent({
+  xstyle,
+  children,
+  align = 'start',
+  side = 'bottom',
+  sideOffset = 6,
+  ...props
+}: DropdownMenuContentProps) {
   return (
     <BaseMenu.Portal>
-      <BaseMenu.Positioner sideOffset={sideOffset} align={align} side={side} className="z-50">
-        <BaseMenu.Popup className={cn('z-50 min-w-44 rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none', transition, className)} {...props}>
+      <BaseMenu.Positioner sideOffset={sideOffset} align={align} side={side} {...stylex.props(styles.menuPositioner)}>
+        <BaseMenu.Popup {...props} {...stylex.props(styles.popup, styles.menu, xstyle)}>
           {children}
         </BaseMenu.Popup>
       </BaseMenu.Positioner>
     </BaseMenu.Portal>
   )
 }
-export function DropdownMenuItem({ className, ...props }: BaseProps<typeof BaseMenu.Item>) {
-  return <BaseMenu.Item className={cn('flex cursor-default items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm outline-none select-none data-[highlighted]:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0', className)} {...props} />
+export function DropdownMenuItem({ xstyle, ...props }: BaseProps<typeof BaseMenu.Item>) {
+  return <BaseMenu.Item {...props} {...stylex.props(styles.menuItem, typography.labelRegular, xstyle)} />
 }
-export function DropdownMenuLabel({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div role="presentation" className={cn('px-2.5 py-1.5 text-xs font-medium text-muted-foreground', className)} {...props} />
+export function DropdownMenuLabel({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
+  return <div role="presentation" {...props} {...stylex.props(styles.menuLabel, typography.caption, xstyle)} />
 }
-export function DropdownMenuSeparator({ className, ...props }: BaseProps<typeof BaseMenu.Separator>) {
-  return <BaseMenu.Separator className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />
+export function DropdownMenuSeparator({ xstyle, ...props }: BaseProps<typeof BaseMenu.Separator>) {
+  return <BaseMenu.Separator {...props} {...stylex.props(styles.menuSeparator, xstyle)} />
 }

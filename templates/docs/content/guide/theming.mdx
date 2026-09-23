@@ -52,8 +52,14 @@ Point `components` at a file that default-exports a React component. It becomes
 available in every page without an import:
 
 ```tsx title="components/PricingTable.tsx"
+import { Card, CardContent } from 'novon'
+
 export default function PricingTable({ plan }: { plan: string }) {
-  return <div className="rounded-xl border p-4">{plan}</div>
+  return (
+    <Card>
+      <CardContent>{plan}</CardContent>
+    </Card>
+  )
 }
 ```
 
@@ -89,8 +95,18 @@ Replace any built-in part with your own implementation. The module
 default-exports a component and receives the same props as the default:
 
 ```tsx title="theme/Footer.tsx"
+import * as stylex from '@stylexjs/stylex'
+import { space } from 'novon/runtime/design-system/tokens.stylex.ts'
+import { typography } from 'novon/runtime/design-system/typography.ts'
+
+const styles = stylex.create({
+  footer: { paddingInline: space.four, paddingBlock: space.eight },
+})
+
 export default function Footer() {
-  return <footer className="px-4 py-8 text-sm">A custom footer.</footer>
+  return (
+    <footer {...stylex.props(typography.label, styles.footer)}>A custom footer.</footer>
+  )
 }
 ```
 

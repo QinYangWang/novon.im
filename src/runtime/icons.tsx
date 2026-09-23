@@ -6,6 +6,8 @@
  * ```
  *
  * A curated map (instead of `import * as icons`) keeps the bundle tree-shakeable.
+ * Icons are sized with lucide's `size` prop and inherit `currentColor` from
+ * their context; there is no class-based icon styling.
  */
 import * as React from 'react'
 import {
@@ -71,7 +73,6 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react'
-import { cn } from './lib.ts'
 
 export const icons: Record<string, LucideIcon> = {
   Alert: AlertTriangle,
@@ -136,29 +137,32 @@ export const icons: Record<string, LucideIcon> = {
   Zap,
 }
 
-export interface IconProps extends React.ComponentProps<'span'> {
+export interface IconProps {
   icon?: string | LucideIcon | React.ReactNode
-  className?: string
+  /** Rendered size in pixels. */
+  size?: number
 }
 
 /** Renders a lucide icon by name, a component, or an element. */
-export function Icon({ icon, className, ...props }: IconProps) {
+export function Icon({ icon, size = 16 }: IconProps) {
   if (!icon) return null
 
   if (typeof icon === 'string') {
     const Component = icons[icon]
     if (!Component) return null
-    return <Component aria-hidden="true" className={cn('size-4 shrink-0', className)} />
+    return <Component aria-hidden="true" size={size} />
   }
 
   if (React.isValidElement(icon)) {
-    return (
-      <span className={cn('inline-flex [&_svg]:size-4', className)} {...props}>
-        {icon}
-      </span>
-    )
+    // Element icons are normalised to the icon slot's size and hidden from
+    // assistive technology; accessible naming belongs to the label beside them.
+    return React.cloneElement(icon as React.ReactElement<Record<string, unknown>>, {
+      width: size,
+      height: size,
+      'aria-hidden': true,
+    })
   }
 
   const Component = icon as LucideIcon
-  return <Component aria-hidden="true" className={cn('size-4 shrink-0', className)} />
+  return <Component aria-hidden="true" size={size} />
 }

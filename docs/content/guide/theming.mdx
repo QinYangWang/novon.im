@@ -44,11 +44,16 @@ theme: { css: ['./styles/extra.css'] }
 <Note>
   Token names follow shadcn/ui: `--background`, `--foreground`, `--card`,
   `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`,
-  `--destructive`, `--border`, `--input`, `--ring`. Layout widths are
-  `--novon-sidebar-width`, `--novon-toc-width`, `--novon-content-width` and
+  `--destructive`, `--border`, `--input`, `--ring`, plus status pairs
+  `--novon-success-*`, `--novon-warning-*` and `--novon-danger-*`. Layout widths
+  are `--novon-sidebar-width`, `--novon-toc-width`, `--novon-content-width` and
   `--novon-column-width`. The typefaces are `--font-sans` (Geist) and
-  `--font-mono` (Geist Mono), which you can override from your own stylesheet
-  with `@theme { --font-sans: … }`.
+  `--font-mono` (Geist Mono), which you can override from your own stylesheet.
+
+  StyleX components read the same variables through
+  `novon/runtime/design-system/tokens.stylex.ts`, so overriding a variable here
+  restyles them everywhere. See
+  [StyleX and the design system](/guide/design-system).
 </Note>
 
 Your stylesheet is loaded after the theme's, so it wins on equal specificity.
@@ -61,14 +66,16 @@ Point `components` at a file that default-exports a React component. It becomes
 available in every page without an import:
 
 ```tsx title="components/PricingTable.tsx"
-import { Badge, Card, CardContent } from 'novon'
+import { Badge, Card, CardContent, CardDescription, CardHeader } from 'novon'
 
 export default function PricingTable({ plan, price }: { plan: string; price: number }) {
   return (
-    <Card className="p-4">
-      <CardContent>
+    <Card>
+      <CardHeader>
         <Badge variant="success">{plan}</Badge>
-        <p className="text-sm text-muted-foreground">${price} / month</p>
+      </CardHeader>
+      <CardContent>
+        <CardDescription>${price} / month</CardDescription>
       </CardContent>
     </Card>
   )
@@ -92,13 +99,29 @@ Replace any built-in part with your own implementation. The module
 default-exports a component and receives the same props as the default:
 
 ```tsx title="theme/Header.tsx"
+import * as stylex from '@stylexjs/stylex'
 import { Brand, SearchTrigger, ThemeSwitch } from 'novon'
+import { colors, layout, space } from 'novon/runtime/design-system/tokens.stylex.ts'
+
+const styles = stylex.create({
+  header: {
+    display: 'flex',
+    height: layout.header,
+    alignItems: 'center',
+    gap: space.four,
+    borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
+    borderBottomColor: colors.border,
+    paddingInline: space.four,
+  },
+  actions: { marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: space.two },
+})
 
 export default function Header() {
   return (
-    <header className="flex h-14 items-center gap-4 border-b px-4">
+    <header {...stylex.props(styles.header)}>
       <Brand />
-      <div className="ml-auto flex items-center gap-2">
+      <div {...stylex.props(styles.actions)}>
         <SearchTrigger />
         <ThemeSwitch />
       </div>

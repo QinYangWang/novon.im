@@ -1,48 +1,120 @@
 /**
  * Disclosure for reading: accordions and tabs.
  */
-import * as React from 'react'
+import * as stylex from '@stylexjs/stylex'
 import { Accordion as BaseAccordion } from '@base-ui-components/react/accordion'
 import { Tabs as BaseTabs } from '@base-ui-components/react/tabs'
-import { cn } from '../lib.ts'
+import { colors, radii, space, type } from '../design-system/tokens.stylex.ts'
+import { typography } from '../design-system/typography.ts'
+import type { ElementProps, StyleProps } from '../design-system/props.ts'
 import type { BaseProps } from './props.ts'
+
+const styles = stylex.create({
+  group: {
+    marginBlock: space.six,
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceSoft,
+  },
+  item: {
+    paddingBlock: 0,
+    borderTopWidth: { default: 0, ':not(:first-child)': 1 },
+    borderTopStyle: 'solid',
+    borderTopColor: colors.border,
+  },
+  trigger: {
+    display: 'flex',
+    width: '100%',
+    flex: 1,
+    alignItems: 'center',
+    gap: space.two,
+    paddingInline: space.four,
+    paddingBlock: space.three,
+    textAlign: 'start',
+    fontSize: type.label,
+    fontWeight: type.medium,
+    lineHeight: type.compactLeading,
+    color: colors.text,
+    outline: 'none',
+    cursor: 'pointer',
+    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft, ':focus-visible': colors.hoverSoft },
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+  },
+  chevron: {
+    width: space.four,
+    height: space.four,
+    flexShrink: 0,
+    color: colors.mutedText,
+    transform: { default: 'none', ':where([data-panel-open] *)': 'rotate(90deg)' },
+    transitionProperty: 'transform',
+    transitionDuration: '200ms',
+  },
+  triggerLabel: { minWidth: 0, flex: 1 },
+  panel: {
+    overflow: 'hidden',
+    color: colors.mutedText,
+    height: { '[data-starting-style]': 0, '[data-ending-style]': 0 },
+    transitionProperty: 'height',
+    transitionDuration: '200ms',
+  },
+  accordionGroup: { marginBlock: space.six },
+
+  tabs: { marginBlock: space.six },
+  tabsList: {
+    display: 'inline-flex',
+    maxWidth: '100%',
+    alignItems: 'center',
+    gap: space.half,
+    overflowX: 'auto',
+    borderRadius: radii.surface,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceRaised,
+    padding: space.one,
+  },
+  tab: {
+    flexShrink: 0,
+    borderRadius: radii.control,
+    paddingInline: space.three,
+    paddingBlock: space.oneHalf,
+    fontSize: type.label,
+    fontWeight: type.medium,
+    lineHeight: type.compactLeading,
+    outline: 'none',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    backgroundColor: { default: 'transparent', '[data-active]': colors.hover, ':hover': colors.hoverSoft },
+    color: { default: colors.mutedText, '[data-active]': colors.text, ':hover': colors.text },
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+  },
+  tabPanel: { paddingBlockStart: space.four, outline: 'none' },
+})
 
 /* -------------------------------------------------------------------------- */
 /* Accordion                                                                  */
 /* -------------------------------------------------------------------------- */
 
-export function Accordion({ className, ...props }: BaseProps<typeof BaseAccordion.Root>) {
-  return (
-    <BaseAccordion.Root
-      className={cn('my-6 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/40', className)}
-      {...props}
-    />
-  )
+export function Accordion({ xstyle, ...props }: BaseProps<typeof BaseAccordion.Root>) {
+  return <BaseAccordion.Root {...props} {...stylex.props(styles.group, styles.accordionGroup, xstyle)} />
 }
 
-export function AccordionItem({ className, ...props }: BaseProps<typeof BaseAccordion.Item>) {
-  return <BaseAccordion.Item className={cn('py-0', className)} {...props} />
+export function AccordionItem({ xstyle, ...props }: BaseProps<typeof BaseAccordion.Item>) {
+  return <BaseAccordion.Item {...props} {...stylex.props(styles.item, xstyle)} />
 }
 
-export function AccordionTrigger({
-  className,
-  children,
-  ...props
-}: BaseProps<typeof BaseAccordion.Trigger>) {
+export function AccordionTrigger({ xstyle, children, ...props }: BaseProps<typeof BaseAccordion.Trigger>) {
   return (
-    <BaseAccordion.Header className="novon-not-prose flex">
-      <BaseAccordion.Trigger
-        className={cn(
-          'group flex w-full flex-1 items-center gap-2 px-4 py-3 text-left text-sm font-medium transition-colors outline-none hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none',
-          className,
-        )}
-        {...props}
-      >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 16 16"
-          className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[panel-open]:rotate-90 motion-reduce:transition-none"
-        >
+    // The marker is a zero-declaration content boundary, so it never competes
+    // with the compiled styles on the trigger below it.
+    <BaseAccordion.Header className="novon-not-prose">
+      <BaseAccordion.Trigger {...props} {...stylex.props(styles.trigger, typography.label, xstyle)}>
+        <svg aria-hidden="true" viewBox="0 0 16 16" {...stylex.props(styles.chevron)}>
           <path
             d="M6 4l4 4-4 4"
             fill="none"
@@ -52,60 +124,37 @@ export function AccordionTrigger({
             strokeLinejoin="round"
           />
         </svg>
-        <span className="min-w-0 flex-1">{children}</span>
+        <span {...stylex.props(styles.triggerLabel)}>{children}</span>
       </BaseAccordion.Trigger>
     </BaseAccordion.Header>
   )
 }
 
-export function AccordionPanel({ className, ...props }: BaseProps<typeof BaseAccordion.Panel>) {
-  return (
-    <BaseAccordion.Panel
-      className={cn(
-        'overflow-hidden text-sm text-muted-foreground transition-[height] data-[ending-style]:h-0 data-[starting-style]:h-0 motion-reduce:transition-none',
-        className,
-      )}
-      {...props}
-    />
-  )
+export function AccordionPanel({ xstyle, ...props }: BaseProps<typeof BaseAccordion.Panel>) {
+  return <BaseAccordion.Panel {...props} {...stylex.props(styles.panel, typography.labelRegular, xstyle)} />
 }
 
-export const AccordionGroup = ({ className, ...props }: React.ComponentProps<'div'>) => (
-  <div className={cn('my-6', className)} {...props} />
+export const AccordionGroup = ({ xstyle, ...props }: ElementProps<'div'> & StyleProps) => (
+  <div {...props} {...stylex.props(styles.accordionGroup, xstyle)} />
 )
 
 /* -------------------------------------------------------------------------- */
 /* Tabs                                                                       */
 /* -------------------------------------------------------------------------- */
 
-export function Tabs({ className, ...props }: BaseProps<typeof BaseTabs.Root>) {
-  return <BaseTabs.Root className={cn('my-6', className)} {...props} />
+export function Tabs({ xstyle, ...props }: BaseProps<typeof BaseTabs.Root>) {
+  return <BaseTabs.Root {...props} {...stylex.props(styles.tabs, xstyle)} />
 }
 
-export function TabsList({ className, ...props }: BaseProps<typeof BaseTabs.List>) {
-  return (
-    <BaseTabs.List
-      className={cn(
-        'inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-border bg-card/60 p-1',
-        className,
-      )}
-      {...props}
-    />
-  )
+export function TabsList({ xstyle, ...props }: BaseProps<typeof BaseTabs.List>) {
+  return <BaseTabs.List {...props} {...stylex.props(styles.tabsList, xstyle)} />
 }
 
-export function TabsTrigger({ className, ...props }: BaseProps<typeof BaseTabs.Tab>) {
-  return (
-    <BaseTabs.Tab
-      className={cn(
-        'shrink-0 rounded-md px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40 data-[active]:bg-accent data-[active]:text-foreground motion-reduce:transition-none',
-        className,
-      )}
-      {...props}
-    />
-  )
+export function TabsTrigger({ xstyle, ...props }: BaseProps<typeof BaseTabs.Tab>) {
+  return <BaseTabs.Tab {...props} {...stylex.props(styles.tab, xstyle)} />
 }
 
-export function TabsContent({ className, ...props }: BaseProps<typeof BaseTabs.Panel>) {
-  return <BaseTabs.Panel className={cn('pt-4 outline-none', className)} {...props} />
+export function TabsContent({ xstyle, ...props }: BaseProps<typeof BaseTabs.Panel>) {
+  return <BaseTabs.Panel {...props} {...stylex.props(styles.tabPanel, xstyle)} />
 }
+

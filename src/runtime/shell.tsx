@@ -19,11 +19,17 @@
  * ```
  */
 import * as React from 'react'
+import * as stylex from '@stylexjs/stylex'
 import { ArrowUpRight, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, List as ListIcon, Loader2, Menu, Pencil, PanelLeft, X } from 'lucide-react'
+import type { StyleXStyles } from '@stylexjs/stylex'
 import type { Frontmatter, Route, RuntimeConfig, ThemeOverrides, TocEntry } from '../types.ts'
-import { cn, formatDate, isExternal, tagSlug, withBase } from './lib.ts'
+import { formatDate, isExternal, tagSlug, withBase } from './lib.ts'
 import { markdownPath } from '../paths.ts'
 import { blogIndexPath, blogTagsPath } from '../layers.ts'
+import { behavior } from './design-system/behaviors.ts'
+import { colors, layout, media, radii, space, theme, type } from './design-system/tokens.stylex.ts'
+import { typography } from './design-system/typography.ts'
+import type { StyleProps } from './design-system/props.ts'
 import { useBase, useConfig, useSite } from './site.tsx'
 import { SearchTrigger } from './search.tsx'
 import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Dialog, DialogClose, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, ScrollArea } from './ui.tsx'
@@ -51,35 +57,605 @@ export function useOverride<K extends keyof ThemeOverrides>(
 }
 
 /** Inline because lucide dropped brand icons. */
-function GithubIcon({ className }: { className?: string }) {
+function GithubIcon({ size = 16 }: { size?: number }) {
   return (
-    <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor" className={cn('size-4', className)}>
+    <svg aria-hidden="true" viewBox="0 0 16 16" fill="currentColor" width={size} height={size}>
       <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
     </svg>
   )
 }
 
+const spin = stylex.keyframes({ from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } })
+
+const styles = stylex.create({
+  /* Brand */
+  brand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space.two,
+    fontSize: type.label,
+    fontWeight: type.semibold,
+    lineHeight: type.compactLeading,
+    textDecoration: 'none',
+  },
+  brandLogoBox: {
+    display: 'flex',
+    width: space.six,
+    height: space.six,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandLogo: { width: space.six, height: space.six },
+  brandLogoLight: { display: theme.lightOnly },
+  brandLogoDark: { display: theme.darkOnly },
+  brandTitle: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: colors.text,
+  },
+
+  /* Header */
+  header: { display: 'flex', flexDirection: 'column', gap: space.six },
+  headerTop: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: space.four,
+  },
+  headerName: { minWidth: 0 },
+  headerTitle: { fontSize: type.body, fontWeight: type.medium, lineHeight: type.compactLeading, color: colors.text },
+  headerDescription: { color: colors.mutedText },
+  headerControls: { display: 'flex', flexShrink: 0, alignItems: 'center', gap: space.three },
+  headerNav: { display: 'flex', alignItems: 'center', gap: space.two },
+  headerSearch: { marginInlineStart: 'auto', width: '9rem' },
+
+  /* Footer */
+  footer: { paddingBlockStart: space.six },
+  footerEmail: { color: colors.mutedText },
+  footerEmailLink: {
+    color: colors.text,
+    textDecorationLine: 'underline',
+    textUnderlineOffset: 4,
+  },
+  footerPills: { display: 'flex', flexWrap: 'wrap', gap: space.two, marginTop: space.five },
+  footerCopy: { paddingBlockStart: space.two, color: colors.mutedText },
+
+  /* Sidebar */
+  navList: { display: 'flex', flexDirection: 'column', gap: space.half },
+  navItem: {
+    display: 'flex',
+    width: '100%',
+    alignItems: 'center',
+    gap: space.two,
+    paddingBlock: space.oneHalf,
+    paddingInlineEnd: space.three,
+    borderRadius: radii.control,
+    fontSize: type.label,
+    lineHeight: type.compactLeading,
+    textDecoration: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft },
+    color: { default: colors.mutedText, ':hover': colors.text },
+  },
+  navItemActive: {
+    backgroundColor: colors.hover,
+    fontWeight: type.medium,
+    color: colors.text,
+    ':hover': { backgroundColor: colors.hover, color: colors.text },
+  },
+  navItemRoot: { paddingInlineStart: space.twoHalf },
+  navItemNested: { paddingInlineStart: space.six },
+  navSection: { paddingBlockStart: space.four, ':first-child': { paddingBlockStart: space.one } },
+  navSectionLabel: {
+    paddingInline: space.twoHalf,
+    paddingBlockEnd: space.oneHalf,
+    fontSize: type.caption,
+    fontWeight: type.medium,
+    lineHeight: type.compactLeading,
+    letterSpacing: type.looseTracking,
+    textTransform: 'uppercase',
+    color: colors.mutedText,
+  },
+  navIcon: { opacity: 0.8 },
+  navGroupTrigger: {
+    paddingBlock: space.oneHalf,
+    paddingInlineStart: space.twoHalf,
+    paddingInlineEnd: space.three,
+    gap: space.two,
+    borderRadius: radii.control,
+    fontSize: type.label,
+    fontWeight: type.regular,
+    color: { default: colors.mutedText, ':hover': colors.text },
+    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft, ':focus-visible': colors.hoverSoft },
+  },
+  navGroupLabel: { display: 'flex', minWidth: 0, alignItems: 'center', gap: space.two },
+  navGroupPanel: { paddingBlockEnd: 0 },
+  navGroupInner: { paddingInlineStart: space.one },
+
+  sidebar: { display: 'flex', height: '100%', flexDirection: 'column', backgroundColor: colors.surfaceSoft },
+  sidebarHead: {
+    display: 'flex',
+    height: layout.header,
+    flexShrink: 0,
+    alignItems: 'center',
+    gap: space.two,
+    paddingInline: space.four,
+  },
+  sidebarSearch: { flexShrink: 0, paddingInline: space.three, paddingBlockEnd: space.two },
+  sidebarSearchFull: { width: '100%' },
+  sidebarNav: {
+    minHeight: 0,
+    flex: 1,
+    overflowY: 'auto',
+    paddingInline: space.three,
+    paddingBlockEnd: space.six,
+  },
+  sidebarFoot: {
+    display: 'flex',
+    height: space.twelve,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopStyle: 'solid',
+    borderTopColor: colors.border,
+    paddingInline: space.three,
+  },
+
+  iconButton: {
+    display: 'inline-flex',
+    width: space.eight,
+    height: space.eight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    borderRadius: radii.control,
+    color: colors.mutedText,
+    backgroundColor: 'transparent',
+    cursor: 'pointer',
+    borderWidth: 0,
+    borderStyle: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    ':hover': { backgroundColor: colors.hover, color: colors.text },
+  },
+  iconButtonSmall: { width: space.seven, height: space.seven },
+  pushEnd: { marginInlineStart: 'auto' },
+
+  /* Docs mobile header */
+  mobileHeader: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 40,
+    display: { default: 'flex', [media.wide]: 'none' },
+    height: layout.header,
+    alignItems: 'center',
+    gap: space.three,
+    borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
+    borderBottomColor: colors.border,
+    backgroundColor: colors.canvasSoft,
+    paddingInline: space.four,
+    backdropFilter: 'blur(12px)',
+  },
+  mobileNav: {
+    marginInlineStart: space.two,
+    display: { default: 'none', [media.small]: 'flex' },
+    alignItems: 'center',
+    gap: space.half,
+  },
+  mobileNavLink: {
+    borderRadius: radii.control,
+    paddingInline: space.three,
+    paddingBlock: space.oneHalf,
+    fontSize: type.label,
+    lineHeight: type.compactLeading,
+    color: colors.mutedText,
+    textDecoration: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    ':hover': { backgroundColor: colors.hover, color: colors.text },
+  },
+  mobileControls: { marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: space.one },
+  mobileSearch: {
+    width: { default: space.eight, [media.small]: '11rem' },
+    padding: 0,
+    paddingInline: { default: 0, [media.small]: space.three },
+    justifyContent: { default: 'center', [media.small]: 'flex-start' },
+  },
+
+  /* Table of contents */
+  tocItem: { marginTop: 0 },
+  tocItemSpaced: { marginTop: space.two },
+  tocLink: {
+    display: 'block',
+    marginInlineStart: '-1px',
+    borderInlineStartWidth: 2,
+    borderInlineStartStyle: 'solid',
+    paddingBlock: space.one,
+    paddingInlineEnd: space.two,
+    textDecoration: 'none',
+    transitionProperty: 'color, border-color',
+    transitionDuration: '150ms',
+    color: { default: colors.mutedText, ':hover': colors.text },
+    borderInlineStartColor: 'transparent',
+  },
+  tocLinkActive: {
+    borderInlineStartColor: colors.strong,
+    fontWeight: type.medium,
+    color: colors.text,
+  },
+  tocDepth2: { paddingInlineStart: space.three },
+  tocDepth3: { paddingInlineStart: space.six },
+  tocDepth4: { paddingInlineStart: space.nine },
+  tocTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space.two,
+    fontWeight: type.medium,
+    color: colors.text,
+  },
+  tocList: {
+    marginTop: space.three,
+    borderInlineStartWidth: 1,
+    borderInlineStartStyle: 'solid',
+    borderInlineStartColor: colors.border,
+  },
+
+  /* Page chrome */
+  actions: { marginTop: space.six, display: 'flex', flexDirection: 'column', gap: space.two },
+  actionsRow: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: space.two },
+  actionControl: { height: space.eight, minHeight: space.eight },
+  labelGrid: { display: 'grid' },
+  labelCell: { gridColumnStart: 1, gridRowStart: 1 },
+  labelHidden: { visibility: 'hidden' },
+  menuIconSlot: { flex: 1 },
+  menuArrow: { color: colors.mutedText },
+  status: { fontSize: type.label, lineHeight: type.compactLeading, color: colors.mutedText },
+  errorLabel: { display: 'block', fontSize: type.label, lineHeight: type.compactLeading, color: colors.mutedText },
+  errorArea: {
+    marginTop: space.one,
+    height: '8rem',
+    width: '100%',
+    resize: 'vertical',
+    borderRadius: radii.control,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceRaised,
+    padding: space.two,
+    fontFamily: type.mono,
+    fontSize: type.caption,
+    color: colors.text,
+  },
+  spin: { animationName: spin, animationDuration: '1s', animationIterationCount: 'infinite', animationTimingFunction: 'linear' },
+  actionButton: {
+    display: 'inline-flex',
+    height: space.eight,
+    minHeight: space.eight,
+    alignItems: 'center',
+    gap: space.two,
+    whiteSpace: 'nowrap',
+    borderRadius: radii.control,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceRaised,
+    paddingInline: space.three,
+    fontSize: type.label,
+    fontWeight: type.medium,
+    lineHeight: type.compactLeading,
+    color: colors.text,
+    cursor: 'pointer',
+    transitionProperty: 'color, background-color, opacity',
+    transitionDuration: '150ms',
+    ':hover': { backgroundColor: colors.hover },
+    pointerEvents: { default: 'auto', ':disabled': 'none' },
+    opacity: { default: 1, ':disabled': 0.6 },
+  },
+  socialPills: { marginTop: space.five },
+  fullHeight: { height: '100%' },
+  progressGap: { marginTop: space.three },
+  mobileScroll: { height: '100%' },
+  openMenu: { width: '16rem' },
+
+  pageHeader: { display: 'flex', flexDirection: 'column', gap: space.three },
+  pageHeaderSpaced: { marginBlockEnd: space.six },
+  pageDescription: { color: colors.mutedText },
+  pageMeta: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    columnGap: space.four,
+    rowGap: space.two,
+    color: colors.mutedText,
+  },
+  divider: { marginBlockEnd: space.eight, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: colors.border },
+  articleDivider: { marginBlock: space.eight, borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: colors.border },
+
+  pageNav: { marginTop: space.twelve, display: 'flex', flexDirection: 'column', gap: space.six },
+  pagination: {
+    display: 'grid',
+    gap: space.three,
+    borderTopWidth: 1,
+    borderTopStyle: 'solid',
+    borderTopColor: colors.border,
+    paddingBlockStart: space.six,
+    gridTemplateColumns: { default: '1fr', [media.small]: 'repeat(2, minmax(0, 1fr))' },
+  },
+  pageLink: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space.one,
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    padding: space.four,
+    textDecoration: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft },
+  },
+  pageLinkNext: { alignItems: 'flex-end', textAlign: 'end' },
+  pageLinkLabel: { display: 'flex', alignItems: 'center', gap: space.one, fontSize: type.caption, lineHeight: type.compactLeading, color: colors.mutedText },
+  pageLinkTitle: { fontWeight: type.medium, color: colors.text },
+  editRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.two,
+    color: colors.mutedText,
+  },
+  editLink: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: space.oneHalf,
+    textDecoration: 'none',
+    ':hover': { color: colors.text },
+  },
+
+  /* Blog */
+  postItem: {
+    display: 'block',
+    marginInline: -space.two,
+    borderRadius: radii.surface,
+    paddingInline: space.two,
+    paddingBlock: space.three,
+    textDecoration: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft, ':focus-visible': colors.hoverSoft },
+  },
+  postTitle: { fontWeight: type.medium, color: colors.text },
+  postDescription: { marginTop: space.half, color: colors.mutedText },
+  postList: { marginBlock: -space.three },
+  postListTitle: {
+    marginBlockEnd: space.three,
+    fontSize: type.heading,
+    fontWeight: type.medium,
+    lineHeight: type.headingLeading,
+    letterSpacing: '-0.01em',
+    color: colors.text,
+  },
+  postCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space.one,
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    padding: space.four,
+    textDecoration: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    backgroundColor: { default: 'transparent', ':hover': colors.hoverSoft },
+  },
+  tagList: { marginBlock: space.eight, display: 'flex', flexWrap: 'wrap', gap: space.two },
+  tagLink: { textDecoration: 'none' },
+  tagCount: { opacity: 0.6 },
+  backLink: { color: colors.mutedText, textDecoration: 'none', ':hover': { color: colors.text } },
+  tagTitle: {
+    marginTop: space.four,
+    fontSize: type.title,
+    fontWeight: type.medium,
+    lineHeight: type.titleLeading,
+    letterSpacing: type.tightTracking,
+    color: colors.text,
+  },
+  tagPosts: { marginTop: space.six },
+
+  notFound: { paddingBlock: space.twelve, textAlign: 'center' },
+  notFoundLabel: { fontSize: type.caption, fontWeight: type.medium, lineHeight: type.compactLeading, color: colors.mutedText },
+  notFoundTitle: {
+    marginTop: space.two,
+    fontSize: type.title,
+    fontWeight: type.medium,
+    lineHeight: type.titleLeading,
+    letterSpacing: type.tightTracking,
+    color: colors.text,
+  },
+  notFoundBody: { marginTop: space.three, color: colors.mutedText },
+  notFoundCode: {
+    borderRadius: radii.control,
+    backgroundColor: colors.muted,
+    paddingInline: space.oneHalf,
+    paddingBlock: space.half,
+    fontSize: type.label,
+  },
+  notFoundLink: {
+    marginTop: space.six,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: space.oneHalf,
+    borderRadius: radii.control,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    paddingInline: space.threeHalf,
+    paddingBlock: space.oneHalf,
+    fontSize: type.label,
+    lineHeight: type.compactLeading,
+    textDecoration: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    ':hover': { backgroundColor: colors.hover },
+  },
+
+  /* Layouts */
+  layoutRoot: { minHeight: '100vh' },
+  progressTop: { display: { default: 'block', [media.xwide]: 'none' } },
+  docsRow: { display: 'flex' },
+  aside: {
+    position: 'sticky',
+    top: 0,
+    height: '100dvh',
+    flexShrink: 0,
+    borderInlineEndWidth: 1,
+    borderInlineEndStyle: 'solid',
+    borderInlineEndColor: colors.border,
+    display: { default: 'none', [media.wide]: 'block' },
+  },
+  asideWidth: (collapsed: boolean) => ({ width: collapsed ? '3.5rem' : 'var(--novon-sidebar-width)' }),
+  collapsedRail: {
+    display: 'flex',
+    height: '100%',
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceSoft,
+  },
+  collapsedHead: { display: 'flex', height: layout.header, alignItems: 'center' },
+  collapsedFoot: { marginTop: 'auto', display: 'flex', height: space.twelve, alignItems: 'center' },
+  mobileDialog: {
+    position: 'fixed',
+    insetInline: 0,
+    top: layout.header,
+    bottom: 0,
+    height: 'auto',
+    maxWidth: 'none',
+    borderRadius: 0,
+    borderWidth: 0,
+    borderStyle: 'none',
+    backgroundColor: colors.canvas,
+    padding: 0,
+    boxShadow: 'none',
+    display: { default: 'block', [media.wide]: 'none' },
+  },
+  mobileClose: {
+    position: 'absolute',
+    top: space.three,
+    insetInlineEnd: space.three,
+    zIndex: 10,
+    display: 'inline-flex',
+    width: space.eight,
+    height: space.eight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.control,
+    color: colors.mutedText,
+    backgroundColor: 'transparent',
+    cursor: 'pointer',
+    borderWidth: 0,
+    borderStyle: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+    ':hover': { backgroundColor: colors.hover, color: colors.text },
+  },
+  main: { minWidth: 0, flex: 1 },
+  tocAside: {
+    position: 'sticky',
+    top: 0,
+    height: '100vh',
+    flexShrink: 0,
+    overflowY: 'auto',
+    paddingInline: space.four,
+    paddingBlock: space.ten,
+    display: { default: 'none', [media.xwide]: 'block' },
+  },
+  tocAsideWidth: { width: 'var(--novon-toc-width)' },
+  docsPage: {
+    marginInline: 'auto',
+    width: '100%',
+    paddingInline: { default: space.four, [media.small]: space.six, [media.wide]: space.ten },
+    paddingBlock: { default: space.eight, [media.wide]: space.ten },
+  },
+  docsPageDefault: { maxWidth: 'var(--novon-content-width)' },
+  docsPageWide: { maxWidth: '64rem' },
+  docsPageFull: { maxWidth: '80rem' },
+  blogLayout: {
+    marginInline: 'auto',
+    width: '100%',
+    maxWidth: 'var(--novon-column-width)',
+    paddingBlockStart: space.fourteen,
+    paddingBlockEnd: space.sixteen,
+    paddingInline: { default: space.four, [media.medium]: 0 },
+  },
+  blogMain: { marginTop: space.twelve },
+  articleTitle: {
+    fontSize: type.title,
+    fontWeight: type.medium,
+    lineHeight: type.titleLeading,
+    letterSpacing: type.tightTracking,
+    color: colors.text,
+  },
+  postMeta: {
+    marginTop: space.three,
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    columnGap: space.two,
+    color: colors.mutedText,
+  },
+  postDescriptionLede: { marginTop: space.four, color: colors.mutedText },
+  cover: { marginBlockEnd: space.eight },
+  coverImage: {
+    width: '100%',
+    borderRadius: radii.large,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: colors.border,
+  },
+  coverCaption: {
+    marginTop: space.three,
+    textAlign: 'center',
+    color: colors.mutedText,
+  },
+  allPosts: {
+    marginTop: space.twelve,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: space.oneHalf,
+    color: colors.mutedText,
+    textDecoration: 'none',
+    transitionProperty: 'color',
+    transitionDuration: '150ms',
+    ':hover': { color: colors.text },
+  },
+})
+
 /* -------------------------------------------------------------------------- */
 /* Brand                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export function Brand({ className, showTitle = true }: { className?: string; showTitle?: boolean }) {
+export function Brand({ xstyle, showTitle = true }: StyleProps & { showTitle?: boolean }) {
   const config = useConfig()
   const base = useBase()
   const logo = config.theme.logo
   const logoDark = config.theme.logoDark
   return (
-    <a
-      href={withBase(base, '/')}
-      className={cn('flex items-center gap-2 text-sm font-semibold no-underline', className)}
-    >
+    <a href={withBase(base, '/')} {...stylex.props(styles.brand, xstyle)}>
       {logo ? (
-        <span className="flex size-6 shrink-0 items-center justify-center">
-          <img src={withBase(base, logo)} alt="" className={cn('size-6', logoDark && 'dark:hidden')} />
-          {logoDark ? <img src={withBase(base, logoDark)} alt="" className="hidden size-6 dark:block" /> : null}
+        <span {...stylex.props(styles.brandLogoBox)}>
+          <img src={withBase(base, logo)} alt="" {...stylex.props(styles.brandLogo, !logoDark ? null : styles.brandLogoLight)} />
+          {logoDark ? <img src={withBase(base, logoDark)} alt="" {...stylex.props(styles.brandLogo, styles.brandLogoDark)} /> : null}
         </span>
       ) : null}
-      {showTitle ? <span className="truncate">{config.title}</span> : null}
+      {showTitle ? <span {...stylex.props(styles.brandTitle)}>{config.title}</span> : null}
     </a>
   )
 }
@@ -89,7 +665,7 @@ export function Brand({ className, showTitle = true }: { className?: string; sho
 /* -------------------------------------------------------------------------- */
 
 /** Name, role, navigation pills and the reading controls. */
-export function DefaultHeader({ className }: { className?: string }) {
+export function DefaultHeader({ xstyle }: StyleProps) {
   const config = useConfig()
   const items =
     config.nav.length > 0
@@ -97,28 +673,28 @@ export function DefaultHeader({ className }: { className?: string }) {
       : [{ label: 'home', href: '/' }]
 
   return (
-    <header className={cn('flex flex-col gap-6', className)}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-base font-medium text-foreground">{config.title}</p>
+    <header {...stylex.props(styles.header, xstyle)}>
+      <div {...stylex.props(styles.headerTop)}>
+        <div {...stylex.props(styles.headerName)}>
+          <p {...stylex.props(styles.headerTitle)}>{config.title}</p>
           {config.description ? (
-            <p className="text-muted-foreground">{config.description}</p>
+            <p {...stylex.props(styles.headerDescription, typography.labelRegular)}>{config.description}</p>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        <div {...stylex.props(styles.headerControls)}>
           <CopyUrlButton />
           {config.theme.darkMode ? <ThemeToggle /> : null}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div {...stylex.props(styles.headerNav)}>
         <PillNav items={items} />
-        {config.features.search ? <SearchTrigger className="ml-auto w-36" /> : null}
+        {config.features.search ? <SearchTrigger xstyle={styles.headerSearch} /> : null}
       </div>
     </header>
   )
 }
 
-export function DefaultFooter({ className, variant = 'blog' }: { className?: string; variant?: 'blog' | 'docs' }) {
+export function DefaultFooter({ xstyle, variant = 'blog' }: StyleProps & { variant?: 'blog' | 'docs' }) {
   const config = useConfig()
   const base = useBase()
   const footer = config.theme.footer ?? {}
@@ -136,39 +712,58 @@ export function DefaultFooter({ className, variant = 'blog' }: { className?: str
   ]
 
   return (
-    <footer className={cn('pt-6', className)}>
+    <footer {...stylex.props(styles.footer, xstyle)}>
       <Section title="Connect">
         {email ? (
-          <p className="text-muted-foreground">
+          <p {...stylex.props(styles.footerEmail, typography.labelRegular)}>
             Feel free to contact me at{' '}
-            <a href={`mailto:${email}`} className="text-foreground underline underline-offset-4">
+            <a href={`mailto:${email}`} {...stylex.props(styles.footerEmailLink)}>
               {email}
             </a>
           </p>
         ) : null}
-        <SocialPills className={email ? 'mt-5' : ''} />
+        <SocialPills xstyle={email ? styles.socialPills : undefined} />
         {pills.length > 0 ? (
-          <div className={cn('flex flex-wrap gap-2', email || pills.length > 0 ? 'mt-5' : '')}>
+          <div {...stylex.props(styles.footerPills)}>
             {pills.map((pill) => (
               <a
                 key={pill.href}
                 href={pill.href}
                 {...(pill.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-sm text-foreground no-underline transition-colors hover:bg-accent"
+                {...stylex.props(pillLinkStyle.pill)}
               >
                 {pill.label}
-                <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
+                <ArrowUpRight aria-hidden="true" size={16} {...stylex.props(pillLinkStyle.arrow)} />
               </a>
             ))}
           </div>
         ) : null}
       </Section>
-      <p className="pt-2 text-sm text-muted-foreground">
+      <p {...stylex.props(styles.footerCopy, typography.labelRegular)}>
         {footer.text ?? `© ${new Date().getFullYear()} ${config.title}`}
       </p>
     </footer>
   )
 }
+
+const pillLinkStyle = stylex.create({
+  pill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: space.oneHalf,
+    borderRadius: radii.control,
+    backgroundColor: { default: colors.subtle, ':hover': colors.hover },
+    color: colors.text,
+    paddingInline: space.twoHalf,
+    paddingBlock: space.one,
+    fontSize: type.label,
+    lineHeight: type.compactLeading,
+    textDecoration: 'none',
+    transitionProperty: 'color, background-color',
+    transitionDuration: '150ms',
+  },
+  arrow: { color: colors.mutedText },
+})
 
 /* -------------------------------------------------------------------------- */
 /* Docs sidebar                                                               */
@@ -196,16 +791,14 @@ function NavLink({
       href={withBase(base, item.path)}
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
-      className={cn(
-        'flex w-full items-center gap-2 rounded-md py-1.5 pr-3 text-sm no-underline transition-colors',
-        indent ? 'pl-6' : 'pl-2.5',
-        active
-          ? 'bg-accent font-medium text-foreground'
-          : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+      {...stylex.props(
+        styles.navItem,
+        indent ? styles.navItemNested : styles.navItemRoot,
+        active && styles.navItemActive,
       )}
     >
-      {item.icon ? <Icon icon={item.icon} className="size-4 shrink-0 opacity-80" /> : null}
-      <span className="truncate">{item.label}</span>
+      {item.icon ? <Icon icon={item.icon} /> : null}
+      <span {...stylex.props(styles.brandTitle)}>{item.label}</span>
     </a>
   )
 }
@@ -226,7 +819,7 @@ function NavTree({
     node.kind === 'page' ? isActive(node.path, current) : node.path === current || node.children.some(contains)
 
   return (
-    <ul className="space-y-0.5">
+    <ul {...stylex.props(styles.navList)}>
       {nodes.map((node) => {
         if (node.kind === 'page') {
           return (
@@ -239,10 +832,8 @@ function NavTree({
         if (depth === 0) {
           // A section: a label, then its pages.
           return (
-            <li key={node.label} className="pt-4 first:pt-1">
-              <p className="px-2.5 pb-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {node.label}
-              </p>
+            <li key={node.label} {...stylex.props(styles.navSection)}>
+              <p {...stylex.props(styles.navSectionLabel)}>{node.label}</p>
               <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} />
             </li>
           )
@@ -267,15 +858,15 @@ function NestedNavGroup({ node, active, current, onNavigate, depth }: {
   return (
     <li>
       <Accordion value={open} onValueChange={setOpen}>
-        <AccordionItem value="group" className="border-0 py-0">
-          <AccordionTrigger className="gap-2 rounded-md py-1.5 pl-2.5 pr-3 text-sm font-normal text-muted-foreground hover:bg-accent/60 hover:text-foreground">
-            <span className="flex min-w-0 items-center gap-2">
-              {node.icon ? <Icon icon={node.icon} className="size-4 shrink-0 opacity-80" /> : null}
-              <span className="truncate">{node.label}</span>
+        <AccordionItem value="group" xstyle={styles.navGroupPanel}>
+          <AccordionTrigger xstyle={styles.navGroupTrigger}>
+            <span {...stylex.props(styles.navGroupLabel)}>
+              {node.icon ? <Icon icon={node.icon} /> : null}
+              <span {...stylex.props(styles.brandTitle)}>{node.label}</span>
             </span>
           </AccordionTrigger>
-          <AccordionPanel className="pb-0">
-            <div className="pl-1">
+          <AccordionPanel>
+            <div {...stylex.props(styles.navGroupInner)}>
               <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} />
             </div>
           </AccordionPanel>
@@ -291,20 +882,20 @@ export function DefaultSidebar({
   current,
   onNavigate,
   onCollapse,
-  className,
+  xstyle,
 }: {
   nav: NavNode[]
   current: string
   onNavigate?: () => void
   onCollapse?: () => void
-  className?: string
+  xstyle?: StyleXStyles
 }) {
   const config = useConfig()
   const social = config.theme.social ?? {}
 
   return (
-    <div className={cn('flex h-full flex-col bg-card/40', className)}>
-      <div className="flex h-14 shrink-0 items-center gap-2 px-4">
+    <div {...stylex.props(styles.sidebar, xstyle)}>
+      <div {...stylex.props(styles.sidebarHead)}>
         <Brand />
         {onCollapse ? (
           <button
@@ -314,33 +905,33 @@ export function DefaultSidebar({
             aria-expanded="true"
             aria-controls="novon-sidebar"
             title="Collapse sidebar"
-            className="ml-auto inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            {...stylex.props(styles.iconButton, styles.pushEnd)}
           >
-            <PanelLeft aria-hidden="true" className="size-3.5" />
+            <PanelLeft aria-hidden="true" size={14} />
           </button>
         ) : null}
       </div>
 
       {config.features.search ? (
-        <div className="shrink-0 px-3 pb-2">
-          <SearchTrigger className="w-full" />
+        <div {...stylex.props(styles.sidebarSearch)}>
+          <SearchTrigger xstyle={styles.sidebarSearchFull} />
         </div>
       ) : null}
 
-      <nav aria-label="Documentation" className="novon-scroll min-h-0 flex-1 overflow-y-auto px-3 pb-6">
+      <nav aria-label="Documentation" {...stylex.props(styles.sidebarNav, behavior.scroll)}>
         {nav.length > 0 ? <NavTree nodes={nav} current={current} onNavigate={onNavigate} /> : null}
       </nav>
 
-      <div className="flex h-12 shrink-0 items-center justify-between border-t border-border px-3">
+      <div {...stylex.props(styles.sidebarFoot)}>
         {social.github ? (
           <a
             href={social.github}
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub"
-            className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            {...stylex.props(styles.iconButton, styles.iconButtonSmall)}
           >
-            <GithubIcon className="size-3.5" />
+            <GithubIcon size={14} />
           </a>
         ) : (
           <span />
@@ -352,11 +943,11 @@ export function DefaultSidebar({
 }
 
 /** Mobile-only top bar for the docs layout. */
-export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () => void; navOpen?: boolean }) {
+export function DefaultDocsHeader({ onToggleNav, navOpen, xstyle }: { onToggleNav?: () => void; navOpen?: boolean; xstyle?: StyleXStyles }) {
   const config = useConfig()
   const base = useBase()
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md lg:hidden">
+    <header {...stylex.props(styles.mobileHeader, xstyle)}>
       {onToggleNav ? (
         <button
           type="button"
@@ -364,26 +955,26 @@ export function DefaultDocsHeader({ onToggleNav, navOpen }: { onToggleNav?: () =
           aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
           aria-expanded={navOpen}
           aria-controls="novon-mobile-sidebar"
-          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          {...stylex.props(styles.iconButton)}
         >
-          {navOpen ? <X aria-hidden="true" className="size-3.5" /> : <Menu aria-hidden="true" className="size-3.5" />}
+          {navOpen ? <X aria-hidden="true" size={14} /> : <Menu aria-hidden="true" size={14} />}
         </button>
       ) : null}
       <Brand />
-      <nav className="ml-2 hidden items-center gap-0.5 sm:flex">
+      <nav {...stylex.props(styles.mobileNav)}>
         {config.nav.map((item) => (
           <a
             key={item.href}
             href={isExternal(item.href) ? item.href : withBase(base, item.href)}
             {...(isExternal(item.href) ? { target: '_blank', rel: 'noreferrer' } : {})}
-            className="rounded-md px-3 py-1.5 text-sm text-muted-foreground no-underline transition-colors hover:bg-accent hover:text-foreground"
+            {...stylex.props(styles.mobileNavLink)}
           >
             {item.label}
           </a>
         ))}
       </nav>
-      <div className="ml-auto flex items-center gap-1">
-        {config.features.search ? <SearchTrigger className="size-8 justify-center p-0 sm:w-44 sm:justify-start sm:px-3" /> : null}
+      <div {...stylex.props(styles.mobileControls)}>
+        {config.features.search ? <SearchTrigger xstyle={styles.mobileSearch} /> : null}
         {config.theme.darkMode ? <ThemeToggle /> : null}
       </div>
     </header>
@@ -408,17 +999,17 @@ const TocItem = React.memo(function TocItem({
   spaced: boolean
 }) {
   return (
-    <li className={cn(spaced && 'mt-2')}>
+    <li {...stylex.props(spaced ? styles.tocItemSpaced : styles.tocItem)}>
       <a
         href={`#${heading.id}`}
         data-toc-id={heading.id}
         aria-current={active ? 'location' : undefined}
-        className={cn(
-          '-ml-px block border-l-2 py-1 pr-2 no-underline transition-colors',
-          heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6' : 'pl-9 text-[0.8125rem]',
-          active
-            ? 'border-primary font-medium text-foreground'
-            : 'border-transparent text-muted-foreground hover:text-foreground',
+        {...stylex.props(
+          typography.labelRegular,
+          styles.tocLink,
+          heading.depth === 2 ? styles.tocDepth2 : heading.depth === 3 ? styles.tocDepth3 : styles.tocDepth4,
+          heading.depth > 3 && typography.micro,
+          active && styles.tocLinkActive,
         )}
       >
         {heading.text}
@@ -427,7 +1018,7 @@ const TocItem = React.memo(function TocItem({
   )
 })
 
-export function DefaultTableOfContents({ headings, className }: { headings: TocEntry[]; className?: string }) {
+export function DefaultTableOfContents({ headings, xstyle }: { headings: TocEntry[]; xstyle?: StyleXStyles }) {
   const [activeId, setActiveId] = React.useState('')
   const listRef = React.useRef<HTMLUListElement>(null)
   const anchorsRef = React.useRef(new Map<string, HTMLAnchorElement>())
@@ -600,13 +1191,13 @@ export function DefaultTableOfContents({ headings, className }: { headings: TocE
   if (headings.length === 0) return null
 
   return (
-    <nav aria-label="On this page" className={cn('text-sm', className)}>
-      <p className="flex items-center gap-2 font-medium text-foreground">
-        <ListIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+    <nav aria-label="On this page" {...stylex.props(xstyle)}>
+      <p {...stylex.props(styles.tocTitle, typography.label)}>
+        <ListIcon aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
         On this page
       </p>
-      <ReadingProgress className="mt-3" />
-      <ul ref={listRef} onClick={onListClick} className="mt-3 border-l border-border">
+      <ReadingProgress xstyle={styles.progressGap} />
+      <ul ref={listRef} onClick={onListClick} {...stylex.props(styles.tocList)}>
         {headings.map((heading, index) => (
           <TocItem
             key={heading.id}
@@ -759,24 +1350,24 @@ export function PageActions({ path }: { path: string }) {
   const claude = `https://claude.ai/new?q=${encodeURIComponent(`${AI_PROMPT} ${absolute}`)}`
 
   return (
-    <div className="mt-6 flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
+    <div {...stylex.props(styles.actions)}>
+      <div {...stylex.props(styles.actionsRow)}>
         <button
           type="button"
           onClick={copy}
           disabled={state === 'copying'}
-          className="inline-flex h-8 items-center gap-2 rounded-md border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60"
+          {...stylex.props(styles.actionButton)}
         >
           {state === 'copied' ? (
-            <Check aria-hidden="true" className="size-3.5" />
+            <Check aria-hidden="true" size={16} />
           ) : state === 'copying' ? (
-            <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
+            <Loader2 aria-hidden="true" size={16} {...stylex.props(styles.spin)} />
           ) : (
-            <Copy aria-hidden="true" className="size-3.5" />
+            <Copy aria-hidden="true" size={16} />
           )}
-          <span className="grid">
+          <span {...stylex.props(styles.labelGrid)}>
             {(Object.keys(COPY_LABELS) as CopyState[]).map((key) => (
-              <span key={key} className={cn('col-start-1 row-start-1', key !== state && 'invisible')}>
+              <span key={key} {...stylex.props(styles.labelCell, key !== state && styles.labelHidden)}>
                 {COPY_LABELS[key]}
               </span>
             ))}
@@ -784,45 +1375,45 @@ export function PageActions({ path }: { path: string }) {
         </button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card/60 px-3.5 text-sm font-medium transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
+          <DropdownMenuTrigger xstyle={styles.actionButton}>
             Open
-            <ChevronDown aria-hidden="true" className="size-3.5 opacity-60" />
+            <ChevronDown aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-64">
+          <DropdownMenuContent align="start" xstyle={styles.openMenu}>
             <DropdownMenuLabel>Raw source</DropdownMenuLabel>
             <DropdownMenuItem render={<a href={url} target="_blank" rel="noreferrer" />}>
               <SvglIcon name="markdown" />
-              <span className="flex-1">View Markdown</span>
-              <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
+              <span {...stylex.props(styles.menuIconSlot)}>View Markdown</span>
+              <ArrowUpRight aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Ask an AI</DropdownMenuLabel>
             <DropdownMenuItem render={<a href={chatgpt} target="_blank" rel="noreferrer" />}>
               <SvglIcon name="openai" />
-              <span className="flex-1">Open in ChatGPT</span>
-              <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
+              <span {...stylex.props(styles.menuIconSlot)}>Open in ChatGPT</span>
+              <ArrowUpRight aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
             </DropdownMenuItem>
             <DropdownMenuItem render={<a href={claude} target="_blank" rel="noreferrer" />}>
               <SvglIcon name="claude" />
-              <span className="flex-1">Open in Claude</span>
-              <ArrowUpRight aria-hidden="true" className="size-3.5 text-muted-foreground" />
+              <span {...stylex.props(styles.menuIconSlot)}>Open in Claude</span>
+              <ArrowUpRight aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      <span role="status" aria-live="polite" className="text-sm text-muted-foreground">
+      <span role="status" aria-live="polite" {...stylex.props(styles.status)}>
         {state === 'copied' ? 'Markdown copied' : state === 'error' ? error : ''}
       </span>
 
       {state === 'error' && source ? (
-        <label className="block text-sm text-muted-foreground">
+        <label {...stylex.props(styles.errorLabel)}>
           Select the Markdown below and copy it manually.
           <textarea
             readOnly
             value={source}
             onFocus={(event) => event.currentTarget.select()}
-            className="novon-scroll mt-1 h-32 w-full resize-y rounded-md border border-border bg-card/60 p-2 font-mono text-xs text-foreground"
+            {...stylex.props(styles.errorArea, behavior.scroll)}
           />
         </label>
       ) : null}
@@ -837,25 +1428,25 @@ export function PageHeading({
   meta,
   path,
   actions = false,
-  className,
+  xstyle,
 }: {
   title: string
   description?: string
   meta?: Frontmatter
   path?: string
   actions?: boolean
-  className?: string
+  xstyle?: StyleXStyles
 }) {
   const config = useConfig()
   const date = formatDate(meta?.date, config.language)
   const author = typeof meta?.author === 'string' ? meta.author : (meta?.author?.name ?? config.author)
 
   return (
-    <header className={cn('space-y-3', className)}>
-      <h1 className="text-3xl font-semibold tracking-tight text-foreground">{title}</h1>
-      {description ? <p className="text-lg text-muted-foreground">{description}</p> : null}
+    <header {...stylex.props(styles.pageHeader, xstyle)}>
+      <h1 {...stylex.props(typography.pageTitle)}>{title}</h1>
+      {description ? <p {...stylex.props(styles.pageDescription, typography.lede)}>{description}</p> : null}
       {(date || author || (meta?.tags?.length ?? 0) > 0) && !actions ? (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+        <div {...stylex.props(styles.pageMeta, typography.labelRegular)}>
           {date ? <time dateTime={String(meta?.date)}>{date}</time> : null}
           {author ? <span>{author}</span> : null}
           {(meta?.tags ?? []).map((tag) => (
@@ -871,9 +1462,9 @@ export function PageHeading({
   )
 }
 
-/** The MDX article body. */
-export function Prose({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn('novon-prose', className)}>{children}</div>
+/** The MDX article body. Content styles live in theme.css's `.novon-prose`. */
+export function Prose({ children }: { children: React.ReactNode }) {
+  return <div className="novon-prose">{children}</div>
 }
 
 /** Previous / next cards plus "last updated" and "edit this page". */
@@ -899,48 +1490,37 @@ export function PageNav({
   const updated = formatDate(meta?.updated ?? meta?.date, config.language)
 
   return (
-    <div className="mt-12 space-y-6">
+    <div {...stylex.props(styles.pageNav)}>
       {previous || next ? (
-        <nav aria-label="Pagination" className="grid gap-3 border-t border-border pt-6 sm:grid-cols-2">
+        <nav aria-label="Pagination" {...stylex.props(styles.pagination)}>
           {previous ? (
-            <a
-              href={withBase(base, previous.path)}
-              className="group flex flex-col gap-1 rounded-xl border border-border p-4 no-underline transition-colors hover:bg-accent/50"
-            >
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <ChevronLeft aria-hidden="true" className="size-3.5" />
+            <a href={withBase(base, previous.path)} {...stylex.props(styles.pageLink)}>
+              <span {...stylex.props(styles.pageLinkLabel)}>
+                <ChevronLeft aria-hidden="true" size={16} />
                 Previous
               </span>
-              <span className="font-medium text-foreground">{previous.label}</span>
+              <span {...stylex.props(styles.pageLinkTitle, typography.label)}>{previous.label}</span>
             </a>
           ) : (
             <span />
           )}
           {next ? (
-            <a
-              href={withBase(base, next.path)}
-              className="group flex flex-col items-end gap-1 rounded-xl border border-border p-4 text-right no-underline transition-colors hover:bg-accent/50"
-            >
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <a href={withBase(base, next.path)} {...stylex.props(styles.pageLink, styles.pageLinkNext)}>
+              <span {...stylex.props(styles.pageLinkLabel)}>
                 Next
-                <ChevronRight aria-hidden="true" className="size-3.5" />
+                <ChevronRight aria-hidden="true" size={16} />
               </span>
-              <span className="font-medium text-foreground">{next.label}</span>
+              <span {...stylex.props(styles.pageLinkTitle, typography.label)}>{next.label}</span>
             </a>
           ) : null}
         </nav>
       ) : null}
 
       {editHref || updated ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+        <div {...stylex.props(styles.editRow, typography.labelRegular)}>
           {editHref ? (
-            <a
-              href={editHref}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 no-underline hover:text-foreground"
-            >
-              <Pencil aria-hidden="true" className="size-3.5" />
+            <a href={editHref} target="_blank" rel="noreferrer" {...stylex.props(styles.editLink)}>
+              <Pencil aria-hidden="true" size={16} />
               {config.theme.editLink?.label ?? 'Edit this page'}
             </a>
           ) : (
@@ -962,19 +1542,13 @@ function postLabel(route: Route): string {
 }
 
 /** One row of the blog list: title, then description. */
-export function PostItem({ route, className }: { route: Route; className?: string }) {
+export function PostItem({ route, xstyle }: { route: Route; xstyle?: StyleXStyles }) {
   const base = useBase()
   return (
-    <a
-      href={withBase(base, route.path)}
-      className={cn(
-        '-mx-2 block rounded-lg px-2 py-3 no-underline transition-colors hover:bg-accent/50 focus-visible:bg-accent/50',
-        className,
-      )}
-    >
-      <p className="font-medium text-foreground">{postLabel(route)}</p>
+    <a href={withBase(base, route.path)} {...stylex.props(styles.postItem, xstyle)}>
+      <p {...stylex.props(styles.postTitle, typography.label)}>{postLabel(route)}</p>
       {route.meta.description ? (
-        <p className="mt-0.5 text-muted-foreground">{route.meta.description}</p>
+        <p {...stylex.props(styles.postDescription, typography.labelRegular)}>{route.meta.description}</p>
       ) : null}
     </a>
   )
@@ -984,20 +1558,20 @@ export function PostList({
   posts,
   title,
   empty,
-  className,
+  xstyle,
 }: {
   posts: Route[]
   title?: string
   empty?: string
-  className?: string
+  xstyle?: StyleXStyles
 }) {
   if (posts.length === 0) {
-    return <p className="text-muted-foreground">{empty ?? 'No posts yet. Add an .mdx file to content/.'}</p>
+    return <p {...stylex.props(styles.footerEmail, typography.labelRegular)}>{empty ?? 'No posts yet. Add an .mdx file to content/.'}</p>
   }
 
   return (
-    <div className={cn('-my-3', className)}>
-      {title ? <h2 className="mb-3 text-lg font-medium tracking-tight">{title}</h2> : null}
+    <div {...stylex.props(styles.postList, xstyle)}>
+      {title ? <h2 {...stylex.props(styles.postListTitle)}>{title}</h2> : null}
       {posts.map((post, index) => (
         <Reveal key={post.path} delay={Math.min(index, 6) * 40}>
           <PostItem route={post} />
@@ -1011,13 +1585,10 @@ export function PostList({
 export function PostCard({ route }: { route: Route }) {
   const base = useBase()
   return (
-    <a
-      href={withBase(base, route.path)}
-      className="flex flex-col gap-1 rounded-xl border border-border p-4 no-underline transition-colors hover:bg-accent/50"
-    >
-      <span className="font-medium text-foreground">{postLabel(route)}</span>
+    <a href={withBase(base, route.path)} {...stylex.props(styles.postCard)}>
+      <span {...stylex.props(styles.postTitle, typography.label)}>{postLabel(route)}</span>
       {route.meta.description ? (
-        <span className="text-sm text-muted-foreground">{route.meta.description}</span>
+        <span {...stylex.props(styles.postDescription, typography.labelRegular)}>{route.meta.description}</span>
       ) : null}
     </a>
   )
@@ -1029,11 +1600,11 @@ export function TagList({ tags, active }: { tags: { tag: string; count: number }
   const tagsPath = blogTagsPath(site.activeLayer?.path ?? '/')
   if (tags.length === 0) return null
   return (
-    <div className="my-8 flex flex-wrap gap-2">
+    <div {...stylex.props(styles.tagList)}>
       {tags.map(({ tag, count }) => (
-        <a key={tag} href={withBase(base, `${tagsPath}/${tagSlug(tag)}`)} className="no-underline">
+        <a key={tag} href={withBase(base, `${tagsPath}/${tagSlug(tag)}`)} {...stylex.props(styles.tagLink)}>
           <Badge variant={active === tag ? 'default' : 'secondary'}>
-            {tag} <span className="opacity-60">{count}</span>
+            {tag} <span {...stylex.props(styles.tagCount)}>{count}</span>
           </Badge>
         </a>
       ))}
@@ -1048,13 +1619,13 @@ export function TagPage({ site, tag }: { site: SiteIndex; tag: string }) {
   const posts = site.posts.filter((post) => (post.meta.tags ?? []).includes(tag))
   return (
     <div>
-      <p className="text-sm">
-        <a href={withBase(base, blogIndexPath(site.activeLayer?.path ?? '/', config))} className="text-muted-foreground no-underline hover:text-foreground">
+      <p {...stylex.props(typography.labelRegular)}>
+        <a href={withBase(base, blogIndexPath(site.activeLayer?.path ?? '/', config))} {...stylex.props(styles.backLink)}>
           ← All posts
         </a>
       </p>
-      <h1 className="mt-4 text-2xl font-medium tracking-tight">Posts tagged “{tag}”</h1>
-      <PostList posts={posts} empty={`No posts tagged “${tag}”.`} className="mt-6" />
+      <h1 {...stylex.props(styles.tagTitle)}>Posts tagged “{tag}”</h1>
+      <PostList posts={posts} empty={`No posts tagged “${tag}”.`} xstyle={styles.tagPosts} />
       <TagList tags={site.tags} active={tag} />
     </div>
   )
@@ -1080,17 +1651,14 @@ export function PostListPage({ site }: { site: SiteIndex }) {
 export function DefaultNotFound({ url }: { url: string }) {
   const base = useBase()
   return (
-    <div className="py-20 text-center">
-      <p className="text-sm font-medium text-muted-foreground">404</p>
-      <h1 className="mt-2 text-2xl font-medium tracking-tight">Page not found</h1>
-      <p className="mt-3 text-muted-foreground">
-        Nothing is published at <code className="rounded bg-muted px-1.5 py-0.5 text-sm">{url}</code>.
+    <div {...stylex.props(styles.notFound)}>
+      <p {...stylex.props(styles.notFoundLabel)}>404</p>
+      <h1 {...stylex.props(styles.notFoundTitle)}>Page not found</h1>
+      <p {...stylex.props(styles.notFoundBody, typography.labelRegular)}>
+        Nothing is published at <code {...stylex.props(styles.notFoundCode)}>{url}</code>.
       </p>
-      <a
-        href={withBase(base, '/')}
-        className="mt-6 inline-flex items-center gap-1.5 rounded-md border border-border px-3.5 py-1.5 text-sm no-underline transition-colors hover:bg-accent"
-      >
-        <ChevronLeft aria-hidden="true" className="size-3.5" /> Back to the start
+      <a href={withBase(base, '/')} {...stylex.props(styles.notFoundLink)}>
+        <ChevronLeft aria-hidden="true" size={16} /> Back to the start
       </a>
     </div>
   )
@@ -1115,11 +1683,8 @@ export interface LayoutProps {
 /** Shared outer layer. Layouts own chrome; page components own article content. */
 export function BaseLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen">
-      <a
-        href="#novon-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:border focus:border-border focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:no-underline focus:shadow-lg"
-      >
+    <div {...stylex.props(styles.layoutRoot)}>
+      <a href="#novon-content" {...stylex.props(behavior.skipLink)}>
         Skip to content
       </a>
       {children}
@@ -1260,22 +1825,21 @@ export function DocsLayout({ route, url, headings, children, config, site }: Doc
     <BaseLayout>
       {/* The outline carries the progress on wide screens; below them the
           sidebar is hidden, so the strip stays. */}
-      <ScrollProgress className="xl:hidden" />
+      <ScrollProgress xstyle={styles.progressTop} />
       <Header onToggleNav={toggleNav} navOpen={navOpen} />
 
-      <div className="flex">
+      <div {...stylex.props(styles.docsRow)}>
         <aside
           ref={sidebarRef}
           aria-label="Sidebar"
-          className="sticky top-0 hidden h-dvh shrink-0 border-r border-border lg:block"
-          style={{ width: collapsed ? '3.5rem' : 'var(--novon-sidebar-width)' }}
+          {...stylex.props(styles.aside, styles.asideWidth(collapsed))}
         >
-          <div id="novon-sidebar" hidden={collapsed} className="h-full">
+          <div id="novon-sidebar" hidden={collapsed} {...stylex.props(styles.fullHeight)}>
             <Sidebar nav={site.nav} current={activePath} onCollapse={toggleCollapsed} />
           </div>
           {collapsed ? (
-            <div className="flex h-full flex-col items-center bg-card/40">
-              <div className="flex h-14 items-center">
+            <div {...stylex.props(styles.collapsedRail)}>
+              <div {...stylex.props(styles.collapsedHead)}>
                 <button
                   type="button"
                   onClick={toggleCollapsed}
@@ -1283,13 +1847,17 @@ export function DocsLayout({ route, url, headings, children, config, site }: Doc
                   aria-expanded="false"
                   aria-controls="novon-sidebar"
                   title="Show sidebar"
-                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                  {...stylex.props(styles.iconButton)}
                 >
-                  <PanelLeft aria-hidden="true" className="size-4" />
+                  <PanelLeft aria-hidden="true" size={16} />
                 </button>
               </div>
-              {config.features.search ? <SearchTrigger className="size-8 justify-center p-0 [&>span]:hidden [&>kbd]:hidden" /> : null}
-              {config.theme.darkMode ? <div className="mt-auto flex h-12 items-center"><ThemeToggle /></div> : null}
+              {config.features.search ? <SearchTrigger compact xstyle={styles.iconButton} /> : null}
+              {config.theme.darkMode ? (
+                <div {...stylex.props(styles.collapsedFoot)}>
+                  <ThemeToggle />
+                </div>
+              ) : null}
             </div>
           ) : null}
         </aside>
@@ -1300,30 +1868,24 @@ export function DocsLayout({ route, url, headings, children, config, site }: Doc
             finalFocus={finalFocus}
             id="novon-mobile-sidebar"
             aria-label="Documentation navigation"
-            className="fixed inset-x-0 top-14 bottom-0 h-auto max-w-none rounded-none border-0 bg-background p-0 shadow-none lg:hidden"
+            xstyle={styles.mobileDialog}
           >
-            <DialogClose
-              aria-label="Close navigation"
-              className="absolute right-3 top-3 z-10 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <X aria-hidden="true" className="size-4" />
+            <DialogClose aria-label="Close navigation" xstyle={styles.mobileClose}>
+              <X aria-hidden="true" size={16} />
             </DialogClose>
-            <ScrollArea className="h-full">
+            <ScrollArea xstyle={styles.mobileScroll}>
               <Sidebar nav={site.nav} current={activePath} onNavigate={() => setNavOpen(false)} />
             </ScrollArea>
           </DialogContent>
         </Dialog>
 
-        <main id="novon-content" tabIndex={-1} className="min-w-0 flex-1">
+        <main id="novon-content" tabIndex={-1} {...stylex.props(styles.main)}>
           {children}
           <Footer variant="docs" />
         </main>
 
         {showToc ? (
-          <aside
-            className="novon-scroll sticky top-0 hidden h-screen shrink-0 overflow-y-auto px-4 py-10 xl:block"
-            style={{ width: 'var(--novon-toc-width)' }}
-          >
+          <aside {...stylex.props(styles.tocAside, styles.tocAsideWidth, behavior.scroll)}>
             <TableOfContents headings={headings} />
           </aside>
         ) : null}
@@ -1338,12 +1900,23 @@ export function DocsPage({ route, url, title, description, children, prevNext }:
   const fullWidth = route?.meta.fullWidth === true
   const wide = route?.meta.wide === true
   return (
-    <div className={cn(
-      'mx-auto w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10',
-      fullWidth ? 'max-w-[80rem]' : wide ? 'max-w-[64rem]' : 'max-w-(--novon-content-width)',
-    )}>
-      {route ? <PageHeading title={title} description={description} meta={route.meta} path={route.path} actions={!route.synthetic} className={fullWidth ? '' : 'mb-6'} /> : null}
-      {route && !route.synthetic ? <div className="mb-8 border-b border-border" /> : null}
+    <div
+      {...stylex.props(
+        styles.docsPage,
+        fullWidth ? styles.docsPageFull : wide ? styles.docsPageWide : styles.docsPageDefault,
+      )}
+    >
+      {route ? (
+        <PageHeading
+          title={title}
+          description={description}
+          meta={route.meta}
+          path={route.path}
+          actions={!route.synthetic}
+          xstyle={!fullWidth ? styles.pageHeaderSpaced : undefined}
+        />
+      ) : null}
+      {route && !route.synthetic ? <div {...stylex.props(styles.divider)} /> : null}
       <Prose>{children}</Prose>
       {!route?.synthetic && !fullWidth ? <PageNav links={prevNext} current={url} meta={route?.meta} file={route?.file} /> : null}
     </div>
@@ -1358,9 +1931,9 @@ export function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
     <BaseLayout>
       <ScrollProgress />
-      <div className="mx-auto w-full max-w-(--novon-column-width) px-4 pt-14 pb-16 md:px-0">
+      <div {...stylex.props(styles.blogLayout)}>
         <Header />
-        <main id="novon-content" tabIndex={-1} className="mt-12">{children}</main>
+        <main id="novon-content" tabIndex={-1} {...stylex.props(styles.blogMain)}>{children}</main>
         <Footer />
       </div>
     </BaseLayout>
@@ -1386,35 +1959,35 @@ export function BlogPage({ route, title, description, children, config, site }: 
   return (
     <article>
       {isPost && cover ? (
-        <figure className="mb-8">
-          <img src={withBase(config.base, cover)} alt="" className="w-full rounded-xl border border-border" />
+        <figure {...stylex.props(styles.cover)}>
+          <img src={withBase(config.base, cover)} alt="" {...stylex.props(styles.coverImage)} />
           {typeof route?.meta.caption === 'string' ? (
-            <figcaption className="mt-3 text-center text-sm text-muted-foreground">
+            <figcaption {...stylex.props(styles.coverCaption, typography.labelRegular)}>
               {route.meta.caption}
             </figcaption>
           ) : null}
         </figure>
       ) : null}
 
-      <h1 className="text-2xl font-medium tracking-tight text-foreground">{title}</h1>
+      <h1 {...stylex.props(styles.articleTitle)}>{title}</h1>
       {isPost && (date || author) ? (
-        <p className="mt-3 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+        <p {...stylex.props(styles.postMeta, typography.labelRegular)}>
           {date ? <time dateTime={String(route?.meta.date)}>{date}</time> : null}
           {date && author ? <span aria-hidden="true">·</span> : null}
           {author ? <span>{author}</span> : null}
         </p>
       ) : null}
-      {description ? <p className="mt-4 text-lg text-muted-foreground">{description}</p> : null}
-      <div className="my-8 border-t border-border" />
+      {description ? <p {...stylex.props(styles.postDescriptionLede, typography.lede)}>{description}</p> : null}
+      <div {...stylex.props(styles.articleDivider)} />
       <Prose>{children}</Prose>
 
       {isPost ? (
-        <p className="mt-12 text-sm">
+        <p {...stylex.props(typography.labelRegular)}>
           <a
             href={withBase(config.base, blogIndexPath(site.activeLayer?.path ?? '/', config))}
-            className="inline-flex items-center gap-1.5 text-muted-foreground no-underline transition-colors hover:text-foreground"
+            {...stylex.props(styles.allPosts)}
           >
-            <ChevronLeft aria-hidden="true" className="size-3.5" />
+            <ChevronLeft aria-hidden="true" size={16} />
             All posts
           </a>
         </p>

@@ -68,7 +68,6 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@shadcn/lint": "^0.1.5",
     "@types/bun": "latest",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

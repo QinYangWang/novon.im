@@ -1,8 +1,0 @@
-{
-  "jsPlugins": ["@shadcn/lint"],
-  "settings": {
-    "shadcn": {
-      "ui": "novon"
-    }
-  }
-}

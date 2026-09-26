@@ -30,6 +30,7 @@ import { behavior } from './design-system/behaviors.ts'
 import { colors, elevation, layout, media, radii, space, theme, type } from './design-system/tokens.stylex.ts'
 import { typography } from './design-system/typography.ts'
 import type { StyleProps } from './design-system/props.ts'
+import { surface } from './design-system/surfaces.ts'
 import { useBase, useConfig, useSite } from './site.tsx'
 import { SearchTrigger } from './search.tsx'
 import { Accordion, AccordionItem, AccordionPanel, AccordionTrigger, Badge, Dialog, DialogClose, DialogContent, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, ScrollArea } from './ui.tsx'
@@ -135,17 +136,16 @@ const styles = stylex.create({
     fontSize: type.label,
     lineHeight: type.compactLeading,
     textDecoration: 'none',
-    transitionProperty: 'color, background-color',
+    transitionProperty: 'color, background-color, box-shadow',
     transitionDuration: '150ms',
-    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover },
     color: { default: colors.mutedText, ':hover': colors.text },
   },
+  // Identity only: the frosted material supplies fill and depth, so the
+  // sidebar highlight and the button are the same style by construction.
   navItemActive: {
-    backgroundColor: colors.raised,
-    boxShadow: elevation.low,
     fontWeight: type.medium,
     color: colors.text,
-    ':hover': { backgroundColor: colors.raisedHover, color: colors.text },
+    ':hover': { color: colors.text },
   },
   navItemRoot: { paddingInlineStart: space.twoHalf },
   navItemNested: { paddingInlineStart: space.six },
@@ -161,6 +161,14 @@ const styles = stylex.create({
     color: colors.mutedText,
   },
   navIcon: { opacity: 0.8 },
+  navIconSlot: {
+    display: 'inline-flex',
+    width: space.four,
+    height: space.four,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   navGroupTrigger: {
     paddingBlock: space.oneHalf,
     paddingInlineStart: space.twoHalf,
@@ -170,13 +178,12 @@ const styles = stylex.create({
     fontSize: type.label,
     fontWeight: type.regular,
     color: { default: colors.mutedText, ':hover': colors.text },
-    backgroundColor: { default: 'transparent', ':hover': colors.raisedHover, ':focus-visible': colors.raisedHover },
   },
   navGroupLabel: { display: 'flex', minWidth: 0, alignItems: 'center', gap: space.two },
   navGroupPanel: { paddingBlockEnd: 0 },
   navGroupInner: { paddingInlineStart: space.one },
 
-  sidebar: { display: 'flex', height: '100%', flexDirection: 'column' },
+  sidebar: { display: 'flex', height: '100%', flexDirection: 'column', backgroundColor: colors.sidebar },
   sidebarHead: {
     display: 'flex',
     height: layout.header,
@@ -254,11 +261,10 @@ const styles = stylex.create({
     paddingBlock: space.oneHalf,
     fontSize: type.label,
     lineHeight: type.compactLeading,
-    color: colors.mutedText,
     textDecoration: 'none',
-    transitionProperty: 'color, background-color',
+    transitionProperty: 'color, background-color, box-shadow',
     transitionDuration: '150ms',
-    ':hover': { backgroundColor: colors.raisedHover, color: colors.text },
+    color: { default: colors.mutedText, ':hover': colors.text },
   },
   mobileControls: { marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: space.one },
   mobileSearch: {
@@ -339,8 +345,6 @@ const styles = stylex.create({
     gap: space.two,
     whiteSpace: 'nowrap',
     borderRadius: radii.control,
-    backgroundColor: { default: colors.raised, ':hover': colors.raisedHover },
-    boxShadow: { default: elevation.low, ':active': elevation.press },
     paddingInline: space.three,
     fontSize: type.label,
     fontWeight: type.medium,
@@ -355,6 +359,21 @@ const styles = stylex.create({
   socialPills: { marginTop: space.five },
   fullHeight: { height: '100%' },
   progressGap: { marginTop: space.three },
+  tocAside: {
+    position: 'sticky',
+    top: 0,
+    height: '100vh',
+    flexShrink: 0,
+    paddingInline: space.four,
+    paddingBlock: space.ten,
+    display: { default: 'none', [media.xwide]: 'block' },
+  },
+  tocScroll: {
+    height: '100%',
+    overflowY: 'auto',
+    scrollbarWidth: 'none',
+    '::-webkit-scrollbar': { width: 0, height: 0 },
+  },
   mobileScroll: { height: '100%' },
   openMenu: { width: '16rem' },
 
@@ -475,7 +494,7 @@ const styles = stylex.create({
   notFoundBody: { marginTop: space.three, color: colors.mutedText },
   notFoundCode: {
     borderRadius: radii.control,
-    backgroundColor: colors.muted,
+    backgroundColor: colors.subtle,
     paddingInline: space.oneHalf,
     paddingBlock: space.half,
     fontSize: type.label,
@@ -517,6 +536,7 @@ const styles = stylex.create({
     height: '100%',
     flexDirection: 'column',
     alignItems: 'center',
+    backgroundColor: colors.sidebar,
   },
   collapsedHead: { display: 'flex', height: layout.header, alignItems: 'center' },
   collapsedFoot: { marginTop: 'auto', display: 'flex', height: space.twelve, alignItems: 'center' },
@@ -556,17 +576,7 @@ const styles = stylex.create({
     ':hover': { backgroundColor: colors.hover, color: colors.text },
   },
   main: { minWidth: 0, flex: 1 },
-  tocAside: {
-    position: 'sticky',
-    top: 0,
-    height: '100vh',
-    flexShrink: 0,
-    overflowY: 'auto',
-    paddingInline: space.four,
-    paddingBlock: space.ten,
-    display: { default: 'none', [media.xwide]: 'block' },
-  },
-  tocAsideWidth: { width: 'var(--novon-toc-width)' },
+  tocAsideWidth: { position: 'relative', width: 'var(--novon-toc-width)' },
   docsPage: {
     marginInline: 'auto',
     width: '100%',
@@ -782,11 +792,14 @@ function NavLink({
       aria-current={active ? 'page' : undefined}
       {...stylex.props(
         styles.navItem,
+        active ? surface.frostedControl : surface.frostedGhost,
         indent ? styles.navItemNested : styles.navItemRoot,
         active && styles.navItemActive,
       )}
     >
-      {item.icon ? <Icon icon={item.icon} /> : null}
+      <span {...stylex.props(styles.navIconSlot)}>
+        {item.icon ? <Icon icon={item.icon} /> : null}
+      </span>
       <span {...stylex.props(styles.brandTitle)}>{item.label}</span>
     </a>
   )
@@ -798,11 +811,14 @@ function NavTree({
   current,
   onNavigate,
   depth = 0,
+  nested = false,
 }: {
   nodes: NavNode[]
   current: string
   onNavigate?: () => void
   depth?: number
+  /** Rows inside an expanded nested group step in; section rows do not. */
+  nested?: boolean
 }) {
   const contains = (node: NavNode): boolean =>
     node.kind === 'page' ? isActive(node.path, current) : node.path === current || node.children.some(contains)
@@ -813,7 +829,7 @@ function NavTree({
         if (node.kind === 'page') {
           return (
             <li key={node.path}>
-              <NavLink item={node} current={current} onNavigate={onNavigate} indent={depth > 0} />
+              <NavLink item={node} current={current} onNavigate={onNavigate} indent={nested} />
             </li>
           )
         }
@@ -823,7 +839,7 @@ function NavTree({
           return (
             <li key={node.label} {...stylex.props(styles.navSection)}>
               <p {...stylex.props(styles.navSectionLabel)}>{node.label}</p>
-              <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} />
+              <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} nested={nested} />
             </li>
           )
         }
@@ -848,15 +864,17 @@ function NestedNavGroup({ node, active, current, onNavigate, depth }: {
     <li>
       <Accordion value={open} onValueChange={setOpen}>
         <AccordionItem value="group" xstyle={styles.navGroupPanel}>
-          <AccordionTrigger xstyle={styles.navGroupTrigger}>
+          <AccordionTrigger xstyle={[surface.frostedGhost, styles.navGroupTrigger]}>
             <span {...stylex.props(styles.navGroupLabel)}>
-              {node.icon ? <Icon icon={node.icon} /> : null}
+              <span {...stylex.props(styles.navIconSlot)}>
+                {node.icon ? <Icon icon={node.icon} /> : null}
+              </span>
               <span {...stylex.props(styles.brandTitle)}>{node.label}</span>
             </span>
           </AccordionTrigger>
           <AccordionPanel>
             <div {...stylex.props(styles.navGroupInner)}>
-              <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} />
+              <NavTree nodes={node.children} current={current} onNavigate={onNavigate} depth={depth + 1} nested />
             </div>
           </AccordionPanel>
         </AccordionItem>
@@ -956,7 +974,7 @@ export function DefaultDocsHeader({ onToggleNav, navOpen, xstyle }: { onToggleNa
             key={item.href}
             href={isExternal(item.href) ? item.href : withBase(base, item.href)}
             {...(isExternal(item.href) ? { target: '_blank', rel: 'noreferrer' } : {})}
-            {...stylex.props(styles.mobileNavLink)}
+            {...stylex.props(surface.frostedGhost, styles.mobileNavLink)}
           >
             {item.label}
           </a>
@@ -1185,7 +1203,6 @@ export function DefaultTableOfContents({ headings, xstyle }: { headings: TocEntr
         <ListIcon aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
         On this page
       </p>
-      <ReadingProgress xstyle={styles.progressGap} />
       <ul ref={listRef} onClick={onListClick} {...stylex.props(styles.tocList)}>
         {headings.map((heading, index) => (
           <TocItem
@@ -1345,7 +1362,7 @@ export function PageActions({ path }: { path: string }) {
           type="button"
           onClick={copy}
           disabled={state === 'copying'}
-          {...stylex.props(styles.actionButton)}
+          {...stylex.props(surface.frostedControl, styles.actionButton)}
         >
           {state === 'copied' ? (
             <Check aria-hidden="true" size={16} />
@@ -1364,7 +1381,7 @@ export function PageActions({ path }: { path: string }) {
         </button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger xstyle={styles.actionButton}>
+          <DropdownMenuTrigger xstyle={[surface.frostedControl, styles.actionButton]}>
             Open
             <ChevronDown aria-hidden="true" size={16} {...stylex.props(styles.menuArrow)} />
           </DropdownMenuTrigger>
@@ -1391,7 +1408,8 @@ export function PageActions({ path }: { path: string }) {
         </DropdownMenu>
       </div>
 
-      <span role="status" aria-live="polite" {...stylex.props(styles.status)}>
+      {/* Announced only: a visible line here made the row jump on every click. */}
+      <span role="status" aria-live="polite" {...stylex.props(behavior.visuallyHidden)}>
         {state === 'copied' ? 'Markdown copied' : state === 'error' ? error : ''}
       </span>
 
@@ -1874,8 +1892,13 @@ export function DocsLayout({ route, url, headings, children, config, site }: Doc
         </main>
 
         {showToc ? (
-          <aside {...stylex.props(styles.tocAside, styles.tocAsideWidth, behavior.scroll)}>
-            <TableOfContents headings={headings} />
+          <aside {...stylex.props(styles.tocAside, styles.tocAsideWidth)}>
+            <div {...stylex.props(styles.tocScroll)}>
+              <TableOfContents headings={headings} />
+            </div>
+            {/* The progress lane merges the old horizontal bar with the
+                scrollbar it replaces. */}
+            <ReadingProgress vertical />
           </aside>
         ) : null}
       </div>

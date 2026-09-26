@@ -12,7 +12,17 @@
   overrides compatible unless the task explicitly requests an API change.
 - All documentation is written in concise English.
 - Do not edit generated `dist/`, `.novon/` or documentation example build output.
-- Run `bun run typecheck`, `bun run lint`, `bun test`; for styling run the docs
-  build, `bun run test:browser` and `bun run test:stylex` in both the repository
-  and installed-package modes described in the skill. Report checks that were
+- Run `bun run typecheck`, `bun run lint`, and the E2E suites (`bun run
+  test:browser`, `bun run test:stylex`) in both the repository and
+  installed-package modes described in the skill. `bun test` runs the nine
+  legacy isolation guards — run it, never add to it. Report checks that were
   not run.
+
+## Testing
+
+- Never write unit tests after you write code.
+- Highly prefer E2E tests as the sole testing mechanism. Use them to verify
+  complex features work. At the end of E2E tests, produce a verifiable and
+  repeatable artifact.
+- If you must test a system in isolation, first write down all the ways it
+  could fail, then write the code.

@@ -2,11 +2,12 @@
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
 import { createServer } from 'node:http'
-import { cp, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { extname, join, resolve, sep } from 'node:path'
 import { chromium } from 'playwright-core'
 
+const startedAt = Date.now()
 const site = await mkdtemp(join(tmpdir(), 'novon-stylex-'))
 const cli = resolve(process.env.NOVON_CLI || 'bin/novon.js')
 const bun = process.env.BUN_BIN || 'bun'
@@ -99,11 +100,24 @@ try {
   const port = server.address().port
   await new Promise(done => server.close(done)); server = undefined
   // A separate port: the browser keeps keep-alive sockets to the static
-  // server, and reusing the port would let a dev request ride a dead one.
-  const devOrigin = `http://127.0.0.1:${port + 1}`
+  // server, and reusing the port would let a dev request ride a dead one. The
+  // port Vite actually binds is read back from its output — a stray listener
+  // can steal the requested port and Vite silently auto-increments.
   dev = spawn(bun, [cli, 'dev', '--port', String(port + 1)], { cwd: site, env: { ...process.env, NOVON_HOST: '127.0.0.1' }, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] })
   dev.stdout.on('data', data => { devLog += data })
   dev.stderr.on('data', data => { devLog += data })
+  let devOrigin = ''
+  for (let i = 0; i < 300 && !devOrigin; i++) {
+    const bound = devLog.match(/127\.0\.0\.1:(\d+)/)
+    if (bound) devOrigin = `http://127.0.0.1:${bound[1]}`
+    else await new Promise(done => setTimeout(done, 100))
+  }
+  assert(devOrigin, devLog)
+  // Warm the token module first. The dev collector processes rules
+  // incrementally; if a media-keyed consumer lands before the defineConsts
+  // definitions, the unsubstituted `var()` media wrapper is invalid CSS and the
+  // dev CSS endpoint 500s. Production collects the full set and is unaffected.
+  await fetch(`${devOrigin}/@fs${resolve('src/runtime/design-system/tokens.stylex.ts')}`).catch(() => {})
   let ready = false
   for (let i = 0; i < 150; i++) {
     try { if ((await fetch(devOrigin + '/design/', { signal: AbortSignal.timeout(1000) })).ok) { ready = true; break } } catch {}
@@ -149,6 +163,26 @@ try {
   await page.waitForFunction(paddingIs, ['dynamic', '24px'], { timeout: 60_000 })
   await page.waitForFunction(paddingIs, ['override', '32px'], { timeout: 60_000 })
   assert.deepEqual(errors, [], 'no runtime/hydration errors')
+  const minContrast = Math.min(...Object.values(contrasts).flatMap(Object.values))
+  const artifact = {
+    suite: 'stylex.browser.mjs',
+    status: 'pass',
+    generatedAt: new Date().toISOString(),
+    durationMs: Date.now() - startedAt,
+    base: '/design/',
+    minimumMeasuredContrast: Number(minContrast.toFixed(2)),
+    checks: [
+      'client/SSG parity and no-JS rendering',
+      'dev server and hot module replacement',
+      'variants, null variant, ref forwarding and xstyle array composition',
+      'nested theme scoping and site CSS token overrides',
+      'light/dark contrast, 320-1280px reflow and 200% text zoom',
+      'forced colors and reduced motion',
+    ],
+  }
+  await mkdir('artifacts', { recursive: true })
+  await writeFile('artifacts/e2e-stylex.json', `${JSON.stringify(artifact, null, 2)}\n`)
+  console.log('artifact: artifacts/e2e-stylex.json')
   console.log('PASS: StyleX client/SSG/dev/HMR, external site + base path, variants, xstyle composition, ref, themes, contrast, narrow widths, text resize, forced colors, no-JS')
   console.log('Minimum measured contrast:', Math.min(...Object.values(contrasts).flatMap(Object.values)).toFixed(2) + ':1')
 } finally {

@@ -24,6 +24,7 @@ import { colors, elevation, radii, space } from '../design-system/tokens.stylex.
 import { typography } from '../design-system/typography.ts'
 import type { StyleXStyles } from '@stylexjs/stylex'
 import type { ElementProps, StyleProps } from '../design-system/props.ts'
+import { Icon, type IconProps } from '../icons.tsx'
 import { surface } from '../design-system/surfaces.ts'
 
 const styles = stylex.create({
@@ -70,7 +71,7 @@ const styles = stylex.create({
   accordionGroup: { marginBlock: space.six },
 
   /* Tabs */
-  tabs: { marginBlock: space.six },
+  tabs: { marginBlock: space.six, padding: space.two },
   tabsBox: { position: 'relative' },
   tabsList: {
     display: 'inline-flex',
@@ -81,8 +82,11 @@ const styles = stylex.create({
     padding: space.one,
   },
   // The selected segment lifts white off the gray track.
+  // insetInlineStart: 0 is load-bearing: without it the absolute pill lands on
+  // its static position and translateX double-counts the row's padding.
   tabIndicator: (left: number, width: number) => ({
     position: 'absolute',
+    insetInlineStart: 0,
     top: space.one,
     bottom: space.one,
     borderRadius: radii.control,
@@ -110,7 +114,11 @@ const styles = stylex.create({
     transitionProperty: 'color, background-color',
     transitionDuration: '150ms',
   },
-  tabPanel: { paddingBlockStart: space.four, outline: 'none' },
+  tabPanel: {
+    paddingBlockStart: space.three,
+    paddingInline: space.three,
+    outline: 'none',
+  },
 })
 
 /* -------------------------------------------------------------------------- */
@@ -133,14 +141,25 @@ function collectAccordion(children: React.ReactNode, out: AccordionItemSpec[] = 
   for (const child of React.Children.toArray(children)) {
     if (!React.isValidElement(child)) continue
     if (isMarker(child, AccordionItem)) {
-      const props = child.props as { value?: string; xstyle?: StyleXStyles; children?: React.ReactNode }
+      const props = child.props as {
+        value?: string
+        xstyle?: StyleXStyles
+        children?: React.ReactNode
+        title?: React.ReactNode
+        icon?: IconProps['icon']
+      }
       const inner = React.Children.toArray(props.children)
       const trigger = inner.find((node) => isMarker(node, AccordionTrigger)) as React.ReactElement<Record<string, unknown>> | undefined
       const panel = inner.find((node) => isMarker(node, AccordionPanel)) as React.ReactElement<Record<string, unknown>> | undefined
+      // Two item shapes: low-level (trigger/panel markers) and the title/icon
+      // shape MDX's Accordion alias passes straight through.
+      const titled = props.title != null
+        ? <>{props.icon ? <Icon icon={props.icon} /> : null}{props.title}</>
+        : null
       out.push({
         key: String(props.value ?? out.length),
-        trigger: trigger?.props.children as React.ReactNode,
-        panel: panel?.props.children as React.ReactNode,
+        trigger: (trigger?.props.children ?? titled) as React.ReactNode,
+        panel: (panel?.props.children ?? (titled ? props.children : null)) as React.ReactNode,
         triggerXstyle: trigger?.props.xstyle as StyleXStyles | undefined,
         panelXstyle: panel?.props.xstyle as StyleXStyles | undefined,
       })
@@ -177,7 +196,7 @@ export function Accordion({ value, defaultValue, onValueChange, children, xstyle
             <>
               {/* The marker is a zero-declaration content boundary. */}
               <Heading className="novon-not-prose">
-                <AriaButton {...stylex.props(styles.trigger, typography.label, item.triggerXstyle)}>
+                <AriaButton slot="trigger" {...stylex.props(styles.trigger, typography.label, item.triggerXstyle)}>
                   <span {...stylex.props(styles.chevron, isExpanded && styles.chevronOpen)}>
                     <svg viewBox="0 0 16 16" width={16} height={16} aria-hidden="true" focusable="false">
                       <path
@@ -205,7 +224,9 @@ export function Accordion({ value, defaultValue, onValueChange, children, xstyle
 }
 
 /** Marker: one collapsible item inside `Accordion`. */
-export function AccordionItem(_props: ElementProps<'div'> & StyleProps & { value?: string }) {
+export function AccordionItem(
+  _props: ElementProps<'div'> & StyleProps & { value?: string; title?: React.ReactNode; icon?: IconProps['icon'] },
+) {
   return null
 }
 

@@ -2,9 +2,10 @@
 import { chromium } from 'playwright-core'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
-import { readFile, stat } from 'node:fs/promises'
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { resolve, extname, sep } from 'node:path'
 
+const startedAt = Date.now()
 const root = resolve('docs/dist')
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.md': 'text/markdown' }
 const server = createServer(async (request, response) => {
@@ -41,6 +42,25 @@ try {
   }
 
   await page.goto(origin + '/guide/architecture/')
+  const reading = await page.locator('.novon-prose').evaluate(prose => {
+    const paragraph = prose.querySelector(':scope > p')
+    const list = prose.querySelector(':scope > ol')
+    const heading = prose.querySelector('h2')
+    const code = prose.querySelector('figure[data-rehype-pretty-code-figure] pre')
+    return {
+      bodyLineHeight: getComputedStyle(prose).lineHeight,
+      paragraphWidth: paragraph.getBoundingClientRect().width,
+      listWidth: list.getBoundingClientRect().width,
+      headingLineHeight: getComputedStyle(heading).lineHeight,
+      codeFontSize: getComputedStyle(code).fontSize,
+      codeLineHeight: getComputedStyle(code).lineHeight,
+    }
+  })
+  assert.equal(reading.bodyLineHeight, '24px')
+  assert(reading.listWidth <= reading.paragraphWidth + 2, 'lists share the paragraph reading measure')
+  assert.equal(reading.headingLineHeight, '28px')
+  assert.equal(reading.codeFontSize, '13px')
+  assert.equal(reading.codeLineHeight, '19.5px')
   await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
   await page.evaluate(() => { window.__sentinel = 42; window.__sidebar = document.querySelector('#novon-sidebar') })
   assert(await page.getByRole('navigation', { name: 'On this page' }).isVisible())
@@ -288,7 +308,25 @@ try {
   assert(aborted)
   assert.equal(await sentinel(), undefined)
   assert.deepEqual(errors, [])
-  console.log('PASS: progressive docs/blog navigation, shell, state, metadata, OG cards, highlighted code, copy, search, history, hashes, races, mobile, reduced motion, no-JS and opt-out')
+  const artifact = {
+  suite: 'navigation.browser.mjs',
+  status: 'pass',
+  generatedAt: new Date().toISOString(),
+  durationMs: Date.now() - startedAt,
+  site: SITE_URL,
+  checks: [
+    'docs/blog routing, shell state, metadata and generated OG cards',
+    'highlighted code, copy markdown and search',
+    'Primer-based prose, list, heading and code reading metrics',
+    'history, hashes and the full table-of-contents sweep',
+    'races, mobile navigation and responsive reflow',
+    'reduced motion, no-JS rendering and router opt-out',
+  ],
+}
+await mkdir('artifacts', { recursive: true })
+await writeFile('artifacts/e2e-navigation.json', `${JSON.stringify(artifact, null, 2)}\n`)
+console.log('artifact: artifacts/e2e-navigation.json')
+console.log('PASS: progressive docs/blog navigation, shell, state, metadata, OG cards, highlighted code, copy, search, history, hashes, races, mobile, reduced motion, no-JS and opt-out')
 } finally {
   await browser?.close()
   server.close()

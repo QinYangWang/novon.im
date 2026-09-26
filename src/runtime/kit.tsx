@@ -154,6 +154,16 @@ const progressStyles = stylex.create({
     backgroundColor: 'transparent',
   },
   hiddenIcon: { width: space.three, height: space.three, flexShrink: 0 },
+  lane: {
+    position: 'absolute',
+    insetBlock: 0,
+    insetInlineEnd: 0,
+    width: 5,
+    borderRadius: radii.pill,
+    backgroundColor: colors.raised,
+    boxShadow: elevation.press,
+  },
+  barVertical: { transformOrigin: '50% 0', width: '100%', height: '100%' },
   bar: {
     width: '100%',
     height: '100%',
@@ -170,14 +180,14 @@ const progressStyles = stylex.create({
  * Drives a progress bar's `scaleX` straight from the DOM, so a scroll frame
  * never re-renders React.
  */
-function useScrollProgress(barRef: React.RefObject<HTMLElement | null>) {
+function useScrollProgress(barRef: React.RefObject<HTMLElement | null>, axis: 'x' | 'y' = 'x') {
   React.useEffect(() => {
     const paint = () => {
       const bar = barRef.current
       if (!bar) return
       const scrollable = document.documentElement.scrollHeight - window.innerHeight
       const progress = scrollable > 1 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0
-      bar.style.transform = `scaleX(${progress})`
+      bar.style.transform = axis === 'y' ? `scaleY(${progress})` : `scaleX(${progress})`
     }
 
     let frame = 0
@@ -200,7 +210,7 @@ function useScrollProgress(barRef: React.RefObject<HTMLElement | null>) {
       observer?.disconnect()
       if (frame) window.cancelAnimationFrame(frame)
     }
-  }, [barRef])
+  }, [barRef, axis])
 }
 
 const readoutStyles = stylex.create({
@@ -256,9 +266,9 @@ function useReadingReadout(words: number, wordsPerMinute: number, steps = 24) {
 }
 
 /**
- * Reading progress as an inline bar. Inside the "On this page" panel the bar
- * alone carries the progress; passing `words` adds the time-remaining readout
- * ("3 min left", then "End · 12 min") with progressbar semantics.
+ * Reading progress. Horizontal shows the time-remaining readout when `words`
+ * is given; `vertical` renders the outline-side lane that merges the progress
+ * with the scrollbar it replaces.
  */
 export function ReadingProgress({
   xstyle,
@@ -266,12 +276,20 @@ export function ReadingProgress({
   wordsPerMinute = 220,
   label = 'Reading progress',
   doneLabel = 'End',
-}: StyleProps & { words?: number; wordsPerMinute?: number; label?: string; doneLabel?: string }) {
+  vertical = false,
+}: StyleProps & { words?: number; wordsPerMinute?: number; label?: string; doneLabel?: string; vertical?: boolean }) {
   const barRef = React.useRef<HTMLDivElement>(null)
-  useScrollProgress(barRef)
+  useScrollProgress(barRef, vertical ? 'y' : 'x')
   const { step, steps, totalMinutes, minutesLeft, complete } = useReadingReadout(words, wordsPerMinute)
 
-  const bar = <div ref={barRef} {...stylex.props(progressStyles.bar)} style={{ transform: 'scaleX(0)' }} />
+  const bar = <div ref={barRef} {...stylex.props(progressStyles.bar, vertical && progressStyles.barVertical)} style={{ transform: vertical ? 'scaleY(0)' : 'scaleX(0)' }} />
+  if (vertical) {
+    return (
+      <div aria-hidden="true" data-novon-progress="inline" {...stylex.props(progressStyles.lane, xstyle)}>
+        {bar}
+      </div>
+    )
+  }
   if (words <= 0) {
     return (
       <div aria-hidden="true" data-novon-progress="inline" {...stylex.props(progressStyles.track, xstyle)}>
@@ -363,9 +381,12 @@ const pillStyles = stylex.create({
     padding: space.one,
   },
   list: { position: 'relative', display: 'flex', alignItems: 'center', gap: space.half },
-  // The selected pill lifts white off the gray track.
+  // The selected pill lifts white off the gray track. insetInlineStart: 0 is
+  // load-bearing: without it the absolute pill lands on its static position and
+  // the measured translateX double-counts the track's padding.
   indicator: (left: number, width: number) => ({
     position: 'absolute',
+    insetInlineStart: 0,
     top: space.one,
     bottom: space.one,
     borderRadius: radii.control,

@@ -6,47 +6,60 @@ import * as stylex from '@stylexjs/stylex'
 // Do not wrap these references in defineVars: root-resolved aliases can freeze
 // an inherited value before a nested theme changes the original variable.
 export const colors = stylex.defineConsts({
+  /*
+   * Roles read novon's public token names, so a site stylesheet can override
+   * either those names or the HeroUI-derived variables behind them. Derived
+   * shades keep HeroUI's color-mix formulas.
+   */
   canvas: 'var(--background)',
+  sidebar: 'var(--novon-sidebar-surface)',
   text: 'var(--foreground)',
   textSoft: 'color-mix(in oklab, var(--foreground) 90%, transparent)',
+  mutedText: 'var(--muted-foreground)',
+
+  /* Surfaces: containers resting on the canvas */
   surface: 'var(--card)',
   surfaceText: 'var(--card-foreground)',
-  surfaceSoft: 'color-mix(in oklab, var(--card) 40%, transparent)',
-  surfaceRaised: 'color-mix(in oklab, var(--card) 60%, transparent)',
-  surfaceStrong: 'color-mix(in oklab, var(--card) 85%, transparent)',
-  canvasSoft: 'color-mix(in oklab, var(--background) 85%, transparent)',
-  canvasSunk: 'color-mix(in oklab, var(--foreground) 4%, var(--background))',
+  surfaceSoft: 'var(--novon-raised)',
+  canvasSoft: 'color-mix(in oklab, var(--background) 96%, var(--foreground) 4%)',
+
+  /* The gray raised block: panels, cards, tool strips */
+  raised: 'var(--novon-raised)',
+  raisedHover: 'var(--novon-raised-hover)',
+  raisedStrong: 'var(--novon-raised-strong)',
+
+  /* Neutral interactive fills */
   subtle: 'var(--secondary)',
   subtleText: 'var(--secondary-foreground)',
-  subtleSoft: 'color-mix(in oklab, var(--secondary) 60%, transparent)',
+  subtleSoft: 'color-mix(in oklab, var(--secondary) 50%, transparent)',
+  hoverSoft: 'color-mix(in oklab, var(--secondary) 60%, transparent)',
+
+  /* Overlays and the selected segment of a segmented control */
   popover: 'var(--popover)',
   popoverText: 'var(--popover-foreground)',
-  muted: 'var(--muted)',
-  mutedText: 'var(--muted-foreground)',
-  mutedSoft: 'color-mix(in oklab, var(--muted) 40%, transparent)',
+  hover: 'color-mix(in oklab, var(--secondary) 8%, var(--card))',
+
+  /* Accent: the primary identity */
   strong: 'var(--primary)',
-  strongHover: 'color-mix(in oklab, var(--primary) 90%, transparent)',
+  strongHover: 'color-mix(in oklab, var(--primary) 90%, var(--primary-foreground) 10%)',
   onStrong: 'var(--primary-foreground)',
-  hover: 'var(--accent)',
-  hoverSoft: 'color-mix(in oklab, var(--accent) 50%, transparent)',
-  hoverFaint: 'color-mix(in oklab, var(--accent) 40%, transparent)',
+
+  /* Structure and focus */
   border: 'var(--border)',
-  borderSoft: 'color-mix(in oklab, var(--muted-foreground) 45%, transparent)',
+  borderSoft: 'color-mix(in oklab, var(--card) 85%, var(--card-foreground) 15%)',
   focus: 'var(--ring)',
-  focusSoft: 'color-mix(in oklab, var(--ring) 40%, transparent)',
   scrim: 'color-mix(in oklab, #000 40%, transparent)',
+
+  /* Status: solid fills pair with their foreground, soft fills carry labels */
+  danger: 'var(--destructive)',
+  dangerHover: 'color-mix(in oklab, var(--destructive) 90%, var(--destructive-foreground) 10%)',
+  onDanger: 'var(--destructive-foreground)',
+  dangerSurface: 'var(--novon-danger-surface)',
+  dangerText: 'var(--novon-danger-text)',
   successSurface: 'var(--novon-success-surface)',
   successText: 'var(--novon-success-text)',
   warningSurface: 'var(--novon-warning-surface)',
   warningText: 'var(--novon-warning-text)',
-  danger: 'var(--destructive)',
-  dangerHover: 'color-mix(in oklab, var(--destructive) 90%, transparent)',
-  onDanger: 'var(--destructive-foreground)',
-  dangerSurface: 'var(--novon-danger-surface)',
-  dangerText: 'var(--novon-danger-text)',
-  raised: 'var(--novon-raised)',
-  raisedHover: 'var(--novon-raised-hover)',
-  raisedStrong: 'var(--novon-raised-strong)',
 })
 
 // The theme is switched by `data-theme` on <html>, which no element can select

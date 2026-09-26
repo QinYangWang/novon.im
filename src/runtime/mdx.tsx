@@ -26,13 +26,12 @@ import type { StyleXStyles } from '@stylexjs/stylex'
 import { colors, elevation, media, radii, space, type } from './design-system/tokens.stylex.ts'
 import { typography } from './design-system/typography.ts'
 import type { ElementProps, StyleProps } from './design-system/props.ts'
+import { surface } from './design-system/surfaces.ts'
 import { Icon, type IconProps } from './icons.tsx'
 import { SvglIcon } from './svgl.tsx'
 import {
   Accordion as UIAccordion,
   AccordionItem,
-  AccordionPanel,
-  AccordionTrigger,
   Badge as UIBadge,
   Tabs as UITabs,
   TabsContent,
@@ -103,7 +102,7 @@ export function Callout({ type = 'note', title, icon, xstyle, children, ...props
       </span>
       <div {...stylex.props(styles.calloutBody)}>
         {title ? <p {...stylex.props(styles.calloutTitle, typography.label)}>{title}</p> : null}
-        <Stack gap={12}>{children}</Stack>
+        {children}
       </div>
     </div>
   )
@@ -133,20 +132,19 @@ export type MdxCardProps = Omit<ElementProps<'div'>, 'title'> &
 const cardStyles = stylex.create({
   // The marker wrapper opts the card out of prose element styles; the visuals
   // live on this box.
+  // Geometry only: the frosted material owns fill, grain, blur and depth.
   card: {
     display: 'flex',
     borderRadius: radii.large,
-    backgroundColor: colors.raised,
-    boxShadow: elevation.low,
     padding: space.four,
     textDecoration: 'none',
     transitionProperty: 'color, background-color, box-shadow',
     transitionDuration: '150ms',
   },
-  cardLink: { backgroundColor: { default: colors.raised, ':hover': colors.raisedHover } },
   horizontal: { flexDirection: 'row', alignItems: 'flex-start', gap: space.three },
   vertical: { flexDirection: 'column' },
   iconTop: { marginTop: space.half },
+  iconPlain: { backgroundColor: 'transparent', boxShadow: 'none' },
   iconCenter: { alignSelf: 'center' },
   iconEnd: { marginInlineStart: 'auto' },
   headerRow: {
@@ -182,7 +180,7 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
   if (horizontal) {
     return (
       <>
-        {icon ? <IconBadge icon={icon} xstyle={cardStyles.iconTop} /> : null}
+        {icon ? <IconBadge icon={icon} xstyle={[cardStyles.iconPlain, cardStyles.iconTop]} /> : null}
         {content}
         {arrow ? <CardArrow xstyle={cardStyles.iconCenter} /> : null}
       </>
@@ -195,7 +193,7 @@ function MdxCardInner({ title, icon, horizontal, arrow, children }: MdxCardProps
     <>
       {icon || arrow ? (
         <div {...stylex.props(cardStyles.headerRow)}>
-          {icon ? <IconBadge icon={icon} /> : null}
+          {icon ? <IconBadge icon={icon} xstyle={cardStyles.iconPlain} /> : null}
           {arrow ? <CardArrow xstyle={cardStyles.iconEnd} /> : null}
         </div>
       ) : null}
@@ -209,8 +207,8 @@ export function MdxCard({ title, icon, href, horizontal, arrow = Boolean(href), 
   const inner = (
     <div
       {...stylex.props(
+        href ? surface.frostedControl : surface.frosted,
         cardStyles.card,
-        Boolean(href) && cardStyles.cardLink,
         horizontal ? cardStyles.horizontal : cardStyles.vertical,
         xstyle,
       )}
@@ -322,9 +320,7 @@ export function Step({ title, xstyle, children, ...props }: ElementProps<'div'> 
     <div {...props} {...stylex.props(stepStyles.step, xstyle)}>
       <span {...stylex.props(stepStyles.marker, typography.caption)} />
       {title ? <p {...stylex.props(stepStyles.title)}>{title}</p> : null}
-      <div {...stylex.props(stepStyles.body, typography.labelRegular)}>
-        <Stack gap={12}>{children}</Stack>
-      </div>
+      <div {...stylex.props(stepStyles.body, typography.labelRegular)}>{children}</div>
     </div>
   )
 }
@@ -398,22 +394,6 @@ export function AccordionGroup({ xstyle, ...props }: ElementProps<'div'> & Style
   return <UIAccordion {...(props as object)} xstyle={xstyle ? [accordionStyles.group, xstyle] : accordionStyles.group} />
 }
 
-export function Accordion({ title, icon, children, xstyle }: TabLikeProps & StyleProps) {
-  return (
-    <AccordionItem xstyle={xstyle}>
-      <AccordionTrigger>
-        <span {...stylex.props(accordionStyles.itemLabel)}>
-          {icon ? <Icon icon={icon} /> : null}
-          {title}
-        </span>
-      </AccordionTrigger>
-      <AccordionPanel xstyle={accordionStyles.panelBody}>
-        <Stack gap={12}>{children}</Stack>
-      </AccordionPanel>
-    </AccordionItem>
-  )
-}
-
 /** Find the first `<figcaption>` text inside a rendered code block. */
 function findCaption(node: React.ReactNode): string | undefined {
   let found: string | undefined
@@ -458,7 +438,7 @@ export function CodeGroup({ children, xstyle }: { children?: React.ReactNode; xs
   }))
   if (panels.length === 0) return null
   return (
-    <UITabs defaultValue={panels[0].key} xstyle={xstyle}>
+    <UITabs defaultValue={panels[0].key} data-code-group="" xstyle={xstyle}>
       <TabsList>
         {panels.map((panel) => (
           <TabsTrigger key={panel.key} value={panel.key}>
@@ -669,7 +649,7 @@ export const mdxComponents = {
   Tabs,
   Tab,
   CodeGroup,
-  Accordion,
+  Accordion: AccordionItem,
   AccordionGroup,
   Frame,
   Badge,

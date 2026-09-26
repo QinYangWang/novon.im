@@ -80,6 +80,10 @@ semantic component props (`size`, `numeric`, `fill`) over styling from markup.
   `heading` 18/500, `lede` 18/400, `body` 16, `label` 14, `caption` 12, plus
   `micro` 13 and mono `code` for identifiers. Mono is for code, commands, paths
   and keys only.
+- **Document prose** uses 16px text with 1.5 line height. Paragraphs, lists
+  and quotes stay within 75ch; headings stay within 40ch. Code blocks use
+  13px text with 1.5 line height. Tables and live examples use the full content
+  width. These reading limits follow [Primer's typography guidance](https://primer.style/product/getting-started/foundations/typography/).
 - **Spacing** uses one scale: 2–64px in the `space` tokens. Containers own the
   gap; children add none. Section turns take 48–64px.
 - **Surfaces** are three roles: the page `canvas`, the gray **`raised`** block
@@ -88,9 +92,14 @@ semantic component props (`size`, `numeric`, `fill`) over styling from markup.
   (`--novon-elevation-low` / `-lift`), never a depth-only border; borders stay
   for structure and state. Pressing a control collapses the shadow into the
   surface. Gradients, glows and decorative shadows are still out.
-- **Color** is monochrome by default and encodes state only. Status surfaces use
-  opaque token pairs (`--novon-success-*`, `--novon-warning-*`,
-  `--novon-danger-*`); gradients, glows and ornamental shadows are out.
+- **Color** follows the [HeroUI color model](https://heroui.com/en/docs/react/getting-started/colors):
+  a few `oklch` base values with hover, soft and soft-foreground colors derived
+  by `color-mix`, organized as the semantic families `accent`, `default`,
+  `success`, `warning` and `danger` plus `background`, `surface`, `overlay`,
+  `segment`, `field`, `separator` and `focus`. novon keeps its public token
+  names as aliases over that model, declared per theme block. Status labels use
+  opaque soft pairs so contrast does not depend on the canvas; measured pairs
+  clear 4.5:1 in both themes. Gradients, glows and ornamental shadows are out.
 - **Motion** is still by default. Reduced-motion removes animation, never
   content; state changes keep a non-motion cue.
 

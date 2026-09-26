@@ -21,6 +21,10 @@ Use `Note` or `Info` for context, `Tip` for a recommendation, `Warning` or `Caut
 for a pitfall, and `Danger` for a risk of data loss. The icon and text convey the
 meaning as well as the color. Avoid stacking callouts when ordinary prose works.
 
+A callout can carry a `title` and an `icon`, and its body flows like prose:
+
+<Info title="Custom title">Callouts accept a `title` and an `icon`.</Info>
+
 `Callout` accepts `type`, `title` and an optional Lucide `icon`. The named variants
 accept the same props except `type`. These are reading content, not interrupting
 screen-reader alerts.

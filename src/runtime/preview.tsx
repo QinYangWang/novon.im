@@ -64,8 +64,11 @@ const styles = stylex.create({
     paddingInline: space.two,
     paddingBlock: space.oneHalf,
   },
+  // insetInlineStart: 0 is load-bearing: without it the absolute chip lands on
+  // its static position and translateX double-counts the bar's padding.
   tabIndicator: (left: number, width: number) => ({
     position: 'absolute',
+    insetInlineStart: 0,
     top: space.oneHalf,
     bottom: space.oneHalf,
     borderRadius: radii.control,

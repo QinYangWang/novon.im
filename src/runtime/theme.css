@@ -15,7 +15,31 @@
 /* -------------------------------------------------------------------------- */
 
 @layer theme {
-  :root {
+  /*
+   * Color follows the HeroUI v3 model (heroui.com/docs/react/getting-started/colors):
+   * a handful of base values in `oklch`, with hover/soft/soft-foreground colors
+   * derived from them by `color-mix`, so contrast and hierarchy stay consistent
+   * across themes. Source: heroui-inc/heroui, packages/styles/themes/default.
+   *
+   * novon's public token names are preserved as semantic aliases at the bottom
+   * of this block, so site stylesheets keep overriding what they always did.
+   */
+  :root,
+  [data-theme='light'] {
+    color-scheme: light;
+
+    /* Theme mechanism. The theme is switched by `data-theme` on <html>, which
+       no element can select against from its own StyleX style; these variables
+       carry theme-conditional display, filters and motion into StyleX. */
+    --novon-sidebar-surface: #f1f1f1;
+    --novon-light-only: block;
+    --novon-dark-only: none;
+    --novon-theme-invert: 0;
+    --novon-reveal-opacity: 1;
+    --novon-reveal-y: 0px;
+    --novon-progress-dim: 1;
+
+    /* Layout and shape */
     --radius: 0.5rem;
     --radius-sm: max(0px, calc(var(--radius) - 4px));
     --radius-md: max(0px, calc(var(--radius) - 2px));
@@ -23,63 +47,121 @@
     --radius-xl: calc(var(--radius) + 4px);
     --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.205 0 0);
-    --card: oklch(0.984 0 0);
-    --card-foreground: oklch(0.205 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.205 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(1 0 0);
-    --secondary: oklch(0.961 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.961 0 0);
-    --muted-foreground: oklch(0.42 0 0);
-    --accent: oklch(0.961 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.6256 0.2524 23.03);
-    --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(0 0 0 / 0.1);
-    --input: oklch(0 0 0 / 0.08);
-    --ring: oklch(0.5761 0.2508 258.23);
-
-    /* Status pairs: opaque surfaces make contrast independent of the canvas. */
-    --novon-success-surface: oklch(0.979 0.021 166.113);
-    --novon-success-text: oklch(0.432 0.095 166.913);
-    --novon-warning-surface: oklch(0.987 0.022 95.277);
-    --novon-warning-text: oklch(0.473 0.137 46.201);
-    --novon-danger-surface: oklch(0.971 0.013 17.38);
-    --novon-danger-text: oklch(0.444 0.177 26.899);
-
-    /* Layout */
     --novon-sidebar-width: 16.75rem;
     --novon-toc-width: 14.5rem;
     --novon-content-width: 56rem;
     --novon-column-width: 38rem;
     --novon-header-height: 3.5rem;
 
-    /* Theme mechanism. The theme is switched by `data-theme` on <html>, which
-       no element can select against from its own StyleX style; these variables
-       carry theme-conditional display, filters and motion into StyleX. */
-    --novon-light-only: block;
-    --novon-dark-only: none;
-    --novon-theme-invert: 0;
+    /* Primitives and shared hues */
+    --white: oklch(100% 0 0);
+    --black: oklch(0% 0 0);
+    --snow: oklch(0.9911 0 0);
+    --eclipse: oklch(0.2103 0.0059 285.89);
 
-    /* Raised surfaces: soft gray blocks that lift off the canvas through a
-       top highlight and layered shadows, not borders. */
-    --novon-raised: oklch(0.95 0 0);
-    --novon-raised-hover: oklch(0.925 0 0);
-    --novon-raised-strong: oklch(0.905 0 0);
-    --novon-raised-highlight: oklch(1 0 0 / 0.9);
-    --novon-elevation-low: inset 0 1px 0 var(--novon-raised-highlight),
-      0 1px 2px oklch(0 0 0 / 0.05), 0 1px 1px -1px oklch(0 0 0 / 0.04);
-    --novon-elevation-lift: inset 0 1px 0 var(--novon-raised-highlight),
-      0 1px 2px oklch(0 0 0 / 0.06), 0 10px 28px -14px oklch(0 0 0 / 0.22);
+    /* HeroUI's default accent hue, darkened one step so white labels clear
+       4.5:1 in both themes (their stock blue lands near 3.6:1). */
+    --accent: oklch(0.55 0.195 253.83);
+    --accent-foreground: var(--snow);
+    --success: oklch(0.7329 0.1935 150.81);
+    --success-foreground: var(--eclipse);
+    --warning: oklch(0.7819 0.1585 72.33);
+    --warning-foreground: var(--eclipse);
+    --danger: oklch(0.6532 0.2328 25.74);
+    --danger-foreground: var(--snow);
+
+    /* Base surfaces */
+    --background: oklch(0.9702 0 0);
+    --foreground: var(--eclipse);
+    --surface: var(--white);
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.9524 0.0013 286.37);
+    --surface-secondary-foreground: var(--foreground);
+    --surface-tertiary: oklch(0.9373 0.0013 286.37);
+    --surface-tertiary-foreground: var(--foreground);
+    --overlay: var(--white);
+    --overlay-foreground: var(--foreground);
+    /* HeroUI's muted gray, a step darker for 4.5:1 labels on the canvas. */
+    --muted: oklch(0.5 0.0138 285.94);
+    --default: oklch(94% 0.001 286.375);
+    --default-foreground: var(--eclipse);
+    --segment: var(--white);
+    --segment-foreground: var(--eclipse);
+    --field-background: var(--white);
+    --field-foreground: oklch(0.2103 0.0059 285.89);
+    --field-placeholder: var(--muted);
+    --border: oklch(90% 0.004 286.32);
+    --separator: oklch(92% 0.004 286.32);
+    --focus: var(--accent);
+    --link: var(--foreground);
+    --backdrop: rgba(0, 0, 0, 0.5);
+
+    /* Derived colors */
+    --surface-hover: color-mix(in oklab, var(--surface) 92%, var(--surface-foreground) 8%);
+    --background-secondary: color-mix(in oklab, var(--background) 96%, var(--foreground) 4%);
+    --background-tertiary: color-mix(in oklab, var(--background) 92%, var(--foreground) 8%);
+    --background-inverse: var(--foreground);
+    --default-hover: color-mix(in oklab, var(--default) 96%, var(--default-foreground) 4%);
+    --accent-hover: color-mix(in oklab, var(--accent) 90%, var(--accent-foreground) 10%);
+    --success-hover: color-mix(in oklab, var(--success) 90%, var(--success-foreground) 10%);
+    --warning-hover: color-mix(in oklab, var(--warning) 90%, var(--warning-foreground) 10%);
+    --danger-hover: color-mix(in oklab, var(--danger) 90%, var(--danger-foreground) 10%);
+    --field-hover: color-mix(in oklab, var(--field-background, var(--default)) 90%, var(--field-foreground, var(--foreground)) 2%);
+    --field-focus: var(--field-background, var(--default));
+    --default-soft: color-mix(in oklab, var(--default) 50%, transparent);
+    --default-soft-foreground: var(--default-foreground);
+    --default-soft-hover: color-mix(in oklab, var(--default) 60%, transparent);
+    --accent-soft: color-mix(in oklab, var(--accent) 15%, transparent);
+    --accent-soft-foreground: color-mix(in oklab, var(--accent) 70%, var(--foreground) 30%);
+    --accent-soft-hover: color-mix(in oklab, var(--accent) 20%, transparent);
+    --success-soft: color-mix(in oklab, var(--success) 15%, var(--background));
+    --success-soft: color-mix(in oklab, var(--success) 15%, var(--background));
+    /* Soft labels derive from the base hue darkened: the stock mixes stay too
+       pale for 12px text on their own soft surfaces (measured 2.5:1). */
+    --success-soft-foreground: oklch(from var(--success) calc(l * 0.55) calc(c * 0.55) h);
+    --success-soft-hover: color-mix(in oklab, var(--success) 20%, transparent);
+    --warning-soft: color-mix(in oklab, var(--warning) 15%, var(--background));
+    --warning-soft-foreground: oklch(from var(--warning) calc(l * 0.5) calc(c * 0.55) h);
+    --warning-soft-hover: color-mix(in oklab, var(--warning) 20%, transparent);
+    --danger-soft: color-mix(in oklab, var(--danger) 15%, var(--background));
+    --danger-soft-foreground: oklch(from var(--danger) calc(l * 0.55) calc(c * 0.55) h);
+    --danger-soft-hover: color-mix(in oklab, var(--danger) 20%, transparent);
+    --separator-secondary: color-mix(in oklab, var(--surface) 85%, var(--surface-foreground) 15%);
+
     --novon-elevation-press: inset 0 1px 3px oklch(0 0 0 / 0.1);
-    --novon-reveal-opacity: 1;
-    --novon-reveal-y: 0px;
-    --novon-progress-dim: 1;
+    --surface-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06), 0 0 1px 0 rgba(0, 0, 0, 0.06);
+    --overlay-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.06), 0 -6px 12px 0 rgba(0, 0, 0, 0.03), 0 14px 28px 0 rgba(0, 0, 0, 0.08);
+
+    /*
+     * novon public aliases. Declared in BOTH theme blocks on purpose: a custom
+     * property containing var() is substituted against the scope where it is
+     * declared, so an alias frozen at :root can never rebind inside a nested
+     * theme. Each block recomputes them against its own base colors.
+     */
+    --card: var(--surface);
+    --card-foreground: var(--surface-foreground);
+    --popover: var(--overlay);
+    --popover-foreground: var(--overlay-foreground);
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-foreground);
+    --secondary: var(--default);
+    --secondary-foreground: var(--default-foreground);
+    --destructive: var(--danger);
+    --destructive-foreground: var(--danger-foreground);
+    --muted-foreground: var(--muted);
+    --input: var(--field-background);
+    --ring: var(--focus);
+    --novon-success-surface: var(--success-soft);
+    --novon-success-text: var(--success-soft-foreground);
+    --novon-warning-surface: var(--warning-soft);
+    --novon-warning-text: var(--warning-soft-foreground);
+    --novon-danger-surface: var(--danger-soft);
+    --novon-danger-text: var(--danger-soft-foreground);
+    --novon-raised: var(--surface-secondary);
+    --novon-raised-hover: var(--surface-hover);
+    --novon-raised-strong: var(--surface-tertiary);
+    --novon-elevation-low: var(--surface-shadow);
+    --novon-elevation-lift: var(--overlay-shadow);
   }
 
   /* Content is revealed only once JS is known to be running, so the page stays
@@ -94,46 +176,105 @@
   }
 
   [data-theme='dark'] {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.946 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.946 0 0);
-    --popover: oklch(0.225 0 0);
-    --popover-foreground: oklch(0.946 0 0);
-    --primary: oklch(0.946 0 0);
-    --primary-foreground: oklch(0.145 0 0);
-    --secondary: oklch(0.274 0 0);
-    --secondary-foreground: oklch(0.946 0 0);
-    --muted: oklch(0.274 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.274 0 0);
-    --accent-foreground: oklch(0.946 0 0);
-    --destructive: oklch(0.6256 0.2234 23.03);
-    --border: oklch(1 0 0 / 0.14);
-    --input: oklch(1 0 0 / 0.16);
-    --ring: oklch(0.717 0.1648 250.794);
-    --novon-success-surface: oklch(0.262 0.051 172.552);
-    --novon-success-text: oklch(0.845 0.143 164.978);
-    --novon-warning-surface: oklch(0.279 0.077 45.635);
-    --novon-warning-text: oklch(0.879 0.169 91.605);
-    --novon-danger-surface: oklch(0.258 0.092 26.042);
-    --novon-danger-text: oklch(0.808 0.114 19.571);
+    color-scheme: dark;
 
+    --novon-sidebar-surface: #191919;
     --novon-light-only: none;
     --novon-dark-only: block;
     --novon-theme-invert: 1;
 
-    /* In the dark theme "raised" is brighter than the canvas, and the white
-       top highlight carries the depth that black shadows cannot. */
-    --novon-raised: oklch(1 0 0 / 0.06);
-    --novon-raised-hover: oklch(1 0 0 / 0.09);
-    --novon-raised-strong: oklch(1 0 0 / 0.13);
-    --novon-raised-highlight: oklch(1 0 0 / 0.1);
-    --novon-elevation-low: inset 0 1px 0 var(--novon-raised-highlight),
-      0 1px 2px oklch(0 0 0 / 0.4);
-    --novon-elevation-lift: inset 0 1px 0 var(--novon-raised-highlight),
-      0 1px 2px oklch(0 0 0 / 0.45), 0 10px 28px -14px oklch(0 0 0 / 0.7);
+    --background: oklch(12% 0.005 285.823);
+    --foreground: var(--snow);
+    --surface: oklch(0.2103 0.0059 285.89);
+    --surface-foreground: var(--foreground);
+    --surface-secondary: oklch(0.257 0.0037 286.14);
+    --surface-secondary-foreground: var(--foreground);
+    --surface-tertiary: oklch(0.2721 0.0024 247.91);
+    --surface-tertiary-foreground: var(--foreground);
+    --overlay: oklch(0.2103 0.0059 285.89);
+    --overlay-foreground: var(--foreground);
+    --muted: oklch(70.5% 0.015 286.067);
+    --default: oklch(27.4% 0.006 286.033);
+    --default-foreground: var(--snow);
+    --field-background: oklch(0.2103 0.0059 285.89);
+    --field-foreground: var(--foreground);
+    --field-placeholder: var(--muted);
+    --warning: oklch(0.8203 0.1388 76.34);
+    --warning-foreground: var(--eclipse);
+    --danger: oklch(0.594 0.1967 24.63);
+    --danger-foreground: var(--snow);
+    --segment: oklch(0.3964 0.01 285.93);
+    --segment-foreground: var(--foreground);
+    --border: oklch(28% 0.006 286.033);
+    --separator: oklch(25% 0.006 286.033);
+    --focus: var(--accent);
+    --link: var(--foreground);
+    --backdrop: rgba(0, 0, 0, 0.6);
+
+    /* Derived colors */
+    --surface-hover: color-mix(in oklab, var(--surface) 92%, var(--surface-foreground) 8%);
+    --background-secondary: color-mix(in oklab, var(--background) 96%, var(--foreground) 4%);
+    --background-tertiary: color-mix(in oklab, var(--background) 92%, var(--foreground) 8%);
+    --background-inverse: var(--foreground);
+    --default-hover: color-mix(in oklab, var(--default) 96%, var(--default-foreground) 4%);
+    --accent-hover: color-mix(in oklab, var(--accent) 90%, var(--accent-foreground) 10%);
+    --success-hover: color-mix(in oklab, var(--success) 90%, var(--success-foreground) 10%);
+    --warning-hover: color-mix(in oklab, var(--warning) 90%, var(--warning-foreground) 10%);
+    --danger-hover: color-mix(in oklab, var(--danger) 90%, var(--danger-foreground) 10%);
+    --field-hover: color-mix(in oklab, var(--field-background, var(--default)) 90%, var(--field-foreground, var(--foreground)) 2%);
+    --field-focus: var(--field-background, var(--default));
+    --default-soft: color-mix(in oklab, var(--default) 50%, transparent);
+    --default-soft-foreground: var(--default-foreground);
+    --default-soft-hover: color-mix(in oklab, var(--default) 60%, transparent);
+    --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
+    --accent-soft-foreground: color-mix(in oklab, var(--accent) 80%, var(--foreground) 30%);
+    --accent-soft-hover: color-mix(in oklab, var(--accent) 16%, transparent);
+    --success-soft: color-mix(in oklab, var(--success) 12%, var(--background));
+    --success-soft-foreground: color-mix(in oklab, var(--success) 80%, var(--foreground) 30%);
+    --success-soft-hover: color-mix(in oklab, var(--success) 16%, transparent);
+    --warning-soft: color-mix(in oklab, var(--warning) 12%, var(--background));
+    --warning-soft-foreground: color-mix(in oklab, var(--warning) 80%, var(--foreground) 30%);
+    --warning-soft-hover: color-mix(in oklab, var(--warning) 16%, transparent);
+    --danger-soft: color-mix(in oklab, var(--danger) 15%, var(--background));
+    --danger-soft-foreground: color-mix(in oklab, var(--danger) 80%, var(--foreground) 30%);
+    --danger-soft-hover: color-mix(in oklab, var(--danger) 20%, transparent);
+    --separator-secondary: color-mix(in oklab, var(--surface) 85%, var(--surface-foreground) 15%);
+
+    /* Dark depth: an inset top highlight carries what black shadows cannot. */
     --novon-elevation-press: inset 0 1px 3px oklch(0 0 0 / 0.45);
+    --surface-shadow: 0 0 0 0 transparent inset;
+    --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    /*
+     * novon public aliases (dark values rebind here). Declared in BOTH theme blocks on purpose: a custom
+     * property containing var() is substituted against the scope where it is
+     * declared, so an alias frozen at :root can never rebind inside a nested
+     * theme. Each block recomputes them against its own base colors.
+     */
+    --card: var(--surface);
+    --card-foreground: var(--surface-foreground);
+    --popover: var(--overlay);
+    --popover-foreground: var(--overlay-foreground);
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-foreground);
+    --secondary: var(--default);
+    --secondary-foreground: var(--default-foreground);
+    --destructive: var(--danger);
+    --destructive-foreground: var(--danger-foreground);
+    --muted-foreground: var(--muted);
+    --input: var(--field-background);
+    --ring: var(--focus);
+    --novon-success-surface: var(--success-soft);
+    --novon-success-text: var(--success-soft-foreground);
+    --novon-warning-surface: var(--warning-soft);
+    --novon-warning-text: var(--warning-soft-foreground);
+    --novon-danger-surface: var(--danger-soft);
+    --novon-danger-text: var(--danger-soft-foreground);
+    --novon-raised: var(--surface-secondary);
+    --novon-raised-hover: var(--surface-hover);
+    --novon-raised-strong: var(--surface-tertiary);
+    --novon-elevation-low: var(--surface-shadow);
+    --novon-elevation-lift: var(--overlay-shadow);
+
   }
 }
 
@@ -308,7 +449,7 @@
 @layer components {
   .novon-prose {
     color: var(--foreground);
-    line-height: 1.75;
+    line-height: 1.5;
     font-size: 1rem;
   }
 
@@ -325,10 +466,9 @@
     margin-bottom: 1.25em;
   }
 
-  /* A readable measure for prose even on wide pages. Only top-level
-     paragraphs are capped, so preview canvases, tables and nested examples
-     keep their full width. */
-  .novon-prose > p {
+  /* Keep reading lines near Primer's 80-character guidance. Tables, code and
+     live examples retain the full content width. */
+  .novon-prose > :where(p, ul, ol, blockquote):not(.novon-not-prose) {
     max-width: 75ch;
   }
 
@@ -339,29 +479,33 @@
     font-weight: 600;
     letter-spacing: -0.015em;
     color: var(--foreground);
-    line-height: 1.3;
+    max-width: 40ch;
   }
 
   .novon-prose :where(h1):not(:where(.novon-not-prose, .novon-not-prose *)) {
     font-size: 1.75rem;
+    line-height: 2.25rem;
     margin-top: 2.5rem;
     margin-bottom: 1rem;
   }
 
   .novon-prose :where(h2):not(:where(.novon-not-prose, .novon-not-prose *)) {
     font-size: 1.375rem;
+    line-height: 1.75rem;
     margin-top: 2.5rem;
     margin-bottom: 0.85rem;
   }
 
   .novon-prose :where(h3):not(:where(.novon-not-prose, .novon-not-prose *)) {
     font-size: 1.125rem;
+    line-height: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 0.6rem;
   }
 
   .novon-prose :where(h4):not(:where(.novon-not-prose, .novon-not-prose *)) {
     font-size: 1rem;
+    line-height: 1.5rem;
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
   }
@@ -428,9 +572,10 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 0.125em 0.375em;
-    font-size: 0.85em;
-    font-weight: 500;
-    white-space: nowrap;
+    font-size: 0.925em;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+    box-decoration-break: clone;
   }
 
   .novon-prose :where(hr):not(:where(.novon-not-prose, .novon-not-prose *)) {
@@ -487,7 +632,7 @@
     overflow-x: auto;
     padding: 1rem;
     font-size: 0.8125rem;
-    line-height: 1.7;
+    line-height: 1.5;
     tab-size: 2;
   }
 
@@ -514,7 +659,7 @@
     margin: 0;
     padding: 1rem 0;
     font-size: 0.8125rem;
-    line-height: 1.7;
+    line-height: 1.5;
     background: transparent !important;
   }
 
@@ -557,6 +702,11 @@
   .novon-prose code[data-line-numbers-max-digits='3'] { --novon-line-number-width: 3ch; }
   .novon-prose code[data-line-numbers-max-digits='4'] { --novon-line-number-width: 4ch; }
   .novon-prose code[data-line-numbers-max-digits='5'] { --novon-line-number-width: 5ch; }
+
+  /* In a code group the tab carries the title; the figcaption would repeat it. */
+  [data-code-group] figure[data-rehype-pretty-code-figure] figcaption {
+    display: none;
+  }
 
   /* A code figure opening a tab panel starts flush with the tab bar. */
   [role='tabpanel'] > figure[data-rehype-pretty-code-figure]:first-child {

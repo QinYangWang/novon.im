@@ -77,7 +77,7 @@ const styles = stylex.create({
   buttonIcon: { width: space.nine, height: space.nine, padding: 0 },
   buttonIconSm: { width: space.eight, height: space.eight, padding: 0 },
 
-  card: { color: colors.surfaceText },
+  card: { color: colors.surfaceText, borderRadius: radii.large },
   cardHeader: { display: 'flex', flexDirection: 'column', gap: space.oneHalf, padding: space.five },
   cardDescription: { color: colors.mutedText },
   cardContent: { padding: space.five, paddingBlockStart: 0 },
@@ -187,6 +187,7 @@ export function Button({
       {...stylex.props(
         styles.buttonBase,
         variant != null && styles[variant],
+        (variant === 'secondary' || variant === 'outline') && surface.frostedControl,
         size === 'sm' ? styles.buttonSm : size === 'lg' ? styles.buttonLg : size === 'icon' ? styles.buttonIcon : size === 'icon-sm' ? styles.buttonIconSm : styles.buttonDefault,
         xstyle,
       )}
@@ -198,7 +199,7 @@ export { Badge, type BadgeProps, type BadgeVariant } from './badge.tsx'
 export { Kbd, type KbdProps } from './kbd.tsx'
 
 export function Card({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
-  return <div {...props} {...stylex.props(surface.raised, styles.card, xstyle)} />
+  return <div {...props} {...stylex.props(surface.frosted, styles.card, xstyle)} />
 }
 export function CardHeader({ xstyle, ...props }: ElementProps<'div'> & StyleProps) {
   return <div {...props} {...stylex.props(styles.cardHeader, xstyle)} />

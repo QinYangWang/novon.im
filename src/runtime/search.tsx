@@ -75,28 +75,37 @@ const styles = stylex.create({
   triggerCompactLabel: { display: 'none' },
   dialog: { padding: 0 },
   input: {
-    height: space.ten,
+    height: '100%',
     flex: 1,
-    borderRadius: radii.control,
-    paddingInline: space.three,
-    boxShadow: elevation.press,
-    backgroundColor: colors.raised,
+    minWidth: 0,
     fontSize: type.label,
     lineHeight: type.compactLeading,
     borderWidth: 0,
     borderStyle: 'none',
+    backgroundColor: 'transparent',
     color: colors.text,
+    outline: 'none',
   },
-  inputRow: {
+  body: { padding: space.two },
+  field: {
     display: 'flex',
     alignItems: 'center',
     gap: space.two,
-    padding: space.two,
+    height: space.ten,
+    paddingInline: space.three,
+    borderRadius: radii.control,
+    boxShadow: elevation.press,
+    backgroundColor: colors.raised,
+    outlineColor: colors.focus,
+    outlineStyle: 'solid',
+    outlineWidth: { default: 0, ':focus-within': 2 },
+    outlineOffset: 2,
   },
+  fieldIcon: { color: colors.mutedText },
   results: {
     maxHeight: '22rem',
     overflowY: 'auto',
-    padding: space.two,
+    paddingTop: space.two,
     display: 'flex',
     flexDirection: 'column',
     gap: space.half,
@@ -132,6 +141,7 @@ const styles = stylex.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: space.two,
     borderTopWidth: 1,
     borderTopStyle: 'solid',
     borderTopColor: colors.border,
@@ -254,8 +264,9 @@ export function SearchTrigger({ xstyle, compact = false }: { xstyle?: StyleXStyl
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent aria-label="Search" xstyle={styles.dialog}>
-          <div {...stylex.props(styles.inputRow)}>
-            <SearchIcon aria-hidden="true" size={16} />
+          <div {...stylex.props(styles.body)}>
+          <div {...stylex.props(styles.field)}>
+            <SearchIcon aria-hidden="true" size={16} {...stylex.props(styles.fieldIcon)} />
             <input
               ref={inputRef}
               value={query}
@@ -306,6 +317,7 @@ export function SearchTrigger({ xstyle, compact = false }: { xstyle?: StyleXStyl
             <span {...stylex.props(styles.hint)}>
               <Kbd>↵</Kbd> to select
             </span>
+          </div>
           </div>
         </DialogContent>
       </Dialog>
